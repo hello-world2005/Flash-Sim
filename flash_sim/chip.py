@@ -1,0 +1,133 @@
+"""Flash chip model with timing calculations for all operations."""
+
+from dataclasses import dataclass
+from typing import Optional
+from .config import FlashConfig, TimingConfig, ParallelConfig
+
+
+class FlashChip:
+    """Simulates a NAND Flash chip with cycle-accurate timing.
+
+    Supports basic storage operations (read, write, erase) and
+    advanced operations (search with parallel WL, compute with parallel blocks).
+    """
+
+    def __init__(self, config: Optional[FlashConfig] = None):
+        """Initialize flash chip with configuration.
+
+        Args:
+            config: Flash configuration. Uses defaults if not provided.
+        """
+        self.config = config or FlashConfig()
+
+    @property
+    def timing(self) -> TimingConfig:
+        """Get timing configuration."""
+        return self.config.timing
+
+    @property
+    def parallel(self) -> ParallelConfig:
+        """Get parallel configuration."""
+        return self.config.parallel
+
+    def get_read_latency(self, address: int) -> int:
+        """Calculate read operation latency.
+
+        Args:
+            address: Page address to read from.
+
+        Returns:
+            Latency in nanoseconds (tR).
+        """
+        return self.timing.t_r
+
+    def get_write_latency(self, address: int) -> int:
+        """Calculate write (program) operation latency.
+
+        Args:
+            address: Page address to write to.
+
+        Returns:
+            Latency in nanoseconds (tPROG).
+        """
+        return self.timing.t_prog
+
+    def get_erase_latency(self, block_address: int) -> int:
+        """Calculate erase operation latency.
+
+        Args:
+            block_address: Block address to erase.
+
+        Returns:
+            Latency in nanoseconds (tBERS).
+        """
+        return self.timing.t_bers
+
+    def get_search_latency(self, wl_count: int) -> int:
+        """Calculate search operation latency with parallel WL activation.
+
+        Search operation activates multiple Word Lines simultaneously
+        for Content Addressable Memory (CAM) functionality.
+
+        The latency model:
+        - Base sensing time equals tR (one read cycle)
+        - Additional overhead for parallel WL coordination
+
+        Args:
+            wl_count: Number of Word Lines to activate in parallel.
+
+        Returns:
+            Latency in nanoseconds.
+
+        Raises:
+            ValueError: If wl_count exceeds maximum or is invalid.
+        """
+        if wl_count <= 0:
+            raise ValueError(f"Invalid WL count: {wl_count}. Must be positive.")
+        if wl_count > self.parallel.max_parallel_wl:
+            raise ValueError(
+                f"WL count {wl_count} exceeds maximum {self.parallel.max_parallel_wl}"
+            )
+
+        # Search latency model:
+        # - Parallel WL sensing takes base tR time
+        # - Overhead scales with log2 of WL count for comparison logic
+        base_latency = self.timing.t_r
+        # Parallel overhead: ~10% per doubling of WL count
+        import math
+        parallel_factor = 1.0 + 0.1 * math.log2(max(1, wl_count))
+        return int(base_latency * parallel_factor)
+
+    def get_compute_latency(self, block_count: int) -> int:
+        """Calculate compute operation latency with parallel Block activation.
+
+        Compute operation activates multiple Blocks for Multiply-Accumulate (MAC)
+        functionality, accumulating current on Bit Lines.
+
+        The latency model:
+        - Base sensing time equals tR (one read cycle)
+        - Additional overhead for multi-block current accumulation
+
+        Args:
+            block_count: Number of Blocks to activate in parallel.
+
+        Returns:
+            Latency in nanoseconds.
+
+        Raises:
+            ValueError: If block_count exceeds maximum or is invalid.
+        """
+        if block_count <= 0:
+            raise ValueError(f"Invalid block count: {block_count}. Must be positive.")
+        if block_count > self.parallel.max_parallel_blocks:
+            raise ValueError(
+                f"Block count {block_count} exceeds maximum {self.parallel.max_parallel_blocks}"
+            )
+
+        # Compute latency model:
+        # - Parallel block sensing takes base tR time
+        # - MAC accumulation adds overhead proportional to block count
+        base_latency = self.timing.t_r
+        # Linear overhead for current accumulation on bit lines
+        accumulation_factor = 1.0 + 0.15 * (block_count - 1)
+        return int(base_latency * accumulation_factor)

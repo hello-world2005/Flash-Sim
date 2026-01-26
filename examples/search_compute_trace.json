@@ -1,0 +1,8 @@
+[
+  {"type": "search", "wl_count": 8},
+  {"type": "search", "wl_count": 16},
+  {"type": "search", "wl_count": 32},
+  {"type": "compute", "block_count": 2},
+  {"type": "compute", "block_count": 4},
+  {"type": "compute", "block_count": 8}
+]

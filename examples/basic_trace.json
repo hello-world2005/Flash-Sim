@@ -1,0 +1,7 @@
+[
+  {"type": "read", "address": 0},
+  {"type": "read", "address": 256},
+  {"type": "write", "address": 512},
+  {"type": "write", "address": 768},
+  {"type": "erase", "block_address": 0}
+]

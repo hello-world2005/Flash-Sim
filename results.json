@@ -1,0 +1,56 @@
+[
+  {
+    "command": "read",
+    "address": 0,
+    "latency_ns": 75000,
+    "status": "success"
+  },
+  {
+    "command": "write",
+    "address": 0,
+    "latency_ns": 750000,
+    "status": "success"
+  },
+  {
+    "command": "search",
+    "wl_count": 16,
+    "latency_ns": 105000,
+    "status": "success"
+  },
+  {
+    "command": "read",
+    "address": 256,
+    "latency_ns": 75000,
+    "status": "success"
+  },
+  {
+    "command": "compute",
+    "block_count": 4,
+    "latency_ns": 108750,
+    "status": "success"
+  },
+  {
+    "command": "erase",
+    "block_address": 1,
+    "latency_ns": 3800000,
+    "status": "success"
+  },
+  {
+    "command": "write",
+    "address": 512,
+    "latency_ns": 750000,
+    "status": "success"
+  },
+  {
+    "command": "search",
+    "wl_count": 64,
+    "latency_ns": 120000,
+    "status": "success"
+  },
+  {
+    "command": "read",
+    "address": 1024,
+    "latency_ns": 75000,
+    "status": "success"
+  }
+]
