@@ -1,0 +1,14 @@
+{
+  "timing": {
+    "t_r": 75000,
+    "t_prog": 750000,
+    "t_bers": 3800000
+  },
+  "parallel": {
+    "max_parallel_wl": 64,
+    "max_parallel_blocks": 8
+  },
+  "pages_per_block": 256,
+  "blocks_per_plane": 1024,
+  "planes_per_die": 2
+}

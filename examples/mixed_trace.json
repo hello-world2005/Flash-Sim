@@ -1,0 +1,14 @@
+{
+  "description": "Mixed workload trace with storage and compute operations",
+  "commands": [
+    {"type": "read", "address": 0},
+    {"type": "write", "address": 0},
+    {"type": "search", "wl_count": 16},
+    {"type": "read", "address": 256},
+    {"type": "compute", "block_count": 4},
+    {"type": "erase", "block_address": 1},
+    {"type": "write", "address": 512},
+    {"type": "search", "wl_count": 64},
+    {"type": "read", "address": 1024}
+  ]
+}
