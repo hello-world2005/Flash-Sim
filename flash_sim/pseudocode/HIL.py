@@ -1,26 +1,11 @@
 # -*- coding: utf-8 -*-
 from queue import Queue
 
-from common import (
-    sim_object,
-    READ,
-    WRITE,
-    SEARCH,
-    COMPUTE,
-    READ_REQ,
-    WRITE_REQ,
-    WRITE_DATA,
-    SEARCH_INPUT,
-    COMPUTE_INPUT,
-    SEARCH_REQ,
-    COMPUTE_REQ,
-    SQ_INFORM,
-    CQ_INFORM,
-    REQ_COMP,
-)
+from common import *
 from FTL import FTL, Transaction
 from Cache import Cache
 import PCIe_link
+import utils
 
 
 class HIL(sim_object):
@@ -41,16 +26,31 @@ class HIL(sim_object):
         self.receive_pcie_message(event.param)
 
     def segment(self, req):
-        """根据 req 的 lba 范围拆成 transaction_list。"""
+        """根据 req 的 lpa 范围拆成 transaction_list。"""
         if req.transaction_list:
             return
-        start = getattr(req, "lba_start", 0)
-        count = getattr(req, "lba_count", 1)
-        for i in range(count):
-            lpa = start + i
-            tr = Transaction(source_req=req, lpa=lpa, bitmap=1)
-            tr.mvpn = lpa // 512
-            req.transaction_list.append(tr)
+        start = getattr(req, "lpa_start", 0)
+        count = getattr(req, "lpa_count", 1)
+        if req.type in (READ, WRITE):
+            for i in range(count):
+                lpa = start + i
+                tr = Transaction(source_req=req, lpa=lpa, bitmap=1)
+                tr.mvpn = lpa // 512
+                req.transaction_list.append(tr)
+        elif req.type == SEARCH:
+            start_bank_id = utils.translate_lpa_to_search_bank_id(start)
+            bank_count = count // PAGE_NO_PER_SEARCH_BANK
+            for i in range(count):
+                bank_id = start_bank_id + i
+                tr = Transaction(source_req=req, bank_id=bank_id, bitmap=1)
+                req.transaction_list.append(tr)
+        elif req.type == COMPUTE:
+            start_bank_id = utils.translate_lpa_to_compute_bank_id(start)
+            bank_count = count // PAGE_NO_PER_COMPUTE_BANK
+            for i in range(count):
+                bank_id = start_bank_id + i
+                tr = Transaction(source_req=req, bank_id=bank_id, bitmap=1)
+                req.transaction_list.append(tr)
 
     def fetch_data(self, req):
         """向 host 请求 WRITE/SEARCH/COMPUTE 所需数据（占位）。"""

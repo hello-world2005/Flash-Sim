@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
 
-from common import Request, READ, WRITE, SEARCH, COMPUTE
+from common import *
 from PHY import PHY
 import utils
 
@@ -22,10 +22,11 @@ class cmt_entry:
 @dataclass
 class Transaction:
     source_req: Request
-    lpa: int
+    lpa: int = 0
     ppa: int = 0
     mvpn: int = 0
     bitmap: int = 0
+    bank_id: int = 0  # 用于 SEARCH/COMPUTE 的 bank 标识
 
 
 class CMT:
@@ -54,26 +55,94 @@ class CMT:
             self.lru_list.insert(0, lpa)
 
 
+from dataclasses import dataclass
+
+@dataclass
+class blockBKE:
+    free_pages: set      # 存储空闲页的 page_id
+    valid_pages: set     # 存储有效页的 page_id
+    invalid_pages: set   # 存储无效页的 page_id
+    write_frontier: int  # 下次写入的目标page_id
+    wl_level: int        # 该block被erase的次数
+    protected: bool     # 该block当前是否上锁，防止读写竞争
+
 class Block_Manager:
-    def __init__(self):
-        self._used_blocks: set[tuple] = set()
-        self._protected_blocks: set[tuple] = set()
+    def __init__(self,
+                 channel_no=CHANNEL_NO,
+                 chip_no_per_channel=CHIP_PER_CHANNEL,
+                 die_no_per_chip=DIE_PER_CHIP,
+                 plane_no_per_die=PLANE_PER_DIE,
+                 block_no_per_plane=BLOCK_PER_PLANE,
+                 pages_per_block=PAGE_PER_BLOCK):
+        self.channel_no = channel_no
+        self.chip_no_per_channel = chip_no_per_channel
+        self.die_no_per_chip = die_no_per_chip
+        self.plane_no_per_die = plane_no_per_die
+        self.block_no_per_plane = block_no_per_plane
+        self.pages_per_block = pages_per_block
+
+        # 结构为：channel -> chip -> die -> plane -> [blockBKE, ...]，与 address 前 5 维一致
+        self.block_keeping_book = [
+            [
+                [
+                    [
+                        [
+                            blockBKE(
+                                free_pages=set(range(pages_per_block)),
+                                valid_pages=set(),
+                                invalid_pages=set(),
+                                write_frontier=0,
+                                wl_level=0,
+                                protected=False,
+                            ) for _ in range(block_no_per_plane)
+                        ]
+                        for _ in range(plane_no_per_die)
+                    ]
+                    for _ in range(die_no_per_chip)
+                ]
+                for _ in range(chip_no_per_channel)
+            ]
+            for _ in range(channel_no)
+        ]
+
+    def get_block_bke(self, addr):
+        # addr: 6 元组 (channel, chip, die, plane, block, page)，使用前 5 维索引
+        channel_id, chip_id, die_id, plane_id, block_id = addr[0], addr[1], addr[2], addr[3], addr[4]
+        return self.block_keeping_book[channel_id][chip_id][die_id][plane_id][block_id]
 
     def is_free(self, addr) -> bool:
-        block_key = (addr[0], addr[1], addr[2], addr[3]) if len(addr) >= 4 else addr
-        return block_key not in self._used_blocks
+        bke = self.get_block_bke(addr)
+        return len(bke.valid_pages) == 0 and len(bke.invalid_pages) == 0 and len(bke.free_pages) != 0
 
     def is_not_protected(self, addr) -> bool:
-        block_key = (addr[0], addr[1], addr[2], addr[3]) if len(addr) >= 4 else addr
-        return block_key not in self._protected_blocks
+        # 这里按需求增加是否保护的判断，可添加bke的protected属性
+        bke = self.get_block_bke(addr)
+        return not getattr(bke, "protected", False)
 
-    def mark_used(self, addr):
-        block_key = (addr[0], addr[1], addr[2], addr[3]) if len(addr) >= 4 else addr
-        self._used_blocks.add(block_key)
+    def mark_used(self, addr, page_id):
+        bke = self.get_block_bke(addr)
+        # 将 page_id 从 free_pages 移动到 valid_pages，更新写前沿
+        if page_id in bke.free_pages:
+            bke.free_pages.remove(page_id)
+        bke.valid_pages.add(page_id)
+        bke.write_frontier = (page_id + 1) % self.pages_per_block
 
-    def mark_protected(self, addr):
-        block_key = (addr[0], addr[1], addr[2], addr[3]) if len(addr) >= 4 else addr
-        self._protected_blocks.add(block_key)
+    def mark_invalid(self, addr, page_id):
+        bke = self.get_block_bke(addr)
+        # 将 page_id 从 valid_pages 移动到 invalid_pages
+        if page_id in bke.valid_pages:
+            bke.valid_pages.remove(page_id)
+        bke.invalid_pages.add(page_id)
+
+    def erase_block(self, addr):
+        bke = self.get_block_bke(addr)
+        # 清空所有有效、无效页，将页全设为free，写前沿归零，擦除次数+1
+        bke.free_pages = set(range(self.pages_per_block))
+        bke.valid_pages.clear()
+        bke.invalid_pages.clear()
+        bke.write_frontier = 0
+        bke.wl_level += 1
+        bke.protected = False
 
 
 class GC_WL_Manager:
@@ -98,13 +167,11 @@ class TSU:
             "gc_read",
             "gc_write",
         ]
-        self.read_write_queues = [
+        self.queues = [
             [{key: [] for key in self.sched_priority}
              for _ in range(CHIP_NO_PER_CHANNEL)]
             for _ in range(CHANNEL_NO)
         ]
-        self.search_queue: list = []
-        self.compute_queue: list = []
         self.block_manager = Block_Manager()
         self.channel_no = CHANNEL_NO
         self.chip_no_per_channel = CHIP_NO_PER_CHANNEL
@@ -119,9 +186,9 @@ class TSU:
 
     def Submit_trans(self, payload):
         if isinstance(payload, Transaction):
-            ch, chip, _, _, _ = utils.translate_ppa_to_address(payload.ppa)
+            channel, chip, die, plane, block, page = utils.translate_ppa_to_address(payload.ppa)
             trans_type = "user_read" if payload.source_req.type == READ else "user_write"
-            self.read_write_queues[ch][chip][trans_type].append(payload)
+            self.read_write_queues[channel][chip][trans_type].append(payload)
         elif isinstance(payload, Request):
             if payload.type not in (SEARCH, COMPUTE):
                 raise TypeError("Only SEARCH/COMPUTE req can be issued to tsu in req form")
