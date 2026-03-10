@@ -353,20 +353,78 @@ class TSU:
         q2,
         suspension_required: bool,
     ) -> bool:
-        """Pop one transaction from each queue and send to PHY.
+        """按 die 粒度选取满足 plane 并行条件的 transactions 并下发给 PHY。
 
-        对标 TSU_Base::issue_command_to_chip()（简化版，忽略 multiplane 并行）。
+        对标 TSU_Base::issue_command_to_chip()。
+        - 以 q1 队首 transaction 的 die 为起点，依次遍历该 chip 下每个 die。
+        - 对每个 die，先扫描 q1 再扫描 q2，用 plane 位图保证每个 plane 最多选一个
+          transaction，同时要求同 die 内所有 transaction 的 page 相同（multiplane
+          命令约束）。
+        - 找到至少一个 transaction 后立即将其合并为列表发给 PHY，清空临时槽位，然后
+          返回 True；当前 die 无候选则跳到下一个 die 继续尝试。
         Returns True if a command was dispatched.
         """
         if not q1:
             return False
 
-        transactions = [q1.pop(0)]
-        if q2:
-            transactions.append(q2.pop(0))
+        die_no = DIE_PER_CHIP
+        plane_no = PLANE_PER_DIE
 
-        self.PHY.send_command_to_chip(chip_id, transactions, suspension_required)
-        return True
+        start_die = q1[0].address[2]
+        start_page = q1[0].address[5]
+
+        for _step in range(die_no):
+            die_id = (start_die + _step) % die_no
+            page_id = start_page if _step == 0 else None
+            plane_vector = 0
+            dispatch_slots: list = []
+
+            for tr in list(q1):
+                if tr.address[2] != die_id:
+                    continue
+                tr_plane = tr.address[3]
+                if plane_vector & (1 << tr_plane):
+                    continue
+                tr_page = tr.address[5]
+                if plane_vector == 0:
+                    page_id = tr_page
+                elif tr_page != page_id:
+                    continue
+                tr.SuspendRequired = suspension_required
+                plane_vector |= 1 << tr_plane
+                dispatch_slots.append(tr)
+                if len(dispatch_slots) >= plane_no:
+                    break
+
+            if q2 is not None and len(dispatch_slots) < plane_no:
+                for tr in list(q2):
+                    if tr.address[2] != die_id:
+                        continue
+                    tr_plane = tr.address[3]
+                    if plane_vector & (1 << tr_plane):
+                        continue
+                    tr_page = tr.address[5]
+                    if plane_vector == 0:
+                        page_id = tr_page
+                    elif tr_page != page_id:
+                        continue
+                    tr.SuspendRequired = suspension_required
+                    plane_vector |= 1 << tr_plane
+                    dispatch_slots.append(tr)
+                    if len(dispatch_slots) >= plane_no:
+                        break
+
+            if dispatch_slots:
+                for tr in dispatch_slots:
+                    if tr in q1:
+                        q1.remove(tr)
+                    elif q2 is not None and tr in q2:
+                        q2.remove(tr)
+                self.PHY.send_command_to_chip(chip_id, dispatch_slots, suspension_required)
+                dispatch_slots = []
+                return True
+
+        return False
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
