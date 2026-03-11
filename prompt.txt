@@ -6,3 +6,14 @@
 以此类推。需要注意的是，Flash_Sim中额外提供了SEARCH和COMPUTE这两种操作，它们有专用的chip，这些chip不可以被传统的读写操作access，这在
 chipBKE中会有相应的状态实现划分，因此你可以先不管跟SEARCH和COMPUTE操作有关的部分。
     对于NVM_PHY的实现请写在Flash-Sim/flash_sim/PHY.py文件中
+
+
+TSU.try_compute()和TSU.try_search()函数编写：
+这两个函数的大体思路跟try_read/write/erase()相同，都是先判断chip的状态是否满足触发条件，再选取合适的队列。
+与read, write, erase不同的地方在于，compute和search操作必须在chip_idle的状态才能触发，并且queue直接选择user_search/user_compute一个队列即可，
+因为mapping和erase没有search和compute操作。选择完队列之后，分别调用issue_compute_command和issue_search_command函数将对应队列发给PHY
+
+需要注意的是，search和compute的transaction.address[5]恒为0（没有意义），最细粒度的地址信息是address[4]，标记的是一个search/compute操作的单元。
+对于search request，你需要保证每个die的每个plane中只能选中一个操作单元；对于compute request，你需要保证每个plane中选中的操作单元数量不能超过COMPUTE_MAX_PARALLEL_SL*SSL_PER_SL
+
+请根据上述要求补全try_compute, try_search, issue_search_command, issue_compute_command四个函数，在FTL.py的TSU模块中

@@ -4,6 +4,7 @@
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 from enum import Enum
+from .config import TimingConfig
 
 
 # ----- 基类 -----
@@ -19,21 +20,30 @@ REQ_INIT = "REQ_INIT"
 DELIVER = "DELIVER"
 
 # PCIe message 类型（Host/Device 间）
+# Host send, Device excute
 WRITE_REQ = "WRITE_REQ"
 READ_REQ = "READ_REQ"
 SEARCH_REQ = "SEARCH_REQ"
 COMPUTE_REQ = "COMPUTE_REQ"
+
 WRITE_DATA = "WRITE_DATA"
-SEARCH_INPUT = "SEARCH_INPUT"
-COMPUTE_INPUT = "COMPUTE_INPUT"
+SEARCH_DATA = "SEARCH_DATA"
+COMPUTE_DATA = "COMPUTE_DATA"
+# Device send, Host excute
 WRITE_DATA_REQ = "WRITE_DATA_REQ"
-SEARCH_INPUT_REQ = "SEARCH_INPUT_REQ"
-COMPUTE_INPUT_REQ = "COMPUTE_INPUT_REQ"
+SEARCH_DATA_REQ = "SEARCH_DATA_REQ"
+COMPUTE_DATA_REQ = "COMPUTE_DATA_REQ"
+
 WRITE_DATA_RECEIVED = "WRITE_DATA_RECEIVED"
+SEARCH_DATA_RECEIVED = "SEARCH_DATA_RECEIVED"
+COMPUTE_DATA_RECEIVED = "COMPUTE_DATA_RECEIVED"
 READ_REQ_RECEIVED = "READ_REQ_RECEIVED"
+
+READ_RES_SEND_BACK = "READ_RES_SEND_BACK"
+SEARCH_RES_SEND_BACK = "SEARCH_RES_SEND_BACK"
+COMPUTE_RES_SEND_BACK = "COMPUTE_RES_SEND_BACK"
+
 REQ_COMP = "REQ_COMP"
-SQ_INFORM = "SQ_INFORM"
-CQ_INFORM = "CQ_INFORM"
 
 # 请求类型（req.type，用于 FTL/HIL）
 READ = "READ"
@@ -41,6 +51,10 @@ WRITE = "WRITE"
 SEARCH = "SEARCH"
 COMPUTE = "COMPUTE"
 MAPPING = "MAPPING"
+
+# Host Memory config
+CQ_ENTRY_SIZE_BASIC = 128
+SQ_ENTRY_SIZE = 128
 
 # 硬件配置
 CHANNEL_NO = 8
@@ -60,6 +74,11 @@ PAGE_NO_PER_SEARCH_BANK = SEARCH_MAX_PARALLEL_WL
 PAGE_NO_PER_COMPUTE_BANK = COMPUTE_MAX_PARALLEL_SL * SSL_PER_SL
 COMPUTE_BANK_PER_PLANE = BLOCK_PER_PLANE * SL_PER_BLOCK // COMPUTE_MAX_PARALLEL_SL
 SEARCH_BANK_PER_PLANE = SSL_PER_SL * SL_PER_BLOCK * BLOCK_PER_PLANE
+
+STATIC_CHIP_PER_CHANNEL = 1
+TOT_RANDOM_SECTOR_NO = SECTOR_PER_PAGE * PAGE_PER_BLOCK * BLOCK_PER_PLANE * PLANE_PER_DIE \
+    * DIE_PER_CHIP * CHANNEL_NO * (CHIP_PER_CHANNEL - STATIC_CHIP_PER_CHANNEL)
+
 
 # ----- 常量 -----
 CMT_SIZE = 4096
@@ -162,24 +181,7 @@ class Transaction_RD(Transaction):
 class Transaction_SEARCH(Transaction):
     def __init__(self, source_req: Request, lpa: int, mvpn: int, sector_bitmap: list[int]):
         super().__init__(source_req, lpa, mvpn, sector_bitmap)
-
-class DieBKE:
-    def __init__(self) -> None:
-        self.status = DieStatus.IDLE
-        self.ActivateCommands = []
-        self.SuspendedCommands = []
         
-
-class ChipBKE:
-    def __init__(self) -> None:
-        self.DieKeepBook = [DieBKE() for _ in range(DIE_PER_CHIP)]
-        self.status = ChipStatus.IDLE
-        self.EnableWriteSuspend = False
-        self.EnableEraseSuspend = False
-        self.HasSuspendedCommands = False
-        self.Expected_Finish_Time = 0
-
-
 # ── Simulation time / event scheduling (set by Engine at startup) ──────────
 _time_provider = None       # () -> int   returns current sim time in ns
 _event_scheduler = None     # (event_type, target, param, scheduled_time) -> None
@@ -189,22 +191,26 @@ def CURRENT_TIME() -> int:
     """Return current simulation time in nanoseconds."""
     if _time_provider is not None:
         return _time_provider()
-    return 0
+    raise ValueError("Time provider is not initialized")
 
 
-def schedule_event(event_type: str, target: Any, param: Any, scheduled_time: int) -> None:
+def Register_event(event_type: str, target: Any, param: Any, scheduled_time: int) -> None:
     """Register a future simulation event."""
     if _event_scheduler is not None:
         _event_scheduler(event_type, target, param, scheduled_time)
+    else:
+        raise ValueError("Event scheduler is not initialized")
 
 
 # ── Flash timing constants (nanoseconds) ────────────────────────────────────
 PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
 PHY_DATA_IN_TIME  = 5_000        # data transfer from controller to chip (write)
 PHY_DATA_OUT_TIME = 5_000        # data transfer from chip to controller (read)
-T_READ_LSB        = 75_000       # chip internal LSB read latency (tR)
-T_PROG            = 1_500_000    # chip internal program latency (tPROG)
-T_BERS            = 10_000_000   # chip internal erase latency (tBERS)
+T_READ_LSB        = TimingConfig.t_r_lsb       # chip internal LSB read latency (tR)
+T_PROG            = TimingConfig.t_prog_lsb    # chip internal program latency (tPROG)
+T_BERS            = TimingConfig.t_bers   # chip internal erase latency (tBERS)
+T_SEARCH          = TimingConfig.t_search_lsb    # chip internal search latency (tSEARCH)
+T_COMPUTE         = TimingConfig.t_compute_lsb   # chip internal compute latency (tCOMPUTE)
 
 # ── Suspension thresholds (ns) ───────────────────────────────────────────────
 REASONABLE_TIME_SUSPEND_WRITE_FOR_READ  = 100_000
@@ -215,7 +221,15 @@ REASONABLE_TIME_SUSPEND_ERASE_FOR_WRITE = 1_000_000
 PHY_READ_CMD_TRANSFERRED  = "PHY_READ_CMD_TRANSFERRED"   # cmd/addr sent → chip reads
 PHY_WRITE_CMD_TRANSFERRED = "PHY_WRITE_CMD_TRANSFERRED"  # cmd+data sent → chip programs
 PHY_ERASE_CMD_TRANSFERRED = "PHY_ERASE_CMD_TRANSFERRED"  # cmd sent → chip erases
-PHY_READ_DATA_TRANSFERRED = "PHY_READ_DATA_TRANSFERRED"  # read data back to controller
+PHY_SEARCH_CMD_TRANSFERRED = "PHY_SEARCH_CMD_TRANSFERRED"  # cmd sent → chip searches
+PHY_COMPUTE_CMD_TRANSFERRED = "PHY_COMPUTE_CMD_TRANSFERRED"  # cmd sent → chip computes
+
 PHY_CHIP_READ_COMPLETE    = "PHY_CHIP_READ_COMPLETE"     # chip internal read done
 PHY_CHIP_WRITE_COMPLETE   = "PHY_CHIP_WRITE_COMPLETE"    # chip internal program done
 PHY_CHIP_ERASE_COMPLETE   = "PHY_CHIP_ERASE_COMPLETE"   # chip internal erase done
+PHY_CHIP_SEARCH_COMPLETE   = "PHY_CHIP_SEARCH_COMPLETE"   # chip internal search done
+PHY_CHIP_COMPUTE_COMPLETE   = "PHY_CHIP_COMPUTE_COMPLETE"   # chip internal compute done
+
+PHY_READ_DATA_TRANSFERRED = "PHY_READ_DATA_TRANSFERRED"  # read data back to controller
+PHY_SEARCH_DATA_TRANSFERRED = "PHY_SEARCH_DATA_TRANSFERRED"  # search data back to controller
+PHY_COMPUTE_DATA_TRANSFERRED = "PHY_COMPUTE_DATA_TRANSFERRED"  # compute data back to controller

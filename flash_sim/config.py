@@ -335,6 +335,12 @@ class TimingConfig:
     # Erase latency (tBERS) - same for all page types
     t_bers: int = 3_800_000  # Block erase latency: 3.8 milliseconds
 
+    # Search latency (tSEARCH) in nanoseconds
+    t_search_lsb: int = 200_000   # LSB search latency
+
+    # Compute latency (tCOMPUTE) in nanoseconds
+    t_compute_lsb: int = 500_000   # LSB compute latency
+
     def __post_init__(self):
         if not isinstance(self.technology, FlashTechnology):
             raise ValueError("technology must be a FlashTechnology enum value")

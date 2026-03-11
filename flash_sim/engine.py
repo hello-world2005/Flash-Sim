@@ -35,3 +35,6 @@ class Engine:
     def Run(self):
         while not self.event_queue.empty():
             self.Execute_event()
+    
+    def Get_current_time(self):
+        return self.current_time

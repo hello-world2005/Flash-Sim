@@ -191,6 +191,8 @@ class TSU:
         if self._onfly_schedule_req_no > 0:
             return
         for ch in range(self.channel_no):
+            if self.channel_is_busy(ch):
+                continue   # channel occupied; move to next channel
             for _ in range(self.chip_no_per_channel):
                 chip_id = (ch, self.round_robin_turn[ch])
                 self.try_activate(chip_id)
@@ -204,6 +206,19 @@ class TSU:
 
     def _on_channel_idle(self, channel_id: int):
         """对标 handle_channel_idle_signal(): 轮询该 channel 下的 chip 尝试激活。"""
+        # Priority: if any chip in this channel has completed a read but is still
+        # holding data (waiting_data_out non-empty), start the data-out transfer
+        # immediately before handing the channel to the TSU for new commands.
+        # This mirrors MQSim's logic of checking WaitingReadTXCount in Execute_simulator_event.
+        for chip_no in range(CHIP_PER_CHANNEL):
+            chip_id_check = (channel_id, chip_no)
+            if chip_id_check not in self._chip_bkes:
+                raise ValueError(f"Chip {chip_id_check} not found in PHY while broadcasting channel idle")
+            bke = self._chip_bkes[chip_id_check]
+            if not bke._waiting_data_out:
+                continue
+            self.PHY._broadcast_channel_idle(channel_id)
+            return
         for _ in range(self.chip_no_per_channel):
             chip_id = (channel_id, self.round_robin_turn[channel_id])
             self.try_activate(chip_id)
@@ -455,8 +470,7 @@ class TSU:
         """按 die-plane 粒度选取 search transactions 并下发给 PHY。
 
         Search 地址最细粒度为 address[4]（sub_plane/操作单元），address[5] 恒为 0。
-        约束：每个 die 的每个 plane 中最多选中一个操作单元，且同一 die 内不同
-        plane 选中的 transaction 必须有相同的 sub_plane_id（address[4]）。
+        约束：每个 die 的每个 plane 中最多选中一个操作单元。
         对每个 die，从队列中收集满足约束的 transactions 后立即发给 PHY，
         找到第一个有候选的 die 后返回 True。
         """
@@ -467,11 +481,11 @@ class TSU:
         plane_no = PLANE_PER_DIE
 
         start_die = q[0].address[2]
+        start_sub_plane = q[0].address[4]
 
         for _step in range(die_no):
             die_id = (start_die + _step) % die_no
             plane_vector = 0
-            sub_plane_id = None
             dispatch_slots: list = []
 
             for tr in list(q):
@@ -479,11 +493,6 @@ class TSU:
                     continue
                 tr_plane = tr.address[3]
                 if plane_vector & (1 << tr_plane):
-                    continue
-                tr_sub_plane = tr.address[4]
-                if sub_plane_id is None:
-                    sub_plane_id = tr_sub_plane
-                elif tr_sub_plane != sub_plane_id:
                     continue
                 tr.SuspendRequired = False
                 plane_vector |= 1 << tr_plane
@@ -496,12 +505,11 @@ class TSU:
                     q.remove(tr)
                 self.PHY.send_command_to_chip(chip_id, dispatch_slots, False)
 
-    def issue_compute_command(self, chip_id, q: list) -> None:
+    def issue_compute_command(self, chip_id, q: list) -> bool:
         """按 die-plane 粒度选取 compute transactions 并下发给 PHY。
 
         Compute 地址最细粒度为 address[4]（sub_plane/操作单元），address[5] 恒为 0。
-        约束：每个 plane 中选中的操作单元数量不超过 COMPUTE_MAX_PARALLEL_SL * SSL_PER_SL，
-        且同一 die 内不同 plane 选中的 transaction 必须有相同的 sub_plane_id（address[4]）。
+        约束：每个 plane 中选中的操作单元数量不超过 COMPUTE_MAX_PARALLEL_SL * SSL_PER_SL。
         对每个 die，收集满足约束的 transactions 后立即发给 PHY，
         找到第一个有候选的 die 后返回 True。
         """
@@ -516,18 +524,12 @@ class TSU:
         for _step in range(die_no):
             die_id = (start_die + _step) % die_no
             plane_count: dict = {}
-            sub_plane_id = None
             dispatch_slots: list = []
 
             for tr in list(q):
                 if tr.address[2] != die_id:
                     continue
                 tr_plane = tr.address[3]
-                tr_sub_plane = tr.address[4]
-                if sub_plane_id is None:
-                    sub_plane_id = tr_sub_plane
-                elif tr_sub_plane != sub_plane_id:
-                    continue
                 count = plane_count.get(tr_plane, 0)
                 if count >= max_per_plane:
                     continue
@@ -539,7 +541,6 @@ class TSU:
                 for tr in dispatch_slots:
                     q.remove(tr)
                 self.PHY.send_command_to_chip(chip_id, dispatch_slots, False)
-        return
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -548,7 +549,7 @@ class TSU:
 
     def is_static_chip(self, chip_id) -> bool:
         """Returns True if chip is dedicated to SEARCH/COMPUTE (placeholder)."""
-        return False
+        return (CHIP_PER_CHANNEL - chip_id[1]) <= STATIC_CHIP_PER_CHANNEL
 
 
 class Address_Mapping_Domain:
@@ -669,3 +670,15 @@ class FTL:
 
     def handle_new_req(self, req: Request):
         self.address_mapping_unit.translate_and_submit(req)
+    
+    def get_static_address(self, sub_plane_id: int) -> tuple:
+        sub_plane_address = sub_plane_id % (SL_PER_BLOCK * SSL_PER_SL * BLOCK_PER_PLANE)
+        sub_plane_id //= SL_PER_BLOCK * SSL_PER_SL * BLOCK_PER_PLANE
+        plane_address = sub_plane_id % PLANE_PER_DIE
+        sub_plane_id //= PLANE_PER_DIE
+        die_address = sub_plane_id % DIE_PER_CHIP
+        sub_plane_id //= DIE_PER_CHIP
+        chip_address = sub_plane_id % STATIC_CHIP_PER_CHANNEL
+        sub_plane_id //= STATIC_CHIP_PER_CHANNEL
+        channel_address = sub_plane_id % CHANNEL_NO
+        return (channel_address, chip_address, die_address, plane_address, sub_plane_address, -1)

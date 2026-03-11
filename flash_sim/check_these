@@ -1,37 +1,14 @@
-阅读MQSim代码搞清楚以下几个事情：
-1. NVMe的multi-queue是怎么管理的，一个host请求来了之后给哪个queue提交、如果满队列之后怎么处理:
-    A：如果单个host开很多queue的话，捡没满的塞进去就行，满了就等；如果需要区分命令优先级，可以考虑在waiting queue里区分优先级，优先级高的先处理
-2. 一个req在打散成transactions之后是如何判定其执行完成并返回给host的
-    A: 每个transaction记录自己的source req，完成后req.serviced_trans +=1，直到数量达到len(req.transactions)即说明req已经完成
-3. 一个req生成之后，是怎么触发host将其压入队列的
-    A: 直接入队即可，如果SQ满了先塞在waiting queue里面，等到有SQ空出来了之后再塞进去
-4. SQ中的entry是什么时候消除的?
-    A: 应该是再host_interface的input_stream收到pcie_message将req压入队之后，更新SQ_Head
-5. SQ, IO_Flow, input_stream是一一对应的吗
+目前要跑通流程还需要完善的代码：
+1. parser将trace文件生成req压入初始的event_queue
+2. 正向的操作都实现完了，逆向的流程需要再完善一下，包括：
+    - PHY收到flash chip读写完成之后，往回发数据
+    - PHY收到数据回传完成之后，往回发req完成信号，发给HIL，HIL再发给host，host收到之后将cq更新，完成仿真
+    - 目前TSU Schedule只会在address mapping之后才会触发，但是每次触发不会清空queues，因此必须有其他机制能够让所有提交的transactions最终
+    能够被调度执行
 
-6. CMT, GTD, GMT分别维护的是什么
-    CMT: cached mapping table，存储当前被缓存的LBA到PBA的映射关系
-    GMT: 在ideal mapping table启用时使用，存储所有LBA到PBA的映射关系，即认为所有映射关系都被缓存了;
-         其余情况下作为cmt与flash mapping page之间的交互的缓存，用来防止cmt驱逐时的racing以及可以复用一部分
-         从mapping page读出的映射关系
-    GTD: Global translate directory，存储每个mvpn所在的mapping page在flash中的位置。一个mapping page中可以存多个lpa的映射关系
-    lpa -> mvmp: mvpn = lpa / entry_no_per_mapping_page
-    mvmp -> mppa: 通过GTD找到mapping page所在的ppa，然后读出mapping page找到lpa对应的ppa
 
-7. TSU - PHY的调度：
-    TSU负责选择需要发送命令的queue（主次两个），挑选出合适的transactions拼成一个list，然后交给PHY下发。
-    TSU中为每个chip维护一个queue，因此当transaction入队时，需要先找到合适的chip_queue
-    对SEARCH和COMPUTE操作来说不是这样，他们各自对应一个queue就行，因为这两种req属于不同req的transaction不可合并打包
-
-    PHY会同时管理chip下面的die的command执行情况和data transfer情况
-
-8. PHY管理ChipBKE和Block Manager管理Block的情况，作用有什么不同
-    PHY其实已经是flash controller层级的了，它只是为了把收到的命令发下去，管理的ChipBKE是为了获悉哪个chip现在可以接受命令
-    Block Manager管理的keeping book是调度时的参考信息，会对gc等操作产生影响
-
-9. write req的fetch data和后续的translate, schedule操作到底是不是并行的？
-
-10. 打包进同一个command的transactions需要满足条件: 操作类型相同；DieID相同；plane parallel条件
-
-11. SEARCH, COMPUTE的拆分、打包粒度：
-    SEARCH：因为同一个BL上不存在累加操作，因此拆分成一根SSL底下对应的subblock
+3. PHY.send_command_to_chip函数中，没有管SEARCH和COMPUTE的命令，需要补充
+4. HIL.fetch_data函数需要实现，目前是占位
+5. 目前sq, cq和host memory的交互只是在event queue中插了个事件，没有管具体的内容是不是正确（感觉双边的指针怎么管理很容易乱啊）
+6. HIL调用PCIE接口发回结果的时候应该是以input_stream为单位操作的，每个input_stream正在回传数据的时候标记为busy，当所有stream都busy的
+时候意味着PCIe接口的并发数已经饱和，需要等待。当stream完成回传之后，标记为idle，可以继续回传下一个message。
