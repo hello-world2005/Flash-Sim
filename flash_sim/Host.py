@@ -11,7 +11,7 @@ class CQ_Entry:
         self.size = CQ_ENTRY_SIZE_BASIC
         self.timestamp = timestamp
 
-class Host(sim_object):
+class Host:
     class Memory:
         def __init__(self, queue_ptrs=None, num_of_queues=8, depth=64):
             self.storage = {}
@@ -19,9 +19,9 @@ class Host(sim_object):
             self._queue_ptrs = queue_ptrs
             self._depth = depth
 
-        def read(self, address: int) -> bytes:
-            if self.storage.get(address, None) is None:
-                raise ValueError(f"Accessing an invalid address {address} in host memory, no data found!")
+        def read(self, address: int, size: int) -> bytes:
+            if address == VIRTUAL_DATA_ADDRESS:
+                return b'\x00' * size
             return self.storage[address]
 
         def write(self, address: int, data: bytes):
@@ -35,15 +35,15 @@ class Host(sim_object):
                 ) % self._depth
 
         def get_req_data(self, req):
-            entry = self.sq_entries[req.sq_id][0]
-            if entry.type == WRITE:
-                return self.read(entry.address)
-            elif entry.type == SEARCH:
-                return self.read(entry.address)
-            elif entry.type == COMPUTE:
-                return self.read(entry.address)
+            next_req = self.sq_entries[req.sq_id][0]
+            if next_req.type == RequestType.WRITE:
+                return self.read(next_req.data_address)
+            elif next_req.type == RequestType.SEARCH:
+                return self.read(next_req.data_address)
+            elif next_req.type == RequestType.COMPUTE:
+                return self.read(next_req.data_address)
             else:
-                raise ValueError(f"{entry.type} entry has no data attached!")
+                raise ValueError(f"{next_req.type} request has no data attached!")
 
     class Queue_ptrs:
         def __init__(self, num_of_queues, depth_of_queues):
@@ -97,28 +97,24 @@ class Host(sim_object):
         self.waiting_req = Queue()
 
     def execute(self, event):
-        if event.type == REQ_INIT:
+        if event.type == EventType.REQ_INIT:
             assert event.target == self
             req = event.param
             self.submit_req(req)
-        elif event.type in [WRITE_DATA_REQ, SEARCH_DATA_REQ, COMPUTE_DATA_REQ]:
-            assert event.target == self
+        elif event.type == EventType.DELIVER:
             message = event.param
-            self.send_data(message)
-        elif event.type in [WRITE_DATA_RECEIVED, READ_REQ_RECEIVED, SEARCH_DATA_RECEIVED, COMPUTE_DATA_RECEIVED]:
-            assert event.target == self
-            message = event.param
-            self.remove_from_sq(message.sq_id)
-            if not self.queue_ptrs.is_sq_empty(message.sq_id):
-                self.send_next_req(message.sq_id)
-        elif event.type in [READ_RES_SEND_BACK, SEARCH_RES_SEND_BACK, COMPUTE_RES_SEND_BACK]:
-            assert event.target == self
-            message = event.param
-            self.memory.write(message.payload.address, message.payload.data)
-        elif event.type == REQ_COMP:
-            assert event.target == self
-            message = event.param
-            self.consume_cq(message)
+            if message.type in [MessageType.WRITE_DATA_REQ, MessageType.SEARCH_DATA_REQ, MessageType.COMPUTE_DATA_REQ]:
+                self.send_data(message)
+            elif message.type in [MessageType.WRITE_DATA_RECEIVED, MessageType.READ_REQ_RECEIVED, MessageType.SEARCH_DATA_RECEIVED, MessageType.COMPUTE_DATA_RECEIVED]:
+                self.remove_from_sq(message.payload["sq_id"])
+                if not self.queue_ptrs.is_sq_empty(message.payload["sq_id"]):
+                    self.send_next_req(message.payload["sq_id"])
+            elif message.type in [MessageType.READ_RES_SEND_BACK, MessageType.SEARCH_RES_SEND_BACK, MessageType.COMPUTE_RES_SEND_BACK]:
+                self.memory.write(message.payload["address"], message.payload["data"])
+            elif message.type == MessageType.REQ_COMP:
+                self.consume_cq(message.payload["req"])
+            else:
+                raise ValueError(f"Invalid message type: {message.type}")
     
     def remove_from_sq(self, sq_id):
         self.queue_ptrs.sq_heads[sq_id] = (
@@ -135,17 +131,17 @@ class Host(sim_object):
     def send_next_req(self, sq_id):
         next_req = self.memory.sq_pop(sq_id)
         message_type = None
-        if next_req.type == WRITE:
-            message_type = WRITE_REQ
-        elif next_req.type == READ:
-            message_type = READ_REQ
-        elif next_req.type == SEARCH:
-            message_type = SEARCH_REQ
-        elif next_req.type == COMPUTE:
-            message_type = COMPUTE_REQ
+        if next_req.type == RequestType.WRITE:
+            message_type = MessageType.WRITE_REQ
+        elif next_req.type == RequestType.READ:
+            message_type = MessageType.READ_REQ
+        elif next_req.type == RequestType.SEARCH:
+            message_type = MessageType.SEARCH_REQ
+        elif next_req.type == RequestType.COMPUTE:
+            message_type = MessageType.COMPUTE_REQ
         else: raise ValueError(f"Invalid request type: {next_req.type}")
         message = PCIe_link.PCIe_message(
-            type=message_type, payload=None, source_req=next_req, sq_id=sq_id
+            type=message_type, payload={"req": next_req}
         )
         self.pcie_link.send(message, self.pcie_link.device)
 
@@ -161,13 +157,13 @@ class Host(sim_object):
             flow.busy = True
             flow.current_req = req
             flow.sq_id = target_sq_id
-            msg_type = WRITE_REQ if req.type == WRITE else READ_REQ
-            if req.type == SEARCH:
-                msg_type = SEARCH_REQ
-            elif req.type == COMPUTE:
-                msg_type = COMPUTE_REQ
+            msg_type = MessageType.WRITE_REQ if req.type == RequestType.WRITE else MessageType.READ_REQ
+            if req.type == RequestType.SEARCH:
+                msg_type = MessageType.SEARCH_REQ
+            elif req.type == RequestType.COMPUTE:
+                msg_type = MessageType.COMPUTE_REQ
             message = PCIe_link.PCIe_message(
-                type=msg_type, payload=None, source_req=req, sq_id=target_sq_id
+                type=msg_type, payload={"req": req}
             )
             self.pcie_link.send(message, self.pcie_link.device)
 
@@ -211,13 +207,10 @@ class Host(sim_object):
         self.inform_cq_tail_update(cq_id)
 
     def send_data(self, message):
-        req = message.source_req
+        req = message.payload["req"]
         data = self.memory.get_req_data(req)
-        message = PCIe_link.PCIe_message(
-            type=WRITE_DATA if req.type == WRITE else SEARCH_DATA if req.type == SEARCH else COMPUTE_DATA,
-            payload=data,
-            source_req=req,
-            sq_id=req.sq_id
+        new_message = PCIe_link.PCIe_message(
+            type=MessageType.WRITE_DATA if req.type == RequestType.WRITE else MessageType.SEARCH_DATA if req.type == RequestType.SEARCH else MessageType.COMPUTE_DATA,
+            payload={"req": req, "data": data}
         )
-        self.pcie_link.send(message, self.pcie_link.device)
-
+        self.pcie_link.send(new_message, self.pcie_link.device)

@@ -2,55 +2,80 @@
 """公共定义：sim_object、事件类型常量、Request、Event。"""
 
 from dataclasses import dataclass, field
+import time
 from typing import Any, List, Optional
 from enum import Enum
 from .config import TimingConfig
+from __future__ import annotations
+
+class EventType(Enum):
+    # ----- 事件类型常量 -----
+    REQ_INIT = "REQ_INIT"
+    DELIVER = "DELIVER"
+    # ── PHY event type constants ─────────────────────────────────────────────────
+    PHY_READ_CMD_TRANSFERRED  = "PHY_READ_CMD_TRANSFERRED"   # cmd/addr sent → chip reads
+    PHY_WRITE_CMD_TRANSFERRED = "PHY_WRITE_CMD_TRANSFERRED"  # cmd+data sent → chip programs
+    PHY_ERASE_CMD_TRANSFERRED = "PHY_ERASE_CMD_TRANSFERRED"  # cmd sent → chip erases
+    PHY_SEARCH_CMD_TRANSFERRED = "PHY_SEARCH_CMD_TRANSFERRED"  # cmd sent → chip searches
+    PHY_COMPUTE_CMD_TRANSFERRED = "PHY_COMPUTE_CMD_TRANSFERRED"  # cmd sent → chip computes
+
+    PHY_CHIP_READ_COMPLETE    = "PHY_CHIP_READ_COMPLETE"     # chip internal read done
+    PHY_CHIP_WRITE_COMPLETE   = "PHY_CHIP_WRITE_COMPLETE"    # chip internal program done
+    PHY_CHIP_ERASE_COMPLETE   = "PHY_CHIP_ERASE_COMPLETE"   # chip internal erase done
+    PHY_CHIP_SEARCH_COMPLETE   = "PHY_CHIP_SEARCH_COMPLETE"   # chip internal search done
+    PHY_CHIP_COMPUTE_COMPLETE   = "PHY_CHIP_COMPUTE_COMPLETE"   # chip internal compute done
+
+    PHY_READ_DATA_TRANSFERRED = "PHY_READ_DATA_TRANSFERRED"  # read data back to controller
+    PHY_SEARCH_DATA_TRANSFERRED = "PHY_SEARCH_DATA_TRANSFERRED"  # search data back to controller
+    PHY_COMPUTE_DATA_TRANSFERRED = "PHY_COMPUTE_DATA_TRANSFERRED"  # compute data back to controller
+
+class MessageType(Enum):
+    # Host send, Device excute
+    WRITE_REQ = "WRITE_REQ"
+    READ_REQ = "READ_REQ"
+    SEARCH_REQ = "SEARCH_REQ"
+    COMPUTE_REQ = "COMPUTE_REQ"
+
+    WRITE_DATA = "WRITE_DATA"
+    SEARCH_DATA = "SEARCH_DATA"
+    COMPUTE_DATA = "COMPUTE_DATA"
+    # Device send, Host excute
+    WRITE_DATA_REQ = "WRITE_DATA_REQ"
+    SEARCH_DATA_REQ = "SEARCH_DATA_REQ"
+    COMPUTE_DATA_REQ = "COMPUTE_DATA_REQ"
+
+    WRITE_DATA_RECEIVED = "WRITE_DATA_RECEIVED"
+    SEARCH_DATA_RECEIVED = "SEARCH_DATA_RECEIVED"
+    COMPUTE_DATA_RECEIVED = "COMPUTE_DATA_RECEIVED"
+    READ_REQ_RECEIVED = "READ_REQ_RECEIVED"
+
+    READ_RES_SEND_BACK = "READ_RES_SEND_BACK"
+    SEARCH_RES_SEND_BACK = "SEARCH_RES_SEND_BACK"
+    COMPUTE_RES_SEND_BACK = "COMPUTE_RES_SEND_BACK"
+
+    REQ_COMP = "REQ_COMP"
 
 
-# ----- 基类 -----
-class sim_object:
-    """仿真对象基类，Host/PCIe_link/HIL 等继承，统一 execute(event) 接口。"""
-    def execute(self, event: "SimEvent") -> None:
-        """事件处理入口，子类按 event.type 分发。"""
-        raise NotImplementedError
-
-
-# ----- 事件类型常量 -----
-REQ_INIT = "REQ_INIT"
-DELIVER = "DELIVER"
-
-# PCIe message 类型（Host/Device 间）
-# Host send, Device excute
-WRITE_REQ = "WRITE_REQ"
-READ_REQ = "READ_REQ"
-SEARCH_REQ = "SEARCH_REQ"
-COMPUTE_REQ = "COMPUTE_REQ"
-
-WRITE_DATA = "WRITE_DATA"
-SEARCH_DATA = "SEARCH_DATA"
-COMPUTE_DATA = "COMPUTE_DATA"
-# Device send, Host excute
-WRITE_DATA_REQ = "WRITE_DATA_REQ"
-SEARCH_DATA_REQ = "SEARCH_DATA_REQ"
-COMPUTE_DATA_REQ = "COMPUTE_DATA_REQ"
-
-WRITE_DATA_RECEIVED = "WRITE_DATA_RECEIVED"
-SEARCH_DATA_RECEIVED = "SEARCH_DATA_RECEIVED"
-COMPUTE_DATA_RECEIVED = "COMPUTE_DATA_RECEIVED"
-READ_REQ_RECEIVED = "READ_REQ_RECEIVED"
-
-READ_RES_SEND_BACK = "READ_RES_SEND_BACK"
-SEARCH_RES_SEND_BACK = "SEARCH_RES_SEND_BACK"
-COMPUTE_RES_SEND_BACK = "COMPUTE_RES_SEND_BACK"
-
-REQ_COMP = "REQ_COMP"
-
-# 请求类型（req.type，用于 FTL/HIL）
-READ = "READ"
-WRITE = "WRITE"
-SEARCH = "SEARCH"
-COMPUTE = "COMPUTE"
+# ???
 MAPPING = "MAPPING"
+
+class RequestType(Enum):
+    # 请求类型（req.type，用于 FTL/HIL）
+    READ = "READ"
+    WRITE = "WRITE"
+    SEARCH = "SEARCH"
+    COMPUTE = "COMPUTE"
+
+class TransactionType(Enum):
+    MAPPING_READ = "MAPPING_READ"
+    MAPPING_WRITE = "MAPPING_WRITE"
+    USER_READ = "USER_READ"
+    USER_WRITE = "USER_WRITE"
+    USER_SEARCH = "USER_SEARCH"
+    USER_COMPUTE = "USER_COMPUTE"
+    GC_WRITE = "GC_WRITE"
+    GC_ERASE = "GC_ERASE"
+    GC_READ = "GC_READ"
 
 # Host Memory config
 CQ_ENTRY_SIZE_BASIC = 128
@@ -84,38 +109,49 @@ TOT_RANDOM_SECTOR_NO = SECTOR_PER_PAGE * PAGE_PER_BLOCK * BLOCK_PER_PLANE * PLAN
 CMT_SIZE = 4096
 LPA_NO_PER_MAPPING_PAGE = 512
 NUM_OF_QUEUES = 8
+VIRTUAL_DATA_ADDRESS = 0xFFFFFFFFFFFFFFFF
 
 # ----- Die Status ----------
 class DieStatus(Enum):
-    READ = 1
-    WRITE = 2
-    SEARCH = 3
-    COMPUTE = 4
-    IDLE = 0
+    READ = "READ"
+    WRITE = "WRITE"
+    SEARCH = "SEARCH"
+    COMPUTE = "COMPUTE"
+    IDLE = "IDLE"
 
 # ----- Chip Status --------
 class ChipStatus(Enum):
-    IDLE = 0
-    READ = 1
-    WRITE = 2
-    SEARCH = 3
-    COMPUTE = 4
-    ERASE = 5
-    GC_WRITE = 6
+    IDLE = "IDLE"
+    READ = "READ"
+    WRITE = "WRITE"
+    SEARCH = "SEARCH"
+    COMPUTE = "COMPUTE"
+    ERASE = "ERASE"
+    GC_WRITE = "GC_WRITE"
 
-
+@dataclass
+class Transaction:
+    source_req: Request
+    type: TransactionType
+    lpa: int = 0
+    address: FlashAddress = field(default_factory=lambda: FlashAddress(channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1))
+    bitmap: list[int] = field(default_factory=list)
+    related_transactions: list['Transaction'] = field(default_factory=list)
+    completed: bool = False
+    exec_event: Optional[SimEvent] = None
 
 # ----- Request 数据类 -----
 @dataclass
 class Request:
     """Host 下发的 IO 请求，供 Host、HIL、FTL 使用。"""
-    type: str  # READ, WRITE, SEARCH, COMPUTE, MAPPING
+    type: RequestType  # READ, WRITE, SEARCH, COMPUTE, MAPPING
     sq_id: Optional[int] = None
-    transaction_list: List[Any] = field(default_factory=list)
+    transaction_list: List[Transaction] = field(default_factory=list)
     serviced_trans: int = 0
     lha_start: int = 0   # start logical sector address
-    size: int = 0   # size of request in sectors
-    payload: Any = None
+    size: int = 0   # size of request
+    data_address: Optional[int] = None
+    data_size: Optional[int] = None
 
     def is_serviced(self) -> bool:
         """是否所有 transaction 已处理完成。"""
@@ -125,6 +161,7 @@ class Request:
             if not tr.completed:
                 return False
         return True
+
 
 @dataclass
 class FlashAddress:
@@ -139,9 +176,11 @@ class FlashAddress:
 @dataclass
 class SimEvent:
     """仿真事件：type, target, param。"""
-    type: str
+    type: EventType
     target: Any
-    param: Any
+    time: int
+    param: Optional[Any] = None
+    ignored: bool = False
 
 
 @dataclass
@@ -156,31 +195,6 @@ class GTDEntry:
 
     def set_valid_bitmap(self, lpa, value):
         self.valid_bitmap[lpa%LPA_NO_PER_MAPPING_PAGE] = value
-
-@dataclass
-class Transaction:
-    source_req: Request
-    type: str
-    lpa: int = 0
-    mvpn: int = 0
-    sector_bitmap: list[int] = field(default_factory=lambda: [0] * SECTOR_PER_PAGE) # 0: not accessed, 1: accessed
-    address: tuple = field(default_factory=lambda: (0, 0, 0, 0, 0, 0))
-    related_transactions = []
-    completed: bool = False
-
-class Transaction_WR(Transaction):
-    def __init__(self, source_req: Request, lpa: int, mvpn: int, sector_bitmap: list[int], data: bytes):
-        super().__init__(source_req, lpa, mvpn, sector_bitmap)
-        self.data = data
-
-class Transaction_RD(Transaction):
-    def __init__(self, source_req: Request, lpa: int, mvpn: int, sector_bitmap: list[int], address: FlashAddress):
-        super().__init__(source_req, lpa, mvpn, sector_bitmap, address)
-        self.type = "read"
-
-class Transaction_SEARCH(Transaction):
-    def __init__(self, source_req: Request, lpa: int, mvpn: int, sector_bitmap: list[int]):
-        super().__init__(source_req, lpa, mvpn, sector_bitmap)
         
 # ── Simulation time / event scheduling (set by Engine at startup) ──────────
 _time_provider = None       # () -> int   returns current sim time in ns
@@ -217,19 +231,3 @@ REASONABLE_TIME_SUSPEND_WRITE_FOR_READ  = 100_000
 REASONABLE_TIME_SUSPEND_ERASE_FOR_READ  = 1_000_000
 REASONABLE_TIME_SUSPEND_ERASE_FOR_WRITE = 1_000_000
 
-# ── PHY event type constants ─────────────────────────────────────────────────
-PHY_READ_CMD_TRANSFERRED  = "PHY_READ_CMD_TRANSFERRED"   # cmd/addr sent → chip reads
-PHY_WRITE_CMD_TRANSFERRED = "PHY_WRITE_CMD_TRANSFERRED"  # cmd+data sent → chip programs
-PHY_ERASE_CMD_TRANSFERRED = "PHY_ERASE_CMD_TRANSFERRED"  # cmd sent → chip erases
-PHY_SEARCH_CMD_TRANSFERRED = "PHY_SEARCH_CMD_TRANSFERRED"  # cmd sent → chip searches
-PHY_COMPUTE_CMD_TRANSFERRED = "PHY_COMPUTE_CMD_TRANSFERRED"  # cmd sent → chip computes
-
-PHY_CHIP_READ_COMPLETE    = "PHY_CHIP_READ_COMPLETE"     # chip internal read done
-PHY_CHIP_WRITE_COMPLETE   = "PHY_CHIP_WRITE_COMPLETE"    # chip internal program done
-PHY_CHIP_ERASE_COMPLETE   = "PHY_CHIP_ERASE_COMPLETE"   # chip internal erase done
-PHY_CHIP_SEARCH_COMPLETE   = "PHY_CHIP_SEARCH_COMPLETE"   # chip internal search done
-PHY_CHIP_COMPUTE_COMPLETE   = "PHY_CHIP_COMPUTE_COMPLETE"   # chip internal compute done
-
-PHY_READ_DATA_TRANSFERRED = "PHY_READ_DATA_TRANSFERRED"  # read data back to controller
-PHY_SEARCH_DATA_TRANSFERRED = "PHY_SEARCH_DATA_TRANSFERRED"  # search data back to controller
-PHY_COMPUTE_DATA_TRANSFERRED = "PHY_COMPUTE_DATA_TRANSFERRED"  # compute data back to controller

@@ -5,8 +5,8 @@ import Host
 import PCIe_link
 import Device
 import common as _common
-from common import SimEvent
-
+from common import REQ_INIT, SimEvent
+import json
 
 class Engine:
     def __init__(self):
@@ -38,3 +38,18 @@ class Engine:
     
     def Get_current_time(self):
         return self.current_time
+    
+    def Initialize_event_queue(self, trace_path: str):
+        with open(trace_path, 'r') as file:
+            trace_data = json.load(file)
+            for req in trace_data:
+                time = req['time']
+                event_type = REQ_INIT
+                target = self.host
+                param = _common.Request(type=req['type'], sq_id=None, transaction_list=[], serviced_trans=0, lha_start=req['lha_start'], size=req['size'], payload=req['payload'])
+                self.Register_event(event_type, target, param, time)
+
+    def Start_simulation(self):
+        self.Initialize_event_queue("trace.json")
+        self.Run()
+

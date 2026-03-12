@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 from queue import Queue
+from typing import Any, Optional
 
 from common import sim_object, DELIVER
+from dataclasses import dataclass
+from common import MessageType, Request
 
-
+@dataclass
 class PCIe_message:
-    def __init__(self, type, payload, source_req, sq_id=None):
-        self.type = type
-        self.payload = payload
-        self.source_req = source_req
-        self.sq_id = sq_id if sq_id is not None else (getattr(source_req, "sq_id", None))
-
+    type: MessageType
+    payload: dict[str, Any]
 
 class PCIe_link(sim_object):
     def __init__(self, host, device):

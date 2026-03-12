@@ -11,7 +11,7 @@ from PCIe_link import PCIe_message
 from Host import CQ_Entry
 
 
-class HIL(sim_object):
+class HIL:
     def __init__(self, name, host, device):
         self.name = name
         self.host = host
@@ -30,7 +30,9 @@ class HIL(sim_object):
         self.cache_manager.Start_simulation()
 
     def execute(self, event):
-        self.receive_pcie_message(event.param)
+        assert event.type == EventType.DELIVER
+        message = event.param
+        self.receive_pcie_message(message)
 
     def segment(self, req):
         """根据 req 的 lha_start 和 size 范围拆成 transaction_list。"""
@@ -38,7 +40,7 @@ class HIL(sim_object):
         if req.transaction_list:
             return
         # search and compute operation should do address translation while segmenting
-        if req.type in (SEARCH, COMPUTE):
+        if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
             start_sub_plane_id = req.lha_start - TOT_RANDOM_SECTOR_NO
             size = req.size
             for i in range(size):
@@ -48,7 +50,7 @@ class HIL(sim_object):
                 req.transaction_list.append(tr)
             return
 
-        elif req.type in (READ, WRITE, MAPPING):
+        elif req.type in (RequestType.READ, RequestType.WRITE):
             start_lha = req.lha_start
             lha_count = req.size
 
@@ -59,19 +61,19 @@ class HIL(sim_object):
             lpa_count = max(1, ceil((lha_count + head_margin_sectors) / SECTOR_PER_PAGE))
             if lpa_count == 1: # only access one page
                 bitmap = [0] * head_margin_sectors + [1] * lha_count + [0] * tail_margin_sectors
-                tr = Transaction(source_req=req, lpa=start_lpa, sector_bitmap=bitmap)
+                tr = Transaction(source_req=req, lpa=start_lpa, bitmap=bitmap)
                 req.transaction_list.append(tr)
                 return
             # access multiple pages
             for i in range(lpa_count):
                 lpa = start_lpa + i
                 if i == 0:
-                    sector_bitmap = [1] * head_margin_sectors + [0] * (SECTOR_PER_PAGE - head_margin_sectors)
+                    bitmap = [1] * head_margin_sectors + [0] * (SECTOR_PER_PAGE - head_margin_sectors)
                 elif i == lpa_count - 1:
-                    sector_bitmap = [1] * (lha_count + head_margin_sectors - tail_margin_sectors) + [0] * tail_margin_sectors
+                    bitmap = [1] * (lha_count + head_margin_sectors - tail_margin_sectors) + [0] * tail_margin_sectors
                 else:
-                    sector_bitmap = [1] * SECTOR_PER_PAGE
-                tr = Transaction(source_req=req, lpa=lpa, sector_bitmap=sector_bitmap)
+                    bitmap = [1] * SECTOR_PER_PAGE
+                tr = Transaction(source_req=req, lpa=lpa, bitmap=bitmap)
                 req.transaction_list.append(tr)
 
         raise ValueError("Unexpected req type!")
@@ -83,48 +85,35 @@ class HIL(sim_object):
         tr.completed = True
         if source_req.is_serviced():
             # 目前仅考虑把所有信息全部塞进CQ_Entry里，因此所有的req类型操作是一样的，都是发个CQ_Entry给Host
-            payload = {}
-            payload["cq_entry"] = CQ_Entry(source_req=source_req, timestamp=CURRENT_TIME())
-            payload["sq_id"] = source_req.sq_id
-            payload["tail"] = self._cq_head_tail[source_req.cq_id][1]
+            payload = {"req": source_req, "status": "completed"}
             self._cq_head_tail[source_req.cq_id][1] += 1
-            payload["new_tail"] = self._cq_head_tail[source_req.cq_id][1]
-            self.pcie_link.send(PCIe_message(type=CQ_ENTRY_SEND_BACK, payload=payload, source_req=source_req), self.host)
-            self.input_streams[source_req.sq_id].remove(source_req)
+            message = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
+            self.pcie_link.send(message, self.host)
 
 
 
     def fetch_data(self, req):
         """向 host 请求 WRITE/SEARCH/COMPUTE 所需数据"""
         message = PCIe_link.PCIe_message(
-            type=WRITE_DATA_REQ if req.type == WRITE else SEARCH_DATA_REQ if req.type == SEARCH else COMPUTE_DATA_REQ,
-            payload=None,
-            source_req=req,
-            sq_id=req.sq_id
+            type=MessageType.WRITE_DATA_REQ if req.type == RequestType.WRITE else MessageType.SEARCH_DATA_REQ if req.type == RequestType.SEARCH else MessageType.COMPUTE_DATA_REQ,
+            payload=req
         )
         self.pcie_link.send(message, self.host)
 
-    def sq_update_from_host(self, sq_id, new_head, new_tail):
-        self._sq_head_tail[sq_id] = (new_head, new_tail)
-
-    def cq_update_from_host(self, cq_id, new_head, new_tail):
-        self._cq_head_tail[cq_id] = (new_head, new_tail)
-
     def receive_pcie_message(self, message):
-        target_queue = self.input_streams[message.sq_id]
-        req = message.source_req
-        target_queue.put(req)
-        if message.type in (READ_REQ, WRITE_DATA, SEARCH_DATA, COMPUTE_DATA):
+        if message.type in (MessageType.READ_REQ, MessageType.WRITE_DATA, MessageType.SEARCH_DATA, MessageType.COMPUTE_DATA):
+            req = message.payload["req"]
             self.segment(req) # 将req拆分成transaction_list
             self.cache_manager.service(req) # 查询cache，如果命中则直接返回
             if req.is_serviced():
                 comp_msg = PCIe_link.PCIe_message(
-                    type=REQ_COMP, payload=None, source_req=req, sq_id=req.sq_id
+                    type=MessageType.REQ_COMP, payload={"req": req, "status": "completed"}
                 )
-                self._host.pcie_link.send(comp_msg, self.host)
+                self.pcie_link.send(comp_msg, self.host)
                 return
             self.ftl.handle_new_req(req)
-        elif message.type in (WRITE_REQ, SEARCH_REQ, COMPUTE_REQ):
+        elif message.type in (MessageType.WRITE_REQ, MessageType.SEARCH_REQ, MessageType.COMPUTE_REQ):
+            req = message.payload["req"]
             self.fetch_data(req)
             self.segment(req)
             self.ftl.handle_new_req(req)
@@ -166,13 +155,13 @@ class Cache_Manager:
         self.cache.Start_simulation()
 
     def service(self, req):
-        if req.type == READ:
+        if req.type == RequestType.READ:
             self.query_cache(req)
             return
-        if req.type in (WRITE, SEARCH, COMPUTE):
+        if req.type in (RequestType.WRITE, RequestType.SEARCH, RequestType.COMPUTE):
             self.write_cache(req)
             return
-        elif req.type == SEARCH or req.type == COMPUTE:
+        elif req.type == RequestType.SEARCH or req.type == RequestType.COMPUTE:
             print(f"Cache manager does not support {req.type} request")
             return
         raise TypeError("Unsupposed req type")

@@ -592,7 +592,7 @@ class Address_Mapping_Unit:
 
     def translate_and_submit(self, req: Request):
         # SEARCH and COMPUTE requests don't need to be translated
-        if req.type in (SEARCH, COMPUTE):
+        if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
             self.tsu.Prepare_trans_submission()
             for tr in req.transaction_list:
                 self.tsu.Submit_trans(tr)
@@ -608,7 +608,7 @@ class Address_Mapping_Unit:
                 self.waiting_for_mapping_trans.append(tr)
                 mvpn = tr.lpa // LPA_NO_PER_MAPPING_PAGE
                 if mvpn not in self.gtd: # cache miss and cannot find direction in gtd, which means this is the first time to access this lpa
-                    if tr.source_req.type == READ:
+                    if tr.source_req.type == RequestType.READ:
                         raise ValueError("Read request accessing non-existing mapping page")
                     else: # write on a new mapping page
                         # generate mapping write transaction to add new direction in gtd
@@ -617,7 +617,7 @@ class Address_Mapping_Unit:
                 else: # find mvpn in gtd
                     entry = self.gtd[mvpn]
                     if entry.valid_bitmap[tr.lpa % LPA_NO_PER_MAPPING_PAGE] == 0: # access an invalid direction
-                        if tr.source_req.type == READ:
+                        if tr.source_req.type == RequestType.READ:
                             raise ValueError("Read request accessing non-existing mapping page")
                         else: # mapping write
                             self.generate_mapping_write_transaction(tr, mvpn)
@@ -637,8 +637,13 @@ class Address_Mapping_Unit:
         page_address = self.block_manager.get_page_address(plane_address)
         trigger_tr.address = page_address
         # set relationship
-        write_mapping_info_tr = Transaction_WR(source_req=trigger_tr.source_req, type="mapping_write", lpa=mvpn, mvpn=mvpn, sector_bitmap=[0] * SECTOR_PER_PAGE, 
-            data=utils.translate_address_to_ppa(mapping_page_address)) # submit write mapping info transaction
+        write_mapping_info_tr = Transaction(
+            source_req=trigger_tr.source_req,
+            type=TransactionType.MAPPING_WRITE,
+            lpa=mvpn,
+            address=mapping_page_address,
+            bitmap=[0] * SECTOR_PER_PAGE
+        )
         trigger_tr.related_transactions.append(write_mapping_info_tr)
         write_mapping_info_tr.related_transactions.append(trigger_tr)
         self.tsu.Submit_trans(trigger_tr)
@@ -649,7 +654,12 @@ class Address_Mapping_Unit:
         mapping_page_address = self.gtd[mvpn].address
         access_bitmap = [0 for _ in LPA_NO_PER_MAPPING_PAGE]
         access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE // SECTOR_PER_PAGE] = 1
-        read_tr = Transaction_RD(trigger_tr.source_req, address=mapping_page_address, sector_bitmap=access_bitmap)
+        read_tr = Transaction(
+            source_req=trigger_tr.source_req,
+            type=TransactionType.MAPPING_READ,
+            address=mapping_page_address,
+            bitmap=access_bitmap
+        )
         read_tr.related_transactions.append(trigger_tr)
         trigger_tr.related_transactions.append(read_tr)
         self.tsu.Submit_trans(trigger_tr)

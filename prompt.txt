@@ -17,3 +17,44 @@ TSU.try_compute()和TSU.try_search()函数编写：
 对于search request，你需要保证每个die的每个plane中只能选中一个操作单元；对于compute request，你需要保证每个plane中选中的操作单元数量不能超过COMPUTE_MAX_PARALLEL_SL*SSL_PER_SL
 
 请根据上述要求补全try_compute, try_search, issue_search_command, issue_compute_command四个函数，在FTL.py的TSU模块中
+
+
+
+
+统一Request, Transaction, Event, Message的字段:
+
+目前Flash-Sim/flash_sim/文件夹下的工程项目存在Request, Transaction, Event, Message的字段使用不统一的问题，现在请你帮我修改代码，统一它们的字段使用。
+现规定Request, Transaction, Event, Message的字段如下：
+
+Request：
+1. type: 记录req的类型，对应common.py中的# 请求类型（req.type，用于 FTL/HIL）
+2. transaction_list：用于存储segment之后的transactions，每个元素为Transaction类型。初始时该字段为[]，在经过segment函数后这个字段中存放有transactions
+3. data_address：用于记录WRITE, SEARCH, COMPUTE类型的req的输入数据地址。READ类型req此字段为None
+4. data_size：用于记录data的数据量，以Byte为单位。READ类型req此字段为None
+5. sq_id：初始时为None，在Host.submit_req()之后该字段记录该req被分配到的SQ的id
+
+Transaction：
+1. source_req: 用于记录该transaction属于哪个req
+2. completed: 用于记录该transaction是否执行完成
+3. lpa: 用于记录该transaction访问的逻辑页地址。
+4. address: 用于记录该transaction访问的物理地址
+5. bitmap：用于记录该transaction访问物理地址时真正需要的BL是哪些，用一个list记录，在这个list中元素为1的位置是需要访问的BL索引
+6. type：用于记录该transaction的类型，具体类型在TSU.sched_priority中有
+7. exec_event：用于记录该操作在die中被执行时register的event，当该transaction被suspend，这个exec_event需要被标记成ignored = True
+
+PCIe_message:
+1. type: 用于记录Message的类型，在common.py中的line: 13-37
+2. payload: 用于记录message传输的信息是什么。不同type的message有不同的payload内容，但payload一定是一个字典，具体如下：
+    对于_REQ信息：包含需要发送的req即可
+    对于_DATA_REQ信息：包含需要fetch data的req即可
+    对于_DATA信息：payload暂时不包含data的具体内容，包含一个字典，‘req’字段为req, 'data'字段存一个data_size大小的data占位
+    对于_RES_SEND_BACK信息：payload包含需要传回的结果，此处依然不需要发真实的数据，根据chip._waiting_data_out里面的数据量大小发一个同样大小的data字段占位
+    对于_RECEIVED信息：包含字段为sq_id，将对应的flow释放即可
+    对于REQ_COMP信息：包括完成的req请求和status字段表示req执行情况
+
+Event:
+1. type: 用于记录事件类型
+2. target: 用于记录执行该事件的module
+3. time: 用于记录该事件的发生事件。该字段是优先队列event_queue中event排序的依据，time越小的event越靠近队首
+4. ignored: 用于记录该事件是否被忽略。被忽略的事件取出后将不执行。Suspend操作会用到这个字段
+5. param: 用于DELIVER类型事件记录参数，参数是message
