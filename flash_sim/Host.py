@@ -12,6 +12,19 @@ class CQ_Entry:
         self.timestamp = timestamp
 
 class Host:
+    def Validate_construction(self):
+        if self._construction_valid:
+            return
+        print("Validating Host construction...")
+        assert self.pcie_link is not None, "PCIe link is not set for Host"
+        assert self.io_flow_manager is not None, "IO flow manager is not set for Host"
+        assert self.waiting_req is not None, "Waiting request queue is not set for Host"
+        assert self.memory is not None, "Memory is not set for Host"
+        assert self.queue_ptrs is not None, "Queue pointers are not set for Host"
+        assert self.io_flows is not None, "IO flows are not set for Host"
+        self._construction_valid = True
+        print("Host construction validation complete.")
+
     class Memory:
         def __init__(self, queue_ptrs=None, num_of_queues=8, depth=64):
             self.storage = {}
@@ -82,7 +95,7 @@ class Host:
                     return flow
             return None
 
-    def __init__(self, name, num_of_queues, depth_of_queues):
+    def __init__(self, name="Host", num_of_queues=8, depth_of_queues=64):
         print("Initializing Host...")
         self.name = name
         self.num_of_queues = num_of_queues
@@ -96,6 +109,7 @@ class Host:
         self.io_flows = [self.IO_Flow(sq_id=i) for i in range(num_of_queues)]
         self.io_flow_manager = self.IO_Flow_Manager(self.io_flows)
         self.waiting_req = Queue()
+        self._construction_valid: bool = False
         print("Host initialization complete.")
 
     def execute(self, event):

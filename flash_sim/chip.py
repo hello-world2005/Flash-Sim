@@ -21,7 +21,14 @@ class FlashChip:
         Args:
             config: Flash configuration. Uses defaults if not provided.
         """
+        self._construction_valid: bool = False
         self.config = config or FlashConfig()
+
+    def Validate_construction(self):
+        if self._construction_valid:
+            return
+        assert self.config is not None, "FlashChip config is not set"
+        self._construction_valid = True
 
     @property
     def timing(self) -> TimingConfig:

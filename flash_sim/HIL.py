@@ -14,6 +14,7 @@ from .Host import CQ_Entry
 class HIL:
     def __init__(self, name, host, device):
         print("Initializing HIL...")
+        self._construction_valid: bool = False
         self.name = name
         self.host = host
         self.device = device
@@ -24,8 +25,23 @@ class HIL:
         self.ftl = FTL()
         self._sq_head_tail = [(0, 0) for _ in range(num_queues)]
         self._cq_head_tail = [(0, 0) for _ in range(num_queues)]
-        self.pcie_link = self.host.pcie_link
         print("HIL initialization complete.")
+
+    def Validate_construction(self):
+        if self._construction_valid:
+            return
+        assert self.host is not None, "HIL host is not set"
+        assert self.device is not None, "HIL device is not set"
+        assert self.input_streams is not None, "HIL input_streams is not set"
+        assert self.cache_manager is not None, "HIL cache_manager is not set"
+        assert self.ftl is not None, "HIL ftl is not set"
+        self.ftl.Validate_construction()
+        self._construction_valid = True
+
+    @property
+    def pcie_link(self):
+        """延迟获取 pcie_link，确保 Engine 注入后才使用。"""
+        return self.host.pcie_link
 
     def execute(self, event):
         assert event.type == EventType.DELIVER

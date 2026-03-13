@@ -6,6 +6,7 @@ from typing import Mapping
 from .common import *
 from .PHY import PHY
 from . import utils
+from collections import deque as deque
 
 class CMT:
     def __init__(self):
@@ -19,7 +20,7 @@ class CMT:
             return self.cache[lpa]
         return None
 
-    def write(self, lpa: int, ppa: int, dirty: bool = True):
+    def write(self, lpa: int, ppa: FlashAddress, dirty: bool = True):
         entry = cmt_entry(ppa=ppa, dirty=dirty)
         if lpa in self.cache:
             self.cache[lpa] = entry
@@ -37,9 +38,9 @@ from dataclasses import dataclass
 
 @dataclass
 class blockBKE:
-    free_pages: set      # 存储空闲页的 page_id
-    valid_pages: set     # 存储有效页的 page_id
-    invalid_pages: set   # 存储无效页的 page_id
+    free_pages: deque      # 存储空闲页的 page_id
+    valid_pages: deque     # 存储有效页的 page_id
+    invalid_pages: deque   # 存储无效页的 page_id
     write_frontier: int  # 下次写入的目标page_id
     wl_level: int        # 该block被erase的次数
     protected: bool     # 该block当前是否上锁，防止读写竞争
@@ -67,9 +68,9 @@ class Block_Manager:
                     [
                         [
                             blockBKE(
-                                free_pages=set(range(pages_per_block)),
-                                valid_pages=set(),
-                                invalid_pages=set(),
+                                free_pages=deque(list(range(pages_per_block))),
+                                valid_pages=deque(),
+                                invalid_pages=deque(),
                                 write_frontier=0,
                                 wl_level=0,
                                 protected=False,
@@ -84,6 +85,28 @@ class Block_Manager:
             for _ in range(channel_no)
         ]
         print("Block Manager initialization complete.")
+
+    def get_write_frontier(self, plane_address: FlashAddress) -> FlashAddress:
+        channel_id = plane_address.channel
+        chip_id = plane_address.chip
+        die_id = plane_address.die
+        plane_id = plane_address.plane
+        block_keeping_books = self.block_keeping_book[channel_id][chip_id][die_id][plane_id]
+        max_free_pages = -1
+        chosen_block_id = -1
+        for i in range(self.block_no_per_plane):
+            bke = block_keeping_books[i]
+            if len(bke.free_pages) > max_free_pages:
+                max_free_pages = len(bke.free_pages)
+                chosen_block_id = i
+        if chosen_block_id == -1:
+            raise ValueError(f"No free block found in plane {plane_address}")
+        bke = block_keeping_books[chosen_block_id]
+        page_id = bke.write_frontier
+        bke.free_pages.remove(page_id)
+        bke.valid_pages.append(page_id)
+        bke.write_frontier = bke.free_pages.popleft()
+        return FlashAddress(channel=channel_id, chip=chip_id, die=die_id, plane=plane_id, sub_plane=chosen_block_id, page=page_id)
 
     def get_block_bke(self, addr):
         # addr: 6 元组 (channel, chip, die, plane, block, page)，使用前 5 维索引
@@ -145,6 +168,7 @@ class TSU:
 
     def __init__(self):
         print("Initializing TSU...")
+        self._construction_valid: bool = False
         self._onfly_schedule_req_no = 0
         # Scheduling priority order (highest first)
         self.sched_priority = [
@@ -158,8 +182,8 @@ class TSU:
             TransactionType.GC_WRITE,
             TransactionType.GC_ERASE,
         ]
-        # queues[channel][chip][type] = list of Transaction
-        self.queues = [
+        # deques[channel][chip][type] = list of Transaction
+        self.deques = [
             [{key: [] for key in self.sched_priority}
              for _ in range(CHIP_PER_CHANNEL)]
             for _ in range(CHANNEL_NO)
@@ -174,6 +198,15 @@ class TSU:
         self.PHY.connect_chip_idle_signal(self._on_chip_idle)
         print("TSU initialization complete.")
 
+    def Validate_construction(self):
+        if self._construction_valid:
+            return
+        assert self.block_manager is not None, "TSU block_manager is not set"
+        assert self.PHY is not None, "TSU PHY is not set"
+        assert self.deques is not None, "TSU deques is not set"
+        self.PHY.Validate_construction()
+        self._construction_valid = True
+
     # ── Batch submission API ──────────────────────────────────────────────────
 
     def Prepare_trans_submission(self):
@@ -181,10 +214,10 @@ class TSU:
         self._onfly_schedule_req_no += 1
 
     def Submit_trans(self, trans):
-        """Enqueue a transaction to the appropriate per-chip priority queue."""
+        """Endeque a transaction to the appropriate per-chip priority deque."""
         channel = trans.address.channel
         chip    = trans.address.chip
-        self.queues[channel][chip][trans.type].append(trans)
+        self.deques[channel][chip][trans.type].append(trans)
 
     def Schedule(self):
         """Close batch and, if all batches are closed, drive scheduling.
@@ -218,9 +251,9 @@ class TSU:
         # This mirrors MQSim's logic of checking WaitingReadTXCount in Execute_simulator_event.
         for chip_no in range(CHIP_PER_CHANNEL):
             chip_id_check = (channel_id, chip_no)
-            if chip_id_check not in self._chip_bkes:
+            if chip_id_check not in self.PHY._chip_bkes:
                 raise ValueError(f"Chip {chip_id_check} not found in PHY while broadcasting channel idle")
-            bke = self._chip_bkes[chip_id_check]
+            bke = self.PHY._chip_bkes[chip_id_check]
             if not bke._waiting_data_out:
                 continue
             self.PHY._broadcast_channel_idle(channel_id)
@@ -266,7 +299,7 @@ class TSU:
 
         对标 TSU_OutOfOrder::service_read_transaction()。
         Checks chip status and, if necessary, suspends an ongoing WRITE/ERASE.
-        Picks the two highest-priority non-empty read queues as q1 / q2.
+        Picks the two highest-priority non-empty read deques as q1 / q2.
         """
         chip_bke = self.PHY.get_chip_bke(chip_id)
         chip_status = chip_bke.status
@@ -291,16 +324,16 @@ class TSU:
             else:
                 return False
 
-        chip_queues = self.queues[chip_id[0]][chip_id[1]]
+        chip_deques = self.deques[chip_id[0]][chip_id[1]]
         q1, q2 = None, None
         for key in self.sched_priority:
-            if "read" not in key:
+            if key not in [TransactionType.MAPPING_READ, TransactionType.USER_READ, TransactionType.GC_READ]:
                 continue
-            if chip_queues[key]:
+            if chip_deques[key]:
                 if q1 is None:
-                    q1 = chip_queues[key]
+                    q1 = chip_deques[key]
                 else:
-                    q2 = chip_queues[key]
+                    q2 = chip_deques[key]
                     break
 
         if q1 is None:
@@ -330,13 +363,13 @@ class TSU:
             else:
                 return False
 
-        chip_queues = self.queues[chip_id[0]][chip_id[1]]
+        chip_deques = self.deques[chip_id[0]][chip_id[1]]
         q1 = None
         for key in self.sched_priority:
-            if "write" not in key:
+            if key not in [TransactionType.USER_WRITE, TransactionType.GC_WRITE]:
                 continue
-            if chip_queues[key]:
-                q1 = chip_queues[key]
+            if chip_deques[key]:
+                q1 = chip_deques[key]
                 break
 
         if q1 is None:
@@ -354,7 +387,7 @@ class TSU:
         if chip_bke.status != ChipStatus.IDLE:
             return False
 
-        q = self.queues[chip_id[0]][chip_id[1]].get("gc_erase")
+        q = self.deques[chip_id[0]][chip_id[1]].get("gc_erase")
         if not q:
             return False
         self.issue_command(chip_id, q, None, False)
@@ -370,7 +403,7 @@ class TSU:
         if chip_bke.status != ChipStatus.IDLE:
             return False
 
-        q = self.queues[chip_id[0]][chip_id[1]].get("user_compute")
+        q = self.deques[chip_id[0]][chip_id[1]].get("user_compute")
         if not q:
             return False
         self.issue_compute_command(chip_id, q)
@@ -386,7 +419,7 @@ class TSU:
         if chip_bke.status != ChipStatus.IDLE:
             return False
 
-        q = self.queues[chip_id[0]][chip_id[1]].get("user_search")
+        q = self.deques[chip_id[0]][chip_id[1]].get("user_search")
         if not q:
             return False
         self.issue_search_command(chip_id, q)
@@ -413,7 +446,7 @@ class TSU:
         Returns True if a command was dispatched.
         """
         if not q1:
-            return False
+            return
 
         die_no = DIE_PER_CHIP
         plane_no = PLANE_PER_DIE
@@ -481,7 +514,7 @@ class TSU:
         找到第一个有候选的 die 后返回 True。
         """
         if not q:
-            raise ValueError("Issued an empty search transactions queue to PHY")
+            raise ValueError("Issued an empty search transactions deque to PHY")
 
         die_no = DIE_PER_CHIP
         plane_no = PLANE_PER_DIE
@@ -511,7 +544,7 @@ class TSU:
                     q.remove(tr)
                 self.PHY.send_command_to_chip(chip_id, dispatch_slots, False)
 
-    def issue_compute_command(self, chip_id, q: list) -> bool:
+    def issue_compute_command(self, chip_id, q: list):
         """按 die-plane 粒度选取 compute transactions 并下发给 PHY。
 
         Compute 地址最细粒度为 address[4]（sub_plane/操作单元），address[5] 恒为 0。
@@ -520,7 +553,7 @@ class TSU:
         找到第一个有候选的 die 后返回 True。
         """
         if not q:
-            raise ValueError("Issued an empty compute transactions queue to PHY")
+            raise ValueError("Issued an empty compute transactions deque to PHY")
 
         die_no = DIE_PER_CHIP
         max_per_plane = COMPUTE_MAX_PARALLEL_SL * SSL_PER_SL
@@ -570,10 +603,10 @@ class Address_Mapping_Domain:
     def query(self, transaction: Transaction) -> bool:
         entry = self.cmt.query(transaction.lpa)
         if entry is not None:
-            transaction.ppa = entry.ppa
+            transaction.address = entry.ppa
             return True
         if transaction.lpa in self.gmt:
-            transaction.ppa = self.gmt[transaction.lpa].ppa
+            transaction.address = self.gmt[transaction.lpa].ppa
             return True
         mvpn = transaction.lpa // LPA_NO_PER_MAPPING_PAGE
         if mvpn not in self.gtd:
@@ -596,6 +629,7 @@ class Address_Mapping_Unit:
         self.waiting_for_mapping_trans: list = []
         self.tsu: TSU
         self.gtd: dict[int, GTDEntry] = {}
+        self.block_manager: Block_Manager
         print("Address Mapping Unit initialization complete.")
 
     def translate_and_submit(self, req: Request):
@@ -635,14 +669,14 @@ class Address_Mapping_Unit:
         return
     
     def generate_mapping_write_transaction(self, trigger_tr: Transaction, mvpn):
-        plane_address = self.get_plane_address(mvpn)
-        mapping_page_address = self.block_manager.get_write_frontier(plane_address)
+        mapping_plane_address = self.get_plane_address_for_mvpn(mvpn) # choose a plane to store the mapping page of mvpn
+        mapping_page_address = self.block_manager.get_write_frontier(mapping_plane_address)
         entry = GTDEntry(address=mapping_page_address)
         entry.set_valid_bitmap(trigger_tr.lpa, 1)
         self.gtd[mvpn] = entry
         # get a page for user write request
-        plane_address = self.get_plane_address(trigger_tr.lpa)
-        page_address = self.block_manager.get_page_address(plane_address)
+        plane_address = self.get_plane_address_for_lpa(trigger_tr.lpa)
+        page_address = self.block_manager.get_write_frontier(plane_address)
         trigger_tr.address = page_address
         # set relationship
         write_mapping_info_tr = Transaction(
@@ -660,7 +694,7 @@ class Address_Mapping_Unit:
 
     def generate_mapping_read_transaction(self, trigger_tr: Transaction, mvpn):
         mapping_page_address = self.gtd[mvpn].address
-        access_bitmap = [0 for _ in LPA_NO_PER_MAPPING_PAGE]
+        access_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
         access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE // SECTOR_PER_PAGE] = 1
         read_tr = Transaction(
             source_req=trigger_tr.source_req,
@@ -679,10 +713,39 @@ class Address_Mapping_Unit:
         # 用 response 更新 CMT/GMT，并继续处理 waiting_read_write_trans / waiting_search_compute_req
         pass
 
+    def get_plane_address_for_mvpn(self, mvpn) -> FlashAddress:
+        """
+        choose a plane address to store the new GTDEntry for mvpn.
+        here we simply tread mvpn as a lpa and use the static address mapping scheme to get a plane address, which is not optimized but simple.
+        """
+        return self.get_plane_address_for_lpa(mvpn)
+
+    def get_plane_address_for_lpa(self, lpa) -> FlashAddress:
+        plane_id = lpa % (PLANE_PER_DIE * SL_PER_BLOCK * SSL_PER_SL * BLOCK_PER_PLANE)
+        lpa //= (PLANE_PER_DIE * SL_PER_BLOCK * SSL_PER_SL * BLOCK_PER_PLANE)
+        die_id = lpa % DIE_PER_CHIP
+        lpa //= DIE_PER_CHIP
+        chip_id = lpa % CHIP_PER_CHANNEL
+        lpa //= CHIP_PER_CHANNEL
+        channel_id = lpa % CHANNEL_NO
+        address = FlashAddress(
+            channel=channel_id,
+            chip=chip_id,
+            die=die_id,
+            plane=plane_id,
+            sub_plane=-1,
+            page=-1
+        )
+        return address
+        
+
+
+
 
 class FTL:
     def __init__(self):
         print("Initializing FTL...")
+        self._construction_valid: bool = False
         self.address_mapping_unit = Address_Mapping_Unit()
         self.gc_wl_manager = GC_WL_Manager()
         self.block_manager = Block_Manager()
@@ -693,6 +756,15 @@ class FTL:
             domain.tsu = self.tsu
         print("FTL initialization complete.")
 
+    def Validate_construction(self):
+        if self._construction_valid:
+            return
+        assert self.address_mapping_unit is not None, "FTL address_mapping_unit is not set"
+        assert self.gc_wl_manager is not None, "FTL gc_wl_manager is not set"
+        assert self.block_manager is not None, "FTL block_manager is not set"
+        assert self.tsu is not None, "FTL tsu is not set"
+        self.tsu.Validate_construction()
+        self._construction_valid = True
 
     def handle_new_req(self, req: Request):
         self.address_mapping_unit.translate_and_submit(req)

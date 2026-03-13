@@ -109,6 +109,7 @@ class PHY():
 
     def __init__(self):
         print("Initializing PHY...")
+        self._construction_valid: bool = False
         self._channel_busy: List[bool] = [False] * CHANNEL_NO
         self._chip_bkes: Dict[Tuple[int, int], ChipBKE] = {}
 
@@ -117,6 +118,13 @@ class PHY():
         self._chip_idle_cbs: List[Callable[[Tuple[int, int]], None]] = []
         self._transaction_serviced_cbs: List[Callable] = []
         print("PHY initialization complete.")
+
+    def Validate_construction(self):
+        if self._construction_valid:
+            return
+        assert self._channel_busy is not None, "PHY _channel_busy is not set"
+        assert self._chip_bkes is not None, "PHY _chip_bkes is not set"
+        self._construction_valid = True
 
     # ── Accessors ─────────────────────────────────────────────────────────────
 
@@ -189,19 +197,19 @@ class PHY():
         # 3. Schedule the appropriate command-transfer event
         if op == "read":
             finish_time = now + PHY_CMD_ADDR_TIME
-            ev = PHY_READ_CMD_TRANSFERRED
+            ev = EventType.PHY_READ_CMD_TRANSFERRED
         elif op == "write":
             finish_time = now + PHY_CMD_ADDR_TIME + PHY_DATA_IN_TIME
-            ev = PHY_WRITE_CMD_TRANSFERRED
+            ev = EventType.PHY_WRITE_CMD_TRANSFERRED
         elif op == "erase":
             finish_time = now + PHY_CMD_ADDR_TIME
-            ev = PHY_ERASE_CMD_TRANSFERRED
+            ev = EventType.PHY_ERASE_CMD_TRANSFERRED
         elif op == "search":
             finish_time = now + PHY_CMD_ADDR_TIME
-            ev = PHY_SEARCH_CMD_TRANSFERRED
+            ev = EventType.PHY_SEARCH_CMD_TRANSFERRED
         elif op == "compute":
             finish_time = now + PHY_CMD_ADDR_TIME
-            ev = PHY_COMPUTE_CMD_TRANSFERRED
+            ev = EventType.PHY_COMPUTE_CMD_TRANSFERRED
         else:
             raise ValueError(f"Invalid operation type: {op}")
 
@@ -223,17 +231,17 @@ class PHY():
 
         # ── Command/address transfer phase complete ────────────────────────────
 
-        if ev_type == PHY_READ_CMD_TRANSFERRED:
+        if ev_type == EventType.PHY_READ_CMD_TRANSFERRED:
             # Cmd+addr sent to chip; chip begins internal read; release channel.
             chip_bke.status = ChipStatus.READ
             self._channel_busy[channel_id] = False
             finish = now + T_READ_LSB
             die_bke.expected_finish_time = finish
             chip_bke.Expected_Finish_Time = finish
-            Register_event(event_type=PHY_CHIP_READ_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
+            Register_event(event_type=EventType.PHY_CHIP_READ_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
             self._broadcast_channel_idle(channel_id)
 
-        elif ev_type == PHY_WRITE_CMD_TRANSFERRED:
+        elif ev_type == EventType.PHY_WRITE_CMD_TRANSFERRED:
             # Cmd+data sent to chip; chip begins internal program; release channel.
             is_gc = "gc" in tr0_type(die_bke)
             chip_bke.status = ChipStatus.GC_WRITE if is_gc else ChipStatus.WRITE
@@ -241,53 +249,53 @@ class PHY():
             finish = now + T_PROG
             die_bke.expected_finish_time = finish
             chip_bke.Expected_Finish_Time = finish
-            Register_event(event_type=PHY_CHIP_WRITE_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
+            Register_event(event_type=EventType.PHY_CHIP_WRITE_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
             self._broadcast_channel_idle(channel_id)
 
-        elif ev_type == PHY_ERASE_CMD_TRANSFERRED:
+        elif ev_type == EventType.PHY_ERASE_CMD_TRANSFERRED:
             # Cmd sent to chip; chip begins internal erase; release channel.
             chip_bke.status = ChipStatus.ERASE
             self._channel_busy[channel_id] = False
             finish = now + T_BERS
             die_bke.expected_finish_time = finish
             chip_bke.Expected_Finish_Time = finish
-            Register_event(event_type=PHY_CHIP_ERASE_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
+            Register_event(event_type=EventType.PHY_CHIP_ERASE_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
             self._broadcast_channel_idle(channel_id)
 
-        elif ev_type == PHY_SEARCH_CMD_TRANSFERRED:
+        elif ev_type == EventType.PHY_SEARCH_CMD_TRANSFERRED:
             # Cmd sent to chip; chip begins internal search; release channel.
             chip_bke.status = ChipStatus.SEARCH
             self._channel_busy[channel_id] = False
             finish = now + T_SEARCH
             die_bke.expected_finish_time = finish
             chip_bke.Expected_Finish_Time = finish
-            Register_event(event_type=PHY_CHIP_SEARCH_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
+            Register_event(event_type=EventType.PHY_CHIP_SEARCH_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
             self._broadcast_channel_idle(channel_id)
 
-        elif ev_type == PHY_COMPUTE_CMD_TRANSFERRED:
+        elif ev_type == EventType.PHY_COMPUTE_CMD_TRANSFERRED:
             # Cmd sent to chip; chip begins internal compute; release channel.
             chip_bke.status = ChipStatus.COMPUTE
             self._channel_busy[channel_id] = False
             finish = now + T_COMPUTE
             die_bke.expected_finish_time = finish
             chip_bke.Expected_Finish_Time = finish
-            Register_event(event_type=PHY_CHIP_COMPUTE_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
+            Register_event(event_type=EventType.PHY_CHIP_COMPUTE_COMPLETE, target=self, param=(chip_id, die_id), scheduled_time=finish)
             self._broadcast_channel_idle(channel_id)
 
         # ── Chip-internal operation complete ──────────────────────────────────
 
-        elif ev_type == PHY_CHIP_READ_COMPLETE:
+        elif ev_type == EventType.PHY_CHIP_READ_COMPLETE:
             self._handle_array_execution_finished(chip_id, die_id, "read")
 
-        elif ev_type == PHY_CHIP_WRITE_COMPLETE:
+        elif ev_type == EventType.PHY_CHIP_WRITE_COMPLETE:
             self._handle_array_execution_finished(chip_id, die_id, "write")
 
-        elif ev_type == PHY_CHIP_ERASE_COMPLETE:
+        elif ev_type == EventType.PHY_CHIP_ERASE_COMPLETE:
             self._handle_array_execution_finished(chip_id, die_id, "erase")
 
         # ── Read data-out phase complete ──────────────────────────────────────
 
-        elif ev_type == PHY_READ_DATA_TRANSFERRED:
+        elif ev_type == EventType.PHY_READ_DATA_TRANSFERRED:
             # Data DMA'd from chip to controller; complete all waiting read transactions.
             for tr in chip_bke._waiting_data_out:
                 tr.completed = True
@@ -304,7 +312,7 @@ class PHY():
                     chip_bke.status = ChipStatus.IDLE
                 self._broadcast_channel_idle(channel_id)
         
-        elif ev_type == PHY_SEARCH_DATA_TRANSFERRED:
+        elif ev_type == EventType.PHY_SEARCH_DATA_TRANSFERRED:
             pass
 
     # ── Internal helpers ──────────────────────────────────────────────────────
@@ -357,11 +365,11 @@ class PHY():
         channel_id = chip_id[0]
         self._channel_busy[channel_id] = True
         if cmd_type == "read":
-            ev = PHY_READ_DATA_TRANSFERRED
+            ev = EventType.PHY_READ_DATA_TRANSFERRED
         elif cmd_type == "search":
-            ev = PHY_SEARCH_DATA_TRANSFERRED
+            ev = EventType.PHY_SEARCH_DATA_TRANSFERRED
         elif cmd_type == "compute":
-            ev = PHY_COMPUTE_DATA_TRANSFERRED
+            ev = EventType.PHY_COMPUTE_DATA_TRANSFERRED
         else:
             raise ValueError(f"Command type {cmd_type} do not need to transfer data!")
         Register_event(event_type=ev, target=self, param=chip_id, scheduled_time=CURRENT_TIME() + PHY_DATA_OUT_TIME)
@@ -385,13 +393,13 @@ class PHY():
                 finish = now + remaining
                 die_bke.expected_finish_time = finish
                 chip_bke.Expected_Finish_Time = finish
-                Register_event(PHY_CHIP_WRITE_COMPLETE, self, (chip_id, die_bke.die_id), finish)
+                Register_event(EventType.PHY_CHIP_WRITE_COMPLETE, self, (chip_id, die_bke.die_id), finish)
             elif cmd_type == "erase":
                 chip_bke.status = ChipStatus.ERASE
                 finish = now + remaining
                 die_bke.expected_finish_time = finish
                 chip_bke.Expected_Finish_Time = finish
-                Register_event(PHY_CHIP_ERASE_COMPLETE, self, (chip_id, die_bke.die_id), finish)
+                Register_event(EventType.PHY_CHIP_ERASE_COMPLETE, self, (chip_id, die_bke.die_id), finish)
             else:
                 raise ValueError(f"Calling resume for command type {cmd_type} is unreasonable!")
 
