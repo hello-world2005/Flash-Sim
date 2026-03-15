@@ -27,12 +27,12 @@ COMMAND_SCHEMA = {
         "optional": ["data_address", "data_size", "invalidate", "bitmap"],  # user_erase oper is realized by invalidate, which will invalidate related page while write nothing
     },
     "search": {
-        "required": ["time", "start_lha", "size"], # lha and size are in granularity of sub-plane
+        "required": ["time", "start_lha", "size", "data_address", "data_size"], # lha and size are in granularity of sub-plane
         "optional": ["bitmap", "wl_bitmap", "pattern"],
     },
     "compute": {
         "required": ["time", "start_lha", "size"], # lha and size are in granularity of sub-plane
-        "optional": ["bitmap", "wl_bitmap", "input"],
+        "optional": ["data_address", "data_size", "bitmap", "wl_bitmap", "input"],
     },
 }
 
