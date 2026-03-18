@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """公共定义：sim_object、事件类型常量、Request、Event。"""
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 import time
 from typing import Any, List, Optional
 from enum import Enum
-from .config import TimingConfig
+from .config import TimingConfig, FlashGeometry
 
 class EventType(Enum):
     # ----- 事件类型常量 -----
@@ -81,15 +81,15 @@ CQ_ENTRY_SIZE_BASIC = 128
 SQ_ENTRY_SIZE = 128
 
 # 硬件配置
-CHANNEL_NO = 8
-CHIP_PER_CHANNEL = 4
-DIE_PER_CHIP = 1
-PLANE_PER_DIE = 4
-BLOCK_PER_PLANE = 256
-LAYER_PER_BLOCK = 256
-SL_PER_BLOCK = 2
-SSL_PER_SL = 4
-PAGE_PER_BLOCK = LAYER_PER_BLOCK * SL_PER_BLOCK * SSL_PER_SL
+geometry = FlashGeometry()
+CHANNEL_NO = geometry.channel_no
+CHIP_PER_CHANNEL = geometry.chip_per_channel
+DIE_PER_CHIP = geometry.dies
+PLANE_PER_DIE = geometry.planes_per_die
+BLOCK_PER_PLANE = geometry.blocks_per_plane
+SL_PER_BLOCK = geometry.sl_per_block
+SSL_PER_SL = geometry.ssl_per_sl
+PAGE_PER_BLOCK = geometry.pages_per_block
 SECTOR_PER_PAGE = 64
 
 COMPUTE_MAX_PARALLEL_SL = 256
@@ -100,15 +100,33 @@ COMPUTE_BANK_PER_PLANE = BLOCK_PER_PLANE * SL_PER_BLOCK // COMPUTE_MAX_PARALLEL_
 SEARCH_BANK_PER_PLANE = SSL_PER_SL * SL_PER_BLOCK * BLOCK_PER_PLANE
 
 STATIC_CHIP_PER_CHANNEL = 1
-TOT_RANDOM_SECTOR_NO = SECTOR_PER_PAGE * PAGE_PER_BLOCK * BLOCK_PER_PLANE * PLANE_PER_DIE \
+STATIC_BASE_LHA = SECTOR_PER_PAGE * PAGE_PER_BLOCK * BLOCK_PER_PLANE * PLANE_PER_DIE \
     * DIE_PER_CHIP * CHANNEL_NO * (CHIP_PER_CHANNEL - STATIC_CHIP_PER_CHANNEL)
 
 
 # ----- 常量 -----
 CMT_SIZE = 4096
-LPA_NO_PER_MAPPING_PAGE = 512
+LPA_NO_PER_SECTOR = 4
+LPA_NO_PER_MAPPING_PAGE = LPA_NO_PER_SECTOR * SECTOR_PER_PAGE
 NUM_OF_QUEUES = 8
 VIRTUAL_DATA_ADDRESS = 0xFFFFFFFFFFFFFFFF
+
+
+
+# ── Flash timing constants (nanoseconds) ────────────────────────────────────
+PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
+PHY_DATA_IN_TIME  = 5_000        # data transfer from controller to chip (write)
+PHY_DATA_OUT_TIME = 5_000        # data transfer from chip to controller (read)
+T_READ_LSB        = TimingConfig.t_r_lsb       # chip internal LSB read latency (tR)
+T_PROG            = TimingConfig.t_prog_lsb    # chip internal program latency (tPROG)
+T_BERS            = TimingConfig.t_bers   # chip internal erase latency (tBERS)
+T_SEARCH          = TimingConfig.t_search_lsb    # chip internal search latency (tSEARCH)
+T_COMPUTE         = TimingConfig.t_compute_lsb   # chip internal compute latency (tCOMPUTE)
+
+# ── Suspension thresholds (ns) ───────────────────────────────────────────────
+REASONABLE_TIME_SUSPEND_WRITE_FOR_READ  = 100_000
+REASONABLE_TIME_SUSPEND_ERASE_FOR_READ  = 1_000_000
+REASONABLE_TIME_SUSPEND_ERASE_FOR_WRITE = 1_000_000
 
 # ----- Die Status ----------
 class DieStatus(Enum):
@@ -135,9 +153,67 @@ class Transaction:
     lpa: int = 0
     address: FlashAddress = field(default_factory=lambda: FlashAddress(channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1))
     bitmap: list[int] = field(default_factory=list)
-    related_transactions: list['Transaction'] = field(default_factory=list)
+    rely_on_transactions: list['Transaction'] = field(default_factory=list)
+    required_by_transactions: list['Transaction'] = field(default_factory=list)
     completed: bool = False
     exec_event: Optional[SimEvent] = None
+    data_ready: bool = True
+
+    def __str__(self) -> str:
+        req = self.source_req
+        source_req_brief = f"Request(type={req.type}, lha_start={req.lha_start}, size={req.size})"
+        address_str = str(self.address)
+        address_lines = "\n".join("    " + line for line in address_str.split("\n"))
+        bitmap_str = repr(self.bitmap) if len(self.bitmap) <= 8 else f"[{len(self.bitmap)} items]"
+        rely_on_transactions_brief = f"{len(self.rely_on_transactions)} transaction(s)" if self.rely_on_transactions else "[]"
+        required_by_transactions_brief = f"{len(self.required_by_transactions)} transaction(s)" if self.required_by_transactions else "[]"
+        exec_ev_brief = (f"SimEvent(type={self.exec_event.type}, time={self.exec_event.time})"
+                         if self.exec_event else "None")
+        lines = [
+            "Transaction:",
+            f"  type:                 {self.type}",
+            f"  lpa:                  {self.lpa}",
+            f"  source_req:           {source_req_brief}",
+            "  address:",
+            address_lines,
+            f"  bitmap:               {bitmap_str}",
+            f"  rely_on_transactions: {rely_on_transactions_brief}",
+            f"  required_by_transactions: {required_by_transactions_brief}",
+            f"  completed:            {self.completed}",
+            f"  exec_event:           {exec_ev_brief}",
+        ]
+        return "\n".join(lines)
+    
+    def __repr__(self) -> str:
+        req = self.source_req
+        source_req_brief = f"Request(type={req.type}, lha_start={req.lha_start}, size={req.size})"
+        rely_on_transactions_brief = f"{len(self.rely_on_transactions)} transaction(s)" if self.rely_on_transactions else "[]"
+        required_by_transactions_brief = f"{len(self.required_by_transactions)} transaction(s)" if self.required_by_transactions else "[]"
+        items = [
+            f"type={self.type},",
+            f"lpa={self.lpa},",
+            f"address={repr(self.address)},",
+            f"Transaction source_req={source_req_brief},",
+            f"bitmap={repr(self.bitmap)},",
+            f"rely_on_transactions={rely_on_transactions_brief},",
+            f"required_by_transactions={required_by_transactions_brief},",
+            f"completed={self.completed},",
+            f"exec_event={repr(self.exec_event)}",
+        ]
+        return "<" + " ".join(items) + ">"
+    
+    def __eq__(self, other: 'Transaction') -> bool:
+       if self.source_req != other.source_req:
+           return False
+       if self.type != other.type:
+           return False
+       if self.lpa != other.lpa:
+           return False
+       if self.address != other.address:
+           return False
+       if self.bitmap != other.bitmap:
+           return False
+       return True
 
 # ----- Request 数据类 -----
 @dataclass
@@ -153,6 +229,7 @@ class Request:
     data_size: Optional[int] = None
     issue_time: Optional[int] = None
     finish_time: Optional[int] = None
+    status: Optional[str] = None
 
     def is_serviced(self) -> bool:
         """是否所有 transaction 已处理完成。"""
@@ -162,6 +239,38 @@ class Request:
             if not tr.completed:
                 return False
         return True
+
+    def __str__(self) -> str:
+        if len(self.transaction_list) <= 3:
+            trans_parts = ["  " + "\n  ".join(str(t).split("\n")) for t in self.transaction_list]
+            trans_summary = "\n" + "\n".join(trans_parts)
+        else:
+            trans_summary = f"{len(self.transaction_list)} transaction(s)"
+        lines = [
+            "Request:",
+            f"  type:              {self.type}",
+            f"  sq_id:             {self.sq_id}",
+            f"  transaction_list:  {trans_summary}",
+            f"  serviced_trans:    {self.serviced_trans}",
+            f"  lha_start:         {self.lha_start}",
+            f"  size:              {self.size}",
+            f"  data_address:      {self.data_address}",
+            f"  data_size:         {self.data_size}",
+            f"  issue_time:        {self.issue_time}",
+            f"  finish_time:       {self.finish_time}",
+        ]
+        return "\n".join(lines)
+    
+    def __repr__(self) -> str:
+        items = [
+            f"Request type={self.type},",
+            f"sq_id={self.sq_id},",
+            f"transaction_list={self.transaction_list},",
+            f"serviced_trans={self.serviced_trans},",
+            f"lha_start={self.lha_start},",
+            f"size={self.size},",
+        ]
+        return "<" + " ".join(items) + ">"
 
 
 @dataclass
@@ -173,6 +282,28 @@ class FlashAddress:
     sub_plane: int
     page: int
 
+    def __str__(self) -> str:
+        lines = [
+            "FlashAddress:",
+            f"  channel:   {self.channel}",
+            f"  chip:      {self.chip}",
+            f"  die:       {self.die}",
+            f"  plane:     {self.plane}",
+            f"  sub_plane: {self.sub_plane}",
+            f"  page:      {self.page}",
+        ]
+        return "\n".join(lines)
+    def __repr__(self) -> str:
+        items = [
+            f"FlashAddress channel={self.channel},",
+            f"chip={self.chip},",
+            f"die={self.die},",
+            f"plane={self.plane},",
+            f"sub_plane={self.sub_plane},",
+            f"page={self.page},",
+        ]
+        return "<" + " ".join(items) + ">"
+
 # ----- Event 视图（供 execute(event) 使用） -----
 @dataclass
 class SimEvent:
@@ -180,25 +311,83 @@ class SimEvent:
     type: EventType
     target: Any
     time: int
-    param: Optional[Any] = None
+    param: dict[str, Any] = field(default_factory=dict)
     ignored: bool = False
 
     def __lt__(self, other: 'SimEvent') -> bool:
         return self.time < other.time
 
+    def __str__(self) -> str:
+        target_str = f"{type(self.target).__name__}(id={id(self.target)})" if self.target is not None else "None"
+        param_str = _format_param(self.param)
+        lines = [
+            "SimEvent:",
+            f"  type:    {self.type}",
+            f"  target:  {target_str}",
+            f"  time:    {self.time}",
+            f"  param:   {param_str}",
+            f"  ignored: {self.ignored}",
+        ]
+        return "\n".join(lines)
+
+
+def _format_param(param: Any, indent: str = "") -> str:
+    """将 param 格式化为可读字符串，若为多行则带缩进。"""
+    if param is None:
+        return "None"
+    if hasattr(param, "__str__") and type(param).__str__ is not object.__str__:
+        s = str(param)
+        if "\n" in s:
+            return "\n" + indent + ("\n" + indent).join(s.split("\n"))
+        return s
+    return repr(param)
+
+
+def log_execute_event(module_name: str, event: SimEvent) -> None:
+    """在 execute 开始时调用：打印当前模块名和 event 完整信息。"""
+    sep = "--------------------------------------------------------"
+    print(sep)
+    print(f"module <{module_name}> is executing event:")
+    print(event)
+    print(sep)
+
+
+def format_event_queue(event_list) -> str:
+    """将事件队列内容格式化为多行可读字符串（按 time 排序）。"""
+    events = sorted(event_list, key=lambda e: (e.time, id(e)))
+    if not events:
+        return "Event queue (0 events):\n  (empty)"
+    lines = [f"Event queue ({len(events)} events):", ""]
+    for i, ev in enumerate(events):
+        lines.append(f"========== Event [{i + 1}/{len(events)}] (time={ev.time}) ==========")
+        lines.append(str(ev))
+        lines.append("")
+    return "\n".join(lines)
+
 
 @dataclass
 class cmt_entry:
-    ppa: int
+    ppa: FlashAddress
     dirty: bool
 
 class GTDEntry:
-    def __init__(self, address) -> None:
+    def __init__(self, address, valid_lpa_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]) -> None:
         self.address = address
-        self.valid_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
+        self.valid_lpa_bitmap = valid_lpa_bitmap
+    
+    def __eq__(self, other: 'GTDEntry') -> bool:
+        return self.address == other.address and self.valid_lpa_bitmap == other.valid_lpa_bitmap
 
-    def set_valid_bitmap(self, lpa, value):
-        self.valid_bitmap[lpa%LPA_NO_PER_MAPPING_PAGE] = value
+    def set_valid_lpa_bitmap(self, lpa, value):
+        self.valid_lpa_bitmap[lpa%LPA_NO_PER_MAPPING_PAGE] = value
+    
+    def __str__(self) -> str:
+        lines = [
+            "GTDEntry:",
+            f"  address:       {self.address}",
+            f"  valid_bitmap:  {self.valid_lpa_bitmap}",
+        ]
+        return "\n".join(lines)
         
 # ── Simulation time / event scheduling (set by Engine at startup) ──────────
 _time_provider = None       # () -> int   returns current sim time in ns
@@ -219,19 +408,4 @@ def Register_event(event_type: str, target: Any, param: Any, scheduled_time: int
     else:
         raise ValueError("Event scheduler is not initialized")
 
-
-# ── Flash timing constants (nanoseconds) ────────────────────────────────────
-PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
-PHY_DATA_IN_TIME  = 5_000        # data transfer from controller to chip (write)
-PHY_DATA_OUT_TIME = 5_000        # data transfer from chip to controller (read)
-T_READ_LSB        = TimingConfig.t_r_lsb       # chip internal LSB read latency (tR)
-T_PROG            = TimingConfig.t_prog_lsb    # chip internal program latency (tPROG)
-T_BERS            = TimingConfig.t_bers   # chip internal erase latency (tBERS)
-T_SEARCH          = TimingConfig.t_search_lsb    # chip internal search latency (tSEARCH)
-T_COMPUTE         = TimingConfig.t_compute_lsb   # chip internal compute latency (tCOMPUTE)
-
-# ── Suspension thresholds (ns) ───────────────────────────────────────────────
-REASONABLE_TIME_SUSPEND_WRITE_FOR_READ  = 100_000
-REASONABLE_TIME_SUSPEND_ERASE_FOR_READ  = 1_000_000
-REASONABLE_TIME_SUSPEND_ERASE_FOR_WRITE = 1_000_000
 

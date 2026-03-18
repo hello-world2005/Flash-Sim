@@ -1,0 +1,328 @@
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773650272.316947}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773650272.316947}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773650440.262735}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773650440.262735}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773651906.0463526}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773651906.0477138}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773654894.5651572}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773654894.5671556}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773655387.9100196}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773655387.9114945}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773655671.414415}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773655671.4352033}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773657223.893893}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773657223.893893}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773657393.3476157}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773657393.4613125}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773657513.1157727}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773657513.1394045}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773658725.5804014}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773658725.6018357}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773658875.244843}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773658875.2668462}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773658969.2533877}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773658969.2533877}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773659428.479645}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773659428.4855902}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773659628.004411}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773659628.0064101}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773660590.6573703}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773660590.6593707}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773663289.088762}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773663289.088762}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773663476.211105}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773663476.213104}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_READ_CMD_TRANSFERRED", "finish_time": 755500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773663748.8206794}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773663748.8226783}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773663834.6413367}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773663834.6433368}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773663916.4216053}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773663916.4226046}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773663979.6473927}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773663979.6473927}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773664076.4275277}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773664076.4275277}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773664192.6744914}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773664192.6744914}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773664228.1895335}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773664228.1915338}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773664277.4095552}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773664277.4115553}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773664289.2499483}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773664289.2519445}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_READ_CMD_TRANSFERRED", "finish_time": 755500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773664320.324863}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5400}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773664320.325181}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 760500}}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773749380.6078882}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773749380.6117172}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773749849.9040592}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773749849.9057984}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751723.2905886}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773751723.2915888}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751771.0490088}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751813.8583803}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751813.85938}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751813.8603818}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751813.86138}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.1292045}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.1302042}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.131225}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.131225}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.1362245}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.1422253}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.1512232}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.1512232}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.1542249}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.1612236}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.1652236}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.1662235}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.1822495}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.1836417}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.1960053}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.197007}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.2183719}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.2223675}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.2323918}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.237392}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.265647}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.2666476}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.283102}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.283102}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.335239}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.340795}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.340795}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.345662}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.4029517}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.4056973}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.4239793}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.4249797}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.4741375}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.4799619}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.5171423}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.5210862}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.5899556}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.5899556}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.6560705}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.6600688}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.7535288}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.7535288}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.801742}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.801742}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.902689}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.90369}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751946.960916}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751946.964915}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.0699496}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.0699496}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.1640885}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.1650896}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.3235178}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.324516}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.3816798}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.3846805}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.5695598}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.573945}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.633513}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.638513}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.7943738}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.7953737}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751947.9354815}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751947.9398563}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751948.17794}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751948.1789389}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751948.2718127}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751948.2727797}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751948.5011406}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751948.502141}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751948.622376}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751948.6233766}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751948.9248755}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751948.9258564}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751949.0166512}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751949.0179982}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751949.3600545}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751949.361041}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751949.498757}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751949.4997373}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751949.872239}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751949.8732479}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751949.9857123}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751949.9866972}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751950.3913803}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751950.3953996}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751950.54377}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751950.544769}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751950.9174197}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751950.91842}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751951.1284087}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751951.129409}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751951.5525382}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751951.5525382}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751951.7920678}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751951.7920678}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773751952.254656}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773751952.2596827}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.39982}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5200}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773752170.4018195}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.402819}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4038196}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.4038196}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4058194}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.4058194}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4068203}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.4078207}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4078207}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.4168425}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4178414}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.4358428}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4368424}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.441844}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.442843}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.45889}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4598901}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.4839103}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.4849112}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.5090375}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.5100389}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.5310364}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.5320358}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.5660765}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.5660765}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.5920756}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.5930762}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.6399715}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.6409726}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.674892}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.675892}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.7284036}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.7284036}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.7654195}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.7654195}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.8330507}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.8345585}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.894898}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.894898}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752170.959581}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752170.959581}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.0290143}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.0295787}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.0960634}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.097063}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.1645522}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.1645522}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.2940521}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.2945755}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.3610356}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.3620334}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.5283637}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.529364}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.6245599}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.6286697}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.7570198}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.7580192}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752171.8962674}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752171.8972683}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752172.0490737}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752172.0500746}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752172.1775417}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752172.1775417}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752172.3660812}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752172.3670812}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.678164}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5200}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773752495.6801605}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.681166}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.682164}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.682164}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.6831663}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.6841645}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.6841645}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.6851656}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.6861646}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.6981955}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.6991951}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.7161956}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.7171962}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.7201967}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.7201967}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.7375214}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.7387538}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.7707174}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.7707174}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.787224}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.7882285}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.8086367}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.8096364}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.8466363}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.8476372}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.8730505}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.8740509}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.927755}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.927755}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752495.9578218}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752495.9578218}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.013006}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.0140069}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.057428}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.0584285}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.154553}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.155555}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.2311454}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.2321463}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.3022845}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.3032854}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.376466}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.3774655}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.454726}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.4560385}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.5296261}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.5296261}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.67816}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.6791615}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.7560554}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.7589269}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773752496.9163415}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773752496.91764}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773756548.3801816}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5200}}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 1, "all_unschedulable": false}, "ts": 1773756548.3811514}
+{"hypothesisId": "Q2", "location": "TSU.Schedule", "message": "onfly_reached_zero_loop_start", "data": {"onfly_after": 0}, "ts": 1773756548.3821838}
+{"hypothesisId": "Q1", "location": "TSU.Schedule", "message": "schedule_loop_done", "data": {"dispatch_count": 0, "all_unschedulable": true}, "ts": 1773756548.3831513}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5200}}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5200}}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_READ_CMD_TRANSFERRED", "finish_time": 755300}}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 5200}}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_READ_CMD_TRANSFERRED", "finish_time": 755300}}
+{"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": [0, 0], "ev": "EventType.PHY_WRITE_CMD_TRANSFERRED", "finish_time": 840400}}

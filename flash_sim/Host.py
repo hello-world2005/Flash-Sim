@@ -146,9 +146,10 @@ class Host:
                 self.memory.write(message.payload["address"], message.payload["data"])
             elif message.type == MessageType.REQ_COMP:
                 req = message.payload["req"]
-                print(f"[Host] Received REQ_COMP:\n{req}")
                 req.finish_time = CURRENT_TIME()
-                self.consume_cq(req)
+                req.status = message.payload["status"]
+                print(f"\n[Host] Received REQ_COMP:\n{req}")
+                self.queue_ptrs.cq_tails[req.sq_id] += 1
             else:
                 raise ValueError(f"Invalid message type: {message.type}")
     
@@ -240,13 +241,6 @@ class Host:
     #     )
 
     # 简单起见，当前版本不考虑nvme协议中双边sq, cq指针维护的问题，认为device可以直接读到host的指针
-
-    def consume_cq(self, cqe):
-        cq_id = getattr(cqe, "cq_id", 0)
-        self.queue_ptrs.cq_tails[cq_id] = (
-            self.queue_ptrs.cq_tails[cq_id] + 1
-        ) % self.queue_ptrs.depth
-        self.inform_cq_tail_update(cq_id)
 
     def send_data(self, message):
         req = message.payload["req"]

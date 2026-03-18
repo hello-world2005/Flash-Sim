@@ -2,15 +2,27 @@
 """SSD 设备顶层模块，包含 HIL。"""
 
 from .HIL import HIL
-
+from .FTL import FTL
+from .PHY import PHY
 
 class Device:
     def __init__(self, host):
         self._construction_valid: bool = False
         self.host = host
         self.hil = HIL(name="HIL", host=host, device=self)
+        self.ftl = FTL()
+        self.phy = PHY()
+        self.hil.ftl = self.ftl
+        self.ftl.tsu.phy = self.phy
+        self.phy.connect_channel_idle_signal(self.ftl.tsu._on_channel_idle)
+        self.phy.connect_chip_idle_signal(self.ftl.tsu._on_chip_idle)
+        self.phy.connect_transaction_serviced_signal(self.hil._on_transaction_serviced)
+        self.phy.connect_transaction_serviced_signal(self.ftl.block_manager._remove_barrier)
+        self.phy.connect_transaction_serviced_signal(self.ftl.tsu._submit_barriered_trans)
 
     def execute(self, event):
+        # from .common import log_execute_event
+        # log_execute_event(self.__class__.__name__, event)
         # 目标为 device 的事件委托给 HIL 处理（若事件 target 为 device 则 param 通常给 HIL）
         self.hil.execute(event)
 
@@ -23,6 +35,10 @@ class Device:
         print("Validating Device construction...")
         assert self.host is not None, "Device host is not set"
         assert self.hil is not None, "Device hil is not set"
-        self.hil.Validate_construction()
+        assert self.ftl is not None, "Device ftl is not set"
+        assert self.phy is not None, "Device phy is not set"
         self._construction_valid = True
+        self.ftl.Validate_construction()
+        self.phy.Validate_construction()
+        self.hil.Validate_construction()
         print("Device construction validation complete.")

@@ -44,6 +44,11 @@ def translate_lpa_to_search_address(lpa: int) -> tuple:
     channel = lpa // CHIP_PER_CHANNEL
     return (channel, chip, die, plane, search_bank)
 
+def translate_lha_to_lpa(lha: int) -> int:
+    if lha < STATIC_BASE_LHA:
+        return lha // SECTOR_PER_PAGE
+    else:
+        return lha - STATIC_BASE_LHA + STATIC_BASE_LHA // SECTOR_PER_PAGE
 
 def translate_lpa_to_search_bank_id(lpa: int) -> int:
     """返回 LPA 对应的 search_bank 编号，与 translate_lpa_to_search_address 最后一维一致。"""

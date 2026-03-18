@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
+from ipaddress import AddressValueError
 from queue import Queue
-from typing import Mapping
 
+from flash_sim import utils
 from .common import *
 from .FTL import FTL, Transaction
 from . import pcie_link as PCIe_link
-from . import utils
 from math import ceil
-from .pcie_link import PCIe_message
-from .Host import CQ_Entry
+from typing import Optional
 
 
 class HIL:
@@ -22,11 +21,9 @@ class HIL:
         num_queues = getattr(host, "num_of_queues", 8)
         self.input_streams = [Queue() for _ in range(num_queues)]
         self.cache_manager = Cache_Manager()
-        self.ftl = FTL()
-        self._sq_head_tail = [(0, 0) for _ in range(num_queues)]
-        self._cq_head_tail = [(0, 0) for _ in range(num_queues)]
+        self.ftl : FTL
         print("HIL initialization complete.")
-
+    
     def Validate_construction(self):
         if self._construction_valid:
             return
@@ -35,8 +32,9 @@ class HIL:
         assert self.input_streams is not None, "HIL input_streams is not set"
         assert self.cache_manager is not None, "HIL cache_manager is not set"
         assert self.ftl is not None, "HIL ftl is not set"
-        self.ftl.Validate_construction()
         self._construction_valid = True
+        self.ftl.Validate_construction()
+        print("HIL construction validation complete.")
 
     @property
     def pcie_link(self):
@@ -44,8 +42,10 @@ class HIL:
         return self.host.pcie_link
 
     def execute(self, event):
+        from .common import log_execute_event
+        log_execute_event(self.__class__.__name__, event)
         assert event.type == EventType.DELIVER
-        message = event.param
+        message = event.param["message"]
         self.receive_pcie_message(message)
 
     def segment(self, req):
@@ -55,13 +55,13 @@ class HIL:
             return
         # search and compute operation should do address translation while segmenting
         if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
-            start_sub_plane_id = req.lha_start - TOT_RANDOM_SECTOR_NO
             size = req.size
             for i in range(size):
-                sub_plane_id = start_sub_plane_id + i
+                sub_plane_id = start_lha + i
                 address = self.ftl.get_static_address(sub_plane_id)
+                lpa  = utils.translate_lha_to_lpa(sub_plane_id)
                 tr_type = TransactionType.USER_SEARCH if req.type == RequestType.SEARCH else TransactionType.USER_COMPUTE
-                tr = Transaction(source_req=req, type=tr_type, address=address)
+                tr = Transaction(source_req=req, type=tr_type, address=address, lpa=lpa, data_ready=False)
                 req.transaction_list.append(tr)
             return
 
@@ -83,7 +83,7 @@ class HIL:
                     tr_type = TransactionType.USER_WRITE
                 else:
                     raise ValueError(f"Invalid request type: {req.type}")
-                tr = Transaction(source_req=req, lpa=start_lpa, bitmap=bitmap, type=tr_type)
+                tr = Transaction(source_req=req, lpa=start_lpa, bitmap=bitmap, type=tr_type, data_ready=False if req.type == RequestType.WRITE else True)
                 req.transaction_list.append(tr)
                 return
             # access multiple pages
@@ -102,7 +102,7 @@ class HIL:
                     tr_type = TransactionType.USER_WRITE
                 else:
                     raise ValueError(f"Invalid request type: {req.type}")
-                tr = Transaction(source_req=req, lpa=lpa, bitmap=bitmap, type=tr_type)
+                tr = Transaction(source_req=req, lpa=lpa, bitmap=bitmap, type=tr_type, data_ready=False if req.type == RequestType.WRITE else True)
                 req.transaction_list.append(tr)
         else:
             raise ValueError("Unexpected req type!")
@@ -110,12 +110,15 @@ class HIL:
         
     def _on_transaction_serviced(self, tr): # handle trnasaction serviced signal from PHY
         # get source req of tr
+        print(f"[HIL] _on_transaction_serviced: tr: {repr(tr)}")
         source_req = tr.source_req
         tr.completed = True
         if source_req.is_serviced():
+            req_brief = f"Request(type={source_req.type}, lha_start={source_req.lha_start}, size={source_req.size})"
+            print(f"[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: {req_brief}")
             # 目前仅考虑把所有信息全部塞进CQ_Entry里，因此所有的req类型操作是一样的，都是发个CQ_Entry给Host
             payload = {"req": source_req, "status": "completed"}
-            self._cq_head_tail[source_req.cq_id][1] += 1
+            self.host.queue_ptrs.cq_tails[source_req.sq_id] += 1
             message = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
             self.pcie_link.send(message, self.host)
 
@@ -125,12 +128,12 @@ class HIL:
         """向 host 请求 WRITE/SEARCH/COMPUTE 所需数据"""
         message = PCIe_link.PCIe_message(
             type=MessageType.WRITE_DATA_REQ if req.type == RequestType.WRITE else MessageType.SEARCH_DATA_REQ if req.type == RequestType.SEARCH else MessageType.COMPUTE_DATA_REQ,
-            payload=req
+            payload={"req": req}
         )
         self.pcie_link.send(message, self.host)
 
     def receive_pcie_message(self, message):
-        if message.type in (MessageType.READ_REQ, MessageType.WRITE_DATA, MessageType.SEARCH_DATA, MessageType.COMPUTE_DATA):
+        if message.type == MessageType.READ_REQ:
             req = message.payload["req"]
             self.segment(req) # 将req拆分成transaction_list
             self.cache_manager.service(req) # 查询cache，如果命中则直接返回
@@ -146,11 +149,15 @@ class HIL:
             self.fetch_data(req)
             self.segment(req)
             self.ftl.handle_new_req(req)
+        elif message.type in (MessageType.WRITE_DATA, MessageType.SEARCH_DATA, MessageType.COMPUTE_DATA):
+            req = message.payload["req"]
+            self.broadcast_data_ready_signal(req)
+        else:
+            raise ValueError(f"Unexpected message type for HIL: {message.type}")
 
-from typing import Optional
-
-PAGE_SIZE = 4096
-
+    def broadcast_data_ready_signal(self, req):
+        for tr in req.transaction_list:
+            tr.data_ready = True
 
 class Cache:
     def __init__(self, max_entries: int = 1024):

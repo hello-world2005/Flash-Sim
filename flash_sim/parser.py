@@ -20,7 +20,7 @@ class ValidationError(Exception):
 COMMAND_SCHEMA = {
     "read": {
         "required": ["time", "start_lha", "size"],
-        "optional": [],  # address for backward compat
+        "optional": ["bitmap"],  # address for backward compat
     },
     "write": {
         "required": ["time", "start_lha", "size"],
@@ -28,11 +28,11 @@ COMMAND_SCHEMA = {
     },
     "search": {
         "required": ["time", "start_lha", "size", "data_address", "data_size"], # lha and size are in granularity of sub-plane
-        "optional": ["bitmap", "wl_bitmap", "pattern"],
+        "optional": ["bitmap", "wl_bitmap"],
     },
     "compute": {
-        "required": ["time", "start_lha", "size"], # lha and size are in granularity of sub-plane
-        "optional": ["data_address", "data_size", "bitmap", "wl_bitmap", "input"],
+        "required": ["time", "start_lha", "size", "data_address", "data_size"], # lha and size are in granularity of sub-plane
+        "optional": ["bitmap", "wl_bitmap"],
     },
 }
 

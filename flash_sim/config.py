@@ -115,7 +115,7 @@ class FlashGeometry:
     chip_per_channel: int = 4
     dies: int = 4                      # die_per_chip
     planes_per_die: int = 4
-    blocks_per_plane: int = 2048
+    blocks_per_plane: int = 64         # use a small number for debugging
     # ----- Block 内层次 -----
     layers_per_block: int = 256        # Number of layers (WL)
     sl_per_block: int = 2              # Sub-block level per block
