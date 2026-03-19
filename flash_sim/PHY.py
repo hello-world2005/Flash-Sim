@@ -5,23 +5,9 @@
 SEARCH/COMPUTE 专属操作由子类或独立路径扩展，此处仅实现 READ/WRITE/ERASE。
 """
 
+from doctest import debug
 from typing import Dict, List, Tuple, Optional, Callable
-import json
-from pathlib import Path
 from .common import *
-# #region agent log
-def _dbg_log(data: dict):
-    import os
-    bases = [Path(__file__).resolve().parent.parent, Path(__file__).resolve().parent, Path(os.getcwd())]
-    for base in bases:
-        try:
-            p = base / "debug-6da53a.log"
-            with open(p, "a", encoding="utf-8") as f:
-                f.write(json.dumps(data, ensure_ascii=False) + "\n")
-            return
-        except Exception:
-            continue
-# #endregion
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -109,7 +95,7 @@ class ChipBKE:
             die_id: DieBKE(die_id) for die_id in range(DIE_PER_CHIP)
         }
         # Transactions whose chip-internal read finished; waiting for data-out transfer
-        self._waiting_data_out: list = []
+        self._has_data_waiting: bool = False
 
     def get_die_bke(self, die_id: int) -> DieBKE:
         return self.dies[die_id]
@@ -171,12 +157,13 @@ class PHY():
         self._transaction_serviced_cbs.append(cb)
     
     def _broadcast_channel_idle(self, channel_id: int) -> None:
+        self._channel_busy[channel_id] = False
         for cb in self._channel_idle_cbs:
             cb(channel_id)
 
-    # def _broadcast_chip_idle(self, chip_id: Tuple[int, int]) -> None:
-    #     for cb in self._chip_idle_cbs:
-    #         cb(chip_id)
+    def _broadcast_chip_idle(self, chip_id: Tuple[int, int]) -> None:
+        for cb in self._chip_idle_cbs:
+            cb(chip_id)
 
     def _broadcast_transaction_serviced(self, tr) -> None:
         for cb in self._transaction_serviced_cbs:
@@ -240,9 +227,6 @@ class PHY():
         chip_bke.Expected_Finish_Time = finish_time
         self._channel_busy[channel_id] = True
         Register_event(event_type=ev, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=finish_time)
-        # #region agent log
-        _dbg_log({"hypothesisId": "H5", "location": "PHY.send_command_to_chip", "message": "Register_event", "data": {"chip_id": list(chip_id), "ev": str(ev), "finish_time": finish_time}})
-        # #endregion
 
     # ── sim_object event handler ───────────────────────────────────────────────
 
@@ -338,17 +322,20 @@ class PHY():
             # Data DMA'd from chip to controller; complete all waiting read transactions.
             for tr in transactions:
                 tr.completed = True
+                debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, tr: {tr}")
                 for required_by_tr in tr.required_by_transactions:
                     required_by_tr.rely_on_transactions.remove(tr)
+                    debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, required_by_tr: {required_by_tr}")
                 self._broadcast_transaction_serviced(tr)
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
-            chip_bke._waiting_data_out.clear()
+            chip_bke._has_data_waiting = False
             die_bke.active_command = None
             chip_bke.No_of_active_dies -= 1
             self._channel_busy[channel_id] = False
             if chip_bke.HasSuspendedCommands:
+                debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, sending resume command")
                 self._send_resume_command(chip_id)
             else:
                 if chip_bke.No_of_active_dies == 0:
@@ -364,7 +351,7 @@ class PHY():
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
-            chip_bke._waiting_data_out.clear()
+            chip_bke._has_data_waiting = False
             die_bke.active_command = None
             chip_bke.No_of_active_dies -= 1
             self._channel_busy[channel_id] = False
@@ -384,7 +371,7 @@ class PHY():
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
-            chip_bke._waiting_data_out.clear()
+            chip_bke._has_data_waiting = False
             die_bke.active_command = None
             chip_bke.No_of_active_dies -= 1
             self._channel_busy[channel_id] = False
@@ -414,9 +401,9 @@ class PHY():
         if cmd_type in ("read", "search", "compute"):
             # Queue transactions for data-out; start DMA if channel is free.
             if die_bke.active_command:
-                chip_bke._waiting_data_out.extend(transactions)
+                chip_bke._has_data_waiting = True
             if not self._channel_busy[channel_id]:
-                self._transfer_data(chip_id, die_id, cmd_type, chip_bke._waiting_data_out)
+                self._transfer_data(chip_id, die_id, cmd_type, transactions)
             # If channel busy, _broadcast_channel_idle will trigger _transfer_data
             # via TSU callback → try_activate → (no more queued work) → the waiting
             # data-out will be picked up when channel next becomes idle.
@@ -427,19 +414,22 @@ class PHY():
             if die_bke.active_command:
                 for tr in transactions:
                     tr.completed = True
+                    debug_info(f"[PHY] following tr completed: {tr}")
                     for required_by_tr in tr.required_by_transactions:
                         required_by_tr.rely_on_transactions.remove(tr) # remove reliance
+                        debug_info(f"[PHY] removing reliance by {required_by_tr}")
                     self._broadcast_transaction_serviced(tr)
             die_bke.active_command = None
             chip_bke.No_of_active_dies -= 1
 
             if chip_bke.No_of_active_dies == 0:
                 if chip_bke.HasSuspendedCommands:
+                    debug_info(f"[PHY] _handle_array_execution_finished, sending resume command")
                     self._send_resume_command(chip_id)
                 else:
+                    debug_info(f"[PHY] _handle_array_execution_finished, chip {chip_id} is idle")
                     chip_bke.status = ChipStatus.IDLE
-                    self._broadcast_channel_idle(channel_id)
-                    # self._broadcast_chip_idle(chip_id)
+                    self._broadcast_chip_idle(chip_id)
         else:
             raise ValueError(f"[PHY] _handle_array_execution_finished: Invalid command type: {cmd_type}")
 

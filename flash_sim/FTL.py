@@ -63,7 +63,6 @@ class blockBKE:
     invalid_pages: deque   # 存储无效页的 page_id
     write_frontier: int  # 下次写入的目标page_id
     wl_level: int        # 该block被erase的次数
-    page_protected: list[bool] = field(default_factory=list)     # 该block当前是否上锁，防止读写竞争
     def __init__(self, free_pages: deque, valid_pages: deque, invalid_pages: deque, write_frontier: int, wl_level: int) -> None:
         self.free_pages = free_pages
         self.valid_pages = valid_pages
@@ -98,6 +97,7 @@ class Block_Manager:
         self.block_no_per_plane = block_no_per_plane
         self.pages_per_block = pages_per_block
         self._construction_valid = False
+        self.lpa_protected_book = set()
         print("Initializing block keeping book...")
         # 结构为：channel -> chip -> die -> plane -> [blockBKE, ...]，与 address 前 5 维一致
         self.block_keeping_book = [
@@ -145,15 +145,14 @@ class Block_Manager:
         bke.write_frontier = bke.free_pages.popleft()
         return FlashAddress(channel=channel_id, chip=chip_id, die=die_id, plane=plane_id, sub_plane=chosen_block_id, page=page_id)
     
-    def set_barrier(self, tr: Transaction):
-        bke = self.get_block_bke(tr.address)
-        bke.page_protected[tr.address.page] = True
+    def _set_barrier(self, tr: Transaction):
+        debug_info(f"[Block Manager] set_barrier: tr: {repr(tr)}")
+        self.lpa_protected_book.add(tr.lpa)
 
     def _remove_barrier(self, tr: Transaction):
         if "write" in tr.type.value.lower() or "erase" in tr.type.value.lower(): # only write and erase need to remove barrier
-            print(f"[Block Manager] _remove_barrier: tr: {repr(tr)}")
-            bke = self.get_block_bke(tr.address)
-            bke.page_protected[tr.address.page] = False
+            debug_info(f"[Block Manager] _remove_barrier: tr: {repr(tr)}")
+            self.lpa_protected_book.remove(tr.lpa)
 
     def get_block_bke(self, addr: FlashAddress) -> blockBKE:
         # addr: 6 元组 (channel, chip, die, plane, block, page)，使用前 5 维索引
@@ -271,32 +270,32 @@ class TSU:
     def Prepare_trans_submission(self):
         """Open a submission batch; must be paired with Schedule()."""
         self._onfly_schedule_req_no += 1
-        print(f"Prepare_trans_submission: {self._onfly_schedule_req_no}")
+        print(f"[TSU] <Prepare_trans_submission> {self._onfly_schedule_req_no}")
 
     def Submit_trans(self, trans):
         """Endeque a transaction to the appropriate per-chip priority deque."""
-        if self.block_manager.is_protected(trans.address):
-            print(f"Submit_trans: facing barrier, address: {repr(trans.address)}, trans: {repr(trans)}")
+        if trans.lpa in self.block_manager.lpa_protected_book:
+            debug_info(f"[TSU] <Submit_trans> facing barrier, lpa: {trans.lpa}, trans: {repr(trans)}")
             self.barriered_trans.append(trans)
             return
+        debug_info(f"[TSU] <Submit_trans> submitting trans: {repr(trans)}")
         channel = trans.address.channel
         chip    = trans.address.chip
         self.queues[channel][chip][trans.type].append(trans)
 
     def Schedule(self):
         """Close batch and, if all batches are closed, drive scheduling.
-
         对标 TSU_OutOfOrder::Schedule()。
         """
-        onfly_before = self._onfly_schedule_req_no
         self._onfly_schedule_req_no -= 1
-        print(f"Schedule: {self._onfly_schedule_req_no}")
+        print(f"[TSU] <Schedule> {self._onfly_schedule_req_no}")
         if self._onfly_schedule_req_no < 0:
             raise RuntimeError("onfly_schedule_req_no should not be negative")
         if self._onfly_schedule_req_no > 0:
             return
         for ch in range(self.channel_no):
             if self.channel_is_busy(ch):
+                print(f"[TSU] <Schedule> channel {ch} is busy, move to next channel")
                 continue   # channel occupied; move to next channel
             for _ in range(self.chip_no_per_channel):
                 chip_id = (ch, self.round_robin_turn[ch])
@@ -315,15 +314,24 @@ class TSU:
         # holding data (waiting_data_out non-empty), start the data-out transfer
         # immediately before handing the channel to the TSU for new commands.
         # This mirrors MQSim's logic of checking WaitingReadTXCount in Execute_simulator_event.
+        debug_info(f"[TSU] <_on_channel_idle> handling channel {channel_id} idle")
         for chip_no in range(CHIP_PER_CHANNEL):
             chip_id_check = (channel_id, chip_no)
             if chip_id_check not in self.phy._chip_bkes:
                 raise ValueError(f"Chip {chip_id_check} not found in PHY while broadcasting channel idle")
             bke = self.phy._chip_bkes[chip_id_check]
-            if not bke._waiting_data_out:
+            if not bke._has_data_waiting:
                 continue
-            self.phy._broadcast_channel_idle(channel_id)
+            debug_info(f"[TSU] <_on_channel_idle> chip {chip_id_check} has data waiting")
+            for die_no in range(DIE_PER_CHIP):
+                die_bke = bke.get_die_bke(die_no)
+                if die_bke.active_command:
+                    debug_info(f"[TSU] <_on_channel_idle> die {die_no} sending data out")
+                    op = die_bke.active_command.cmd_type
+                    transactions = die_bke.active_command.transactions
+                    self.phy._transfer_data(chip_id_check, die_no, op, transactions)
             return
+        debug_info(f"[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips")
         for _ in range(self.chip_no_per_channel):
             chip_id = (channel_id, self.round_robin_turn[channel_id])
             self.try_activate(chip_id)
@@ -331,11 +339,13 @@ class TSU:
                 (self.round_robin_turn[channel_id] + 1) % self.chip_no_per_channel
             )
             if self.channel_is_busy(channel_id):
+                debug_info(f"[TSU] <_on_channel_idle> channel {channel_id} is busy, moving to next chip")
                 break
 
     def _on_chip_idle(self, chip_id):
         """对标 handle_chip_idle_signal(): chip 空闲且 channel 空闲时尝试激活。"""
         channel_id = chip_id[0]
+        debug_info(f"[TSU] <_on_chip_idle> handling chip {chip_id} idle")
         if not self.channel_is_busy(channel_id):
             self.try_activate(chip_id)
 
@@ -350,21 +360,27 @@ class TSU:
         if is_static:
             # SEARCH/COMPUTE-dedicated chip: handled separately
             if self.try_compute(chip_id):
-                print(f"try_activate: compute dispatched for chip {chip_id}")
+                print(f"[TSU] <try_activate> compute dispatched for chip {chip_id}")
                 dispatched = True
             if not dispatched and self.try_search(chip_id):
-                print(f"try_activate: search dispatched for chip {chip_id}")
+                print(f"[TSU] <try_activate> search dispatched for chip {chip_id}")
                 dispatched = True
             return dispatched
-        if self.try_read(chip_id):
-            print(f"try_activate: read dispatched for chip {chip_id}")
+        if not dispatched and self.try_read(chip_id):
+            print(f"[TSU] <try_activate> read dispatched for chip {chip_id}")
             dispatched = True
-        elif self.try_write(chip_id):
-            print(f"try_activate: write dispatched for chip {chip_id}")
+        else:
+            print(f"[TSU] <try_activate> read failed for chip {chip_id}")
+        if not dispatched and self.try_write(chip_id):
+            print(f"[TSU] <try_activate> write dispatched for chip {chip_id}")
             dispatched = True
-        elif self.try_erase(chip_id):
-            print(f"try_activate: erase dispatched for chip {chip_id}")
+        else:
+            print(f"[TSU] <try_activate> write failed for chip {chip_id}")
+        if not dispatched and self.try_erase(chip_id):
+            print(f"[TSU] <try_activate> erase dispatched for chip {chip_id}")
             dispatched = True
+        else:
+            print(f"[TSU] <try_activate> erase failed for chip {chip_id}")
         return dispatched
 
     # ── Per-type scheduling methods ───────────────────────────────────────────
@@ -539,13 +555,13 @@ class TSU:
             dispatch_slots: list = []
 
             for tr in list(q1):
-                if tr.address.die != die_id:
-                    continue
                 if tr.rely_on_transactions:
                     print(f"[TSU] <issue_command> tr has rely_on_transactions, skipping {repr(tr)}")
                     continue
                 if not tr.data_ready and (tr.type.value.lower() != "read"):
                     print(f"[TSU] <issue_command> data not ready, skipping {repr(tr)}")
+                    continue
+                if tr.address.die != die_id:
                     continue
                 tr_plane = tr.address.plane
                 if plane_vector & (1 << tr_plane):
@@ -563,13 +579,13 @@ class TSU:
 
             if q2 is not None and len(dispatch_slots) < plane_no:
                 for tr in list(q2):
-                    if tr.address.die != die_id:
-                        continue
                     if tr.rely_on_transactions:
                         print(f"[TSU] <issue_command> tr has rely_on_transactions, skipping {repr(tr)}")
                         continue
                     if not tr.data_ready and (tr.type.value.lower() != "read"):
                         print(f"[TSU] <issue_command> data not ready, skipping {repr(tr)}")
+                        continue
+                    if tr.address.die != die_id:
                         continue
                     tr_plane = tr.address.plane
                     if plane_vector & (1 << tr_plane):
@@ -800,9 +816,9 @@ class Address_Mapping_Unit:
                         tr.rely_on_transactions.append(write_mapping_info_tr)
                         write_mapping_info_tr.required_by_transactions.append(tr)
                         self.tsu.Submit_trans(tr)
-                        self.block_manager.set_barrier(tr)                                # barrier should be set once a write transaction is issued to prevent from a read access before this write transaction is executed
+                        self.block_manager._set_barrier(tr)                                # barrier should be set once a write transaction is issued to prevent from a read access before this write transaction is executed
                         self.tsu.Submit_trans(write_mapping_info_tr)
-                        self.block_manager.set_barrier(write_mapping_info_tr)
+                        self.block_manager._set_barrier(write_mapping_info_tr)
                     else:
                         entry = self.gtd[mvpn]
                         if entry.valid_lpa_bitmap[tr.lpa % LPA_NO_PER_MAPPING_PAGE] == 0: 
@@ -812,9 +828,9 @@ class Address_Mapping_Unit:
                             tr.rely_on_transactions.append(write_mapping_info_tr)
                             write_mapping_info_tr.required_by_transactions.append(tr)
                             self.tsu.Submit_trans(tr)
-                            self.block_manager.set_barrier(tr)
+                            self.block_manager._set_barrier(tr)
                             self.tsu.Submit_trans(write_mapping_info_tr)
-                            self.block_manager.set_barrier(write_mapping_info_tr)
+                            self.block_manager._set_barrier(write_mapping_info_tr)
                         else:
                             print("Read mapping page")
                             # we only need to read the mapping page

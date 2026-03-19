@@ -121,6 +121,7 @@ class HIL:
             self.host.queue_ptrs.cq_tails[source_req.sq_id] += 1
             message = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
             self.pcie_link.send(message, self.host)
+        debug_info(f"[HIL] _on_transaction_serviced: source_req is not serviced yet")
 
 
 
@@ -152,6 +153,7 @@ class HIL:
         elif message.type in (MessageType.WRITE_DATA, MessageType.SEARCH_DATA, MessageType.COMPUTE_DATA):
             req = message.payload["req"]
             self.broadcast_data_ready_signal(req)
+            debug_info(f"[HIL] received data for req: {req}")
         else:
             raise ValueError(f"Unexpected message type for HIL: {message.type}")
 

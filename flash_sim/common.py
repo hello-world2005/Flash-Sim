@@ -111,7 +111,7 @@ LPA_NO_PER_MAPPING_PAGE = LPA_NO_PER_SECTOR * SECTOR_PER_PAGE
 NUM_OF_QUEUES = 8
 VIRTUAL_DATA_ADDRESS = 0xFFFFFFFFFFFFFFFF
 
-
+debug_info = print
 
 # ── Flash timing constants (nanoseconds) ────────────────────────────────────
 PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
@@ -160,29 +160,7 @@ class Transaction:
     data_ready: bool = True
 
     def __str__(self) -> str:
-        req = self.source_req
-        source_req_brief = f"Request(type={req.type}, lha_start={req.lha_start}, size={req.size})"
-        address_str = str(self.address)
-        address_lines = "\n".join("    " + line for line in address_str.split("\n"))
-        bitmap_str = repr(self.bitmap) if len(self.bitmap) <= 8 else f"[{len(self.bitmap)} items]"
-        rely_on_transactions_brief = f"{len(self.rely_on_transactions)} transaction(s)" if self.rely_on_transactions else "[]"
-        required_by_transactions_brief = f"{len(self.required_by_transactions)} transaction(s)" if self.required_by_transactions else "[]"
-        exec_ev_brief = (f"SimEvent(type={self.exec_event.type}, time={self.exec_event.time})"
-                         if self.exec_event else "None")
-        lines = [
-            "Transaction:",
-            f"  type:                 {self.type}",
-            f"  lpa:                  {self.lpa}",
-            f"  source_req:           {source_req_brief}",
-            "  address:",
-            address_lines,
-            f"  bitmap:               {bitmap_str}",
-            f"  rely_on_transactions: {rely_on_transactions_brief}",
-            f"  required_by_transactions: {required_by_transactions_brief}",
-            f"  completed:            {self.completed}",
-            f"  exec_event:           {exec_ev_brief}",
-        ]
-        return "\n".join(lines)
+        return self.__repr__()
     
     def __repr__(self) -> str:
         req = self.source_req
@@ -241,25 +219,7 @@ class Request:
         return True
 
     def __str__(self) -> str:
-        if len(self.transaction_list) <= 3:
-            trans_parts = ["  " + "\n  ".join(str(t).split("\n")) for t in self.transaction_list]
-            trans_summary = "\n" + "\n".join(trans_parts)
-        else:
-            trans_summary = f"{len(self.transaction_list)} transaction(s)"
-        lines = [
-            "Request:",
-            f"  type:              {self.type}",
-            f"  sq_id:             {self.sq_id}",
-            f"  transaction_list:  {trans_summary}",
-            f"  serviced_trans:    {self.serviced_trans}",
-            f"  lha_start:         {self.lha_start}",
-            f"  size:              {self.size}",
-            f"  data_address:      {self.data_address}",
-            f"  data_size:         {self.data_size}",
-            f"  issue_time:        {self.issue_time}",
-            f"  finish_time:       {self.finish_time}",
-        ]
-        return "\n".join(lines)
+        return self.__repr__()
     
     def __repr__(self) -> str:
         items = [
