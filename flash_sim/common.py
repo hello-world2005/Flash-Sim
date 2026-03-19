@@ -150,14 +150,17 @@ class ChipStatus(Enum):
 class Transaction:
     source_req: Request
     type: TransactionType
-    lpa: int = 0
+    lpa: int # register mvpn if type is TransactionType.MAPPING_...
     address: FlashAddress = field(default_factory=lambda: FlashAddress(channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1))
-    bitmap: list[int] = field(default_factory=list)
+    bitmap: list[int] = field(default_factory=list) # register lpa bitmap if type is TransactionType.MAPPING_..., else sector bitmap
     rely_on_transactions: list['Transaction'] = field(default_factory=list)
     required_by_transactions: list['Transaction'] = field(default_factory=list)
     completed: bool = False
     exec_event: Optional[SimEvent] = None
     data_ready: bool = True
+    payload: list[int] = field(default_factory=list) # register data if type is TransactionType.USER_..., else payload for mapping write
+    response: Optional[list[int]] = None # register response data when necessary
+
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -173,6 +176,7 @@ class Transaction:
             f"address={repr(self.address)},",
             f"Transaction source_req={source_req_brief},",
             f"bitmap={repr(self.bitmap)},",
+            f"response={repr(self.response)},",
             f"rely_on_transactions={rely_on_transactions_brief},",
             f"required_by_transactions={required_by_transactions_brief},",
             f"completed={self.completed},",

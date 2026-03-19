@@ -100,6 +100,11 @@ class ChipBKE:
     def get_die_bke(self, die_id: int) -> DieBKE:
         return self.dies[die_id]
 
+class PageData:
+    def __init__(self):
+        self.function = None
+        self.data = None
+        self.lpa = None
 
 # ── PHY class ─────────────────────────────────────────────────────────────────
 
@@ -124,7 +129,23 @@ class PHY():
         self._channel_idle_cbs: List[Callable[[int], None]] = []
         self._chip_idle_cbs: List[Callable[[Tuple[int, int]], None]] = []
         self._transaction_serviced_cbs: List[Callable] = []
-
+        # _storage[channel][chip][die][plane][block][page] = list of SECTOR_PER_PAGE sector data (int or None)
+        self._storage: List = [
+            [
+                [
+                    [
+                        [
+                            [PageData() for _ in range(PAGE_PER_BLOCK)]
+                            for _ in range(BLOCK_PER_PLANE)
+                        ]
+                        for _ in range(PLANE_PER_DIE)
+                    ]
+                    for _ in range(DIE_PER_CHIP)
+                ]
+                for _ in range(CHIP_PER_CHANNEL)
+            ]
+            for _ in range(CHANNEL_NO)
+        ]
 
         print("PHY initialization complete.")
 
@@ -319,21 +340,23 @@ class PHY():
         # ── Read data-out phase complete ──────────────────────────────────────
 
         elif ev_type == EventType.PHY_READ_DATA_TRANSFERRED:
+            chip_bke = self.get_chip_bke(chip_id)
+            die_bke = chip_bke.get_die_bke(die_id)
+            channel_id = chip_id[0]
+            chip_bke.No_of_active_dies -= 1
+            self._channel_busy[channel_id] = False
+            chip_bke._has_data_waiting = False
+            die_bke.active_command = None
             # Data DMA'd from chip to controller; complete all waiting read transactions.
             for tr in transactions:
                 tr.completed = True
+                data = self._read_from_storage(tr.type, tr.address, tr.bitmap)
+                tr.response = data
                 debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, tr: {tr}")
                 for required_by_tr in tr.required_by_transactions:
                     required_by_tr.rely_on_transactions.remove(tr)
                     debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, required_by_tr: {required_by_tr}")
                 self._broadcast_transaction_serviced(tr)
-            chip_bke = self.get_chip_bke(chip_id)
-            die_bke = chip_bke.get_die_bke(die_id)
-            channel_id = chip_id[0]
-            chip_bke._has_data_waiting = False
-            die_bke.active_command = None
-            chip_bke.No_of_active_dies -= 1
-            self._channel_busy[channel_id] = False
             if chip_bke.HasSuspendedCommands:
                 debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, sending resume command")
                 self._send_resume_command(chip_id)
@@ -414,6 +437,8 @@ class PHY():
             if die_bke.active_command:
                 for tr in transactions:
                     tr.completed = True
+                    if tr.type == TransactionType.MAPPING_WRITE:
+                        self._write_to_storage(tr.type, tr.address, tr.payload, tr.lpa)
                     debug_info(f"[PHY] following tr completed: {tr}")
                     for required_by_tr in tr.required_by_transactions:
                         required_by_tr.rely_on_transactions.remove(tr) # remove reliance
@@ -483,6 +508,41 @@ class PHY():
                 raise ValueError(f"Calling resume for command type {cmd_type} is unreasonable!")
 
         chip_bke.HasSuspendedCommands = False
+    
+    # ---------------- PHY storage transaction ----------------------
+    def _write_to_storage(self, type: TransactionType, address: FlashAddress, data: list[int], lpa: int) -> None:
+        channel_id = address.channel
+        chip_id = address.chip
+        die_id = address.die
+        plane_id = address.plane
+        sub_plane_id = address.sub_plane
+        page_id = address.page
+        pagedata = self._storage[channel_id][chip_id][die_id][plane_id][sub_plane_id][page_id]
+        pagedata.data = data
+        pagedata.lpa = lpa
+        if type == TransactionType.MAPPING_WRITE:
+            pagedata.function = "mapping"
+        else:
+            pagedata.function = "user"
+    
+    def _read_from_storage(self, type: TransactionType, address: FlashAddress, bitmap: list[int]) -> list[int]:
+        if type != TransactionType.MAPPING_READ:
+            return []
+        channel_id = address.channel
+        chip_id = address.chip
+        die_id = address.die
+        plane_id = address.plane
+        sub_plane_id = address.sub_plane
+        page_id = address.page
+        pagedata = self._storage[channel_id][chip_id][die_id][plane_id][sub_plane_id][page_id]
+        if len(pagedata.data) != len(bitmap):
+            raise ValueError(f"Data length mismatch, data: {len(pagedata.data)}, bitmap: {len(bitmap)}")
+        data = []
+        for i in range(len(bitmap)):
+            if bitmap[i] == 0:
+                continue
+            data.append(pagedata.data[i])
+        return data
 
 
 # ── Module-level utility ──────────────────────────────────────────────────────

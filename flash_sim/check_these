@@ -51,3 +51,13 @@ Event:
 3. time: 用于记录该事件的发生事件。该字段是优先队列event_queue中event排序的依据，time越小的event越靠近队首
 4. ignored: 用于记录该事件是否被忽略。被忽略的事件取出后将不执行。Suspend操作会用到这个字段
 5. param: 用于DELIVER类型事件记录参数，参数是message
+
+
+
+functions to add:
+1. partial page update by write, need to generate a related read transaction
+2. gc unit
+3. check multi-queue arrangement
+4. add static write support and read support for static region
+5. static region configuration
+6. !!! revise the transformation between address and ppa !!!

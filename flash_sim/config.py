@@ -117,11 +117,11 @@ class FlashGeometry:
     planes_per_die: int = 4
     blocks_per_plane: int = 64         # use a small number for debugging
     # ----- Block 内层次 -----
-    layers_per_block: int = 256        # Number of layers (WL)
+    layers_per_block: int = 128        # Number of layers (WL)
     sl_per_block: int = 2              # Sub-block level per block
     ssl_per_sl: int = 4                # Sub-sub-block per SL
     sub_blocks_per_block: int = 8      # = sl_per_block * ssl_per_sl
-    sector_per_page: int = 64
+    sector_per_page: int = 16
     # ----- 计算/搜索并行与 Bank -----
     compute_max_parallel_sl: int = 256
     search_max_parallel_wl: int = 256

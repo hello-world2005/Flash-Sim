@@ -4,6 +4,7 @@ from nt import access
 from typing import Mapping
 from pathlib import Path
 import json
+from collections import defaultdict
 
 from .common import *
 # #region agent log
@@ -97,7 +98,7 @@ class Block_Manager:
         self.block_no_per_plane = block_no_per_plane
         self.pages_per_block = pages_per_block
         self._construction_valid = False
-        self.lpa_protected_book = set()
+        self.lpa_protected_book = dict[int, Transaction]()
         print("Initializing block keeping book...")
         # 结构为：channel -> chip -> die -> plane -> [blockBKE, ...]，与 address 前 5 维一致
         self.block_keeping_book = [
@@ -147,12 +148,12 @@ class Block_Manager:
     
     def _set_barrier(self, tr: Transaction):
         debug_info(f"[Block Manager] set_barrier: tr: {repr(tr)}")
-        self.lpa_protected_book.add(tr.lpa)
+        self.lpa_protected_book[tr.lpa] = tr
 
     def _remove_barrier(self, tr: Transaction):
         if "write" in tr.type.value.lower() or "erase" in tr.type.value.lower(): # only write and erase need to remove barrier
-            debug_info(f"[Block Manager] _remove_barrier: tr: {repr(tr)}")
-            self.lpa_protected_book.remove(tr.lpa)
+            debug_info(f"[Block Manager] <_remove_barrier> tr: {repr(tr)}")
+            self.lpa_protected_book.pop(tr.lpa)
 
     def get_block_bke(self, addr: FlashAddress) -> blockBKE:
         # addr: 6 元组 (channel, chip, die, plane, block, page)，使用前 5 维索引
@@ -241,18 +242,20 @@ class TSU:
         self.barriered_trans = []
         print("TSU initialization complete.")
     
-    def _submit_barriered_trans(self, tr_removing_barrier: Transaction):
-        if tr_removing_barrier.type not in [TransactionType.USER_WRITE, TransactionType.MAPPING_WRITE, TransactionType.GC_WRITE, TransactionType.GC_ERASE]:
-            return
-        print(f"[TSU] _submit_barriered_trans: following tr is removing barrier: {repr(tr_removing_barrier)}")
-        # 按 address 收集要提交的 transaction，再按 id 移除，避免 list.remove(tr) 触发
-        # Transaction.__eq__ 递归比较 rely_on_transactions/required_by_transactions 导致栈溢出
-        to_submit = [tr for tr in self.barriered_trans if tr.lpa == tr_removing_barrier.lpa]
-        for tr in to_submit:
-            self.Submit_trans(tr)
-            print(f"[TSU] _submit_barriered_trans: submitted tr: {repr(tr)}")
-        ids_to_remove = {id(tr) for tr in to_submit}
-        self.barriered_trans = [t for t in self.barriered_trans if id(t) not in ids_to_remove]
+    def _removing_barrier(self, tr: Transaction):
+        self.Prepare_trans_submission()                 
+        # removing barrier set by tr
+        if tr.type in [TransactionType.USER_WRITE, TransactionType.MAPPING_WRITE, TransactionType.GC_WRITE, TransactionType.GC_ERASE]:
+            print(f"[TSU] <_removing_barrier> following tr is removing barrier: {repr(tr)}")
+            # 按 address 收集要提交的 transaction，再按 id 移除，避免 list.remove(tr) 触发
+            # Transaction.__eq__ 递归比较 rely_on_transactions/required_by_transactions 导致栈溢出
+            to_submit = [tr for tr in self.barriered_trans if tr.lpa == tr.lpa]
+            for tr in to_submit:
+                self.Submit_trans(tr)
+            ids_to_remove = {id(tr) for tr in to_submit}
+            self.barriered_trans = [t for t in self.barriered_trans if id(t) not in ids_to_remove]
+        self.Schedule()
+        return
 
     def Validate_construction(self):
         if self._construction_valid:
@@ -274,7 +277,7 @@ class TSU:
 
     def Submit_trans(self, trans):
         """Endeque a transaction to the appropriate per-chip priority deque."""
-        if trans.lpa in self.block_manager.lpa_protected_book:
+        if trans.lpa in self.block_manager.lpa_protected_book.keys() and self.block_manager.lpa_protected_book[trans.lpa] != trans:
             debug_info(f"[TSU] <Submit_trans> facing barrier, lpa: {trans.lpa}, trans: {repr(trans)}")
             self.barriered_trans.append(trans)
             return
@@ -749,13 +752,40 @@ class Address_Mapping_Unit:
         print("Initializing Address Mapping Unit...")
         self._construction_valid: bool = False
         self.domains = [Address_Mapping_Domain() for _ in range(NUM_OF_QUEUES)]
-        self.waiting_for_mapping_trans: list = []
+        self.waiting_for_mapping_trans: dict[int, list[Transaction]] = defaultdict(list)
         self.tsu: TSU
         self.gtd: dict[int, GTDEntry] = {}
         self.block_manager: Block_Manager
         for domain in self.domains:
             domain.gtd = self.gtd
-        
+    
+    def _handle_mapping_read_response(self, tr: Transaction):
+        # handle response for tr waiting mapping info
+        if tr.type == TransactionType.MAPPING_READ:
+            print(f"[AMU] <_handle_mapping_read_response> response tr: {repr(tr)}")
+            self.tsu.Prepare_trans_submission()
+            arriving_lpa = []
+            for i in range(len(tr.bitmap)):
+                if tr.bitmap[i] == 0:
+                    continue
+                lpa = i + tr.lpa * LPA_NO_PER_MAPPING_PAGE
+                arriving_lpa.append(lpa) 
+            debug_info(f"[AMU] <_handle_mapping_read_response> arriving_lpa: {arriving_lpa}, response: {tr.response}")
+            if len(arriving_lpa) != len(tr.response):
+                raise ValueError(f"Arriving lpa number mismatch, arriving_lpa: {arriving_lpa}, response: {tr.response}")
+            for i in range(len(arriving_lpa)):
+                lpa = arriving_lpa[i]
+                ppa = tr.response[i]
+                waiting_trs = self.waiting_for_mapping_trans[lpa]
+                debug_info(f"[AMU] <_handle_mapping_read_response> number of waiting trs: {len(waiting_trs)}")
+                for waiting_tr in waiting_trs:
+                    waiting_tr.address = self.translate_ppa_to_address(ppa)
+                    debug_info(f"[AMU] <_handle_mapping_read_response> submitted waiting tr: {repr(waiting_tr)}")
+                    self.tsu.Submit_trans(waiting_tr)
+                self.waiting_for_mapping_trans[lpa].clear()
+            self.tsu.Schedule()
+        return
+    
     def translate_and_submit(self, req: Request):
         # SEARCH and COMPUTE requests don't need to be translated
         print(f"[AMU] translate_and_submit: handling new request: {repr(req)}")
@@ -775,7 +805,7 @@ class Address_Mapping_Unit:
                     self.tsu.Submit_trans(tr)
                 else:
                     print("Cache miss")
-                    self.waiting_for_mapping_trans.append(tr)
+                    self.waiting_for_mapping_trans[tr.lpa].append(tr)
                     mvpn = tr.lpa // LPA_NO_PER_MAPPING_PAGE
                     if mvpn not in self.gtd:
                         raise ValueError("Read request accessing non-existing mapping page")
@@ -786,7 +816,6 @@ class Address_Mapping_Unit:
                     read_tr = self.generate_mapping_read_transaction(tr, mvpn)
                     tr.rely_on_transactions.append(read_tr)
                     read_tr.required_by_transactions.append(tr)
-                    self.tsu.Submit_trans(tr)
                     self.tsu.Submit_trans(read_tr)
         elif req.type == RequestType.WRITE:
             for tr in req.transaction_list:
@@ -795,7 +824,7 @@ class Address_Mapping_Unit:
                     self.tsu.Submit_trans(tr)
                 else:
                     print("Cache miss")
-                    self.waiting_for_mapping_trans.append(tr)
+                    self.waiting_for_mapping_trans[tr.lpa].append(tr)
                     mvpn = tr.lpa // LPA_NO_PER_MAPPING_PAGE
                     lpa_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
                     lpa_bitmap[tr.lpa % LPA_NO_PER_MAPPING_PAGE] = 1
@@ -810,12 +839,17 @@ class Address_Mapping_Unit:
                         plane_address = self.get_plane_address_for_lpa(tr.lpa)
                         page_address = self.block_manager.get_write_frontier(plane_address)
                         tr.address = page_address
+                        debug_info(f"[AMU] <translate_and_submit> tr got user write page address: {repr(tr)}")
+                        debug_info(f"[AMU] <translate_and_submit> ppa: {self.translate_address_to_ppa(tr.address)}")
                         # add an entry in cmt
                         domain.cmt.write(tr.lpa, page_address, dirty=False)
                         # set relationship
+                        ppa = self.translate_address_to_ppa(tr.address)
+                        write_mapping_info_tr.payload = [None for _ in range(LPA_NO_PER_MAPPING_PAGE)]
+                        write_mapping_info_tr.payload[tr.lpa % LPA_NO_PER_MAPPING_PAGE] = ppa
+
                         tr.rely_on_transactions.append(write_mapping_info_tr)
                         write_mapping_info_tr.required_by_transactions.append(tr)
-                        self.tsu.Submit_trans(tr)
                         self.block_manager._set_barrier(tr)                                # barrier should be set once a write transaction is issued to prevent from a read access before this write transaction is executed
                         self.tsu.Submit_trans(write_mapping_info_tr)
                         self.block_manager._set_barrier(write_mapping_info_tr)
@@ -827,7 +861,6 @@ class Address_Mapping_Unit:
                             write_mapping_info_tr = self.generate_mapping_write_transaction(tr, mvpn, lpa_bitmap, new_page=False)
                             tr.rely_on_transactions.append(write_mapping_info_tr)
                             write_mapping_info_tr.required_by_transactions.append(tr)
-                            self.tsu.Submit_trans(tr)
                             self.block_manager._set_barrier(tr)
                             self.tsu.Submit_trans(write_mapping_info_tr)
                             self.block_manager._set_barrier(write_mapping_info_tr)
@@ -838,6 +871,8 @@ class Address_Mapping_Unit:
                             read_tr.required_by_transactions.append(tr)
                             tr.rely_on_transactions.append(read_tr)
                             self.tsu.Submit_trans(tr)
+                            self.block_manager._set_barrier(tr)
+                            self.block_manager._set_barrier(read_tr)
                             self.tsu.Submit_trans(read_tr)
         else:
             raise ValueError("Invalid request type for translate_and_submit")
@@ -850,13 +885,12 @@ class Address_Mapping_Unit:
         if new_page: # the mvpn has no mapping page for it, we need to find a new page to store this mapping page
             mapping_plane_address = self.get_plane_address_for_mvpn(mvpn) # choose a plane to store the mapping page of mvpn
             mapping_page_address = self.block_manager.get_write_frontier(mapping_plane_address)
-            sector_bitmap = self.translate_lpa_bitmap_to_sector_bitmap(lpa_bitmap)
             write_mapping_info_tr = Transaction(
                 source_req=trigger_tr.source_req,
                 type=TransactionType.MAPPING_WRITE,
                 lpa=mvpn,
                 address=mapping_page_address,
-                bitmap=sector_bitmap,
+                bitmap=lpa_bitmap,
                 data_ready=True
             )
             return write_mapping_info_tr
@@ -871,7 +905,7 @@ class Address_Mapping_Unit:
                 data_ready=True
             )
             new_lpa_bitmap = [valid_lpa_bitmap[i] or lpa_bitmap[i] for i in range(LPA_NO_PER_MAPPING_PAGE)]
-            write_mapping_info_tr.bitmap = self.translate_lpa_bitmap_to_sector_bitmap(new_lpa_bitmap)
+            write_mapping_info_tr.bitmap = new_lpa_bitmap
             self.gtd[mvpn].valid_lpa_bitmap = new_lpa_bitmap # update the valid lpa bitmap of the mapping page
             if lpa_bitmap != new_lpa_bitmap: # we need to read the mapping page to get mapping info of other lpa
                 read_tr = self.generate_mapping_read_transaction(trigger_tr, mvpn)
@@ -879,19 +913,11 @@ class Address_Mapping_Unit:
                 read_tr.required_by_transactions.append(write_mapping_info_tr)
                 self.tsu.Submit_trans(read_tr)
             return write_mapping_info_tr
-    
-    def translate_lpa_bitmap_to_sector_bitmap(self, lpa_bitmap: list[int]) -> list[int]:
-        sector_bitmap = [0 for _ in range(SECTOR_PER_PAGE)]
-        for i in range(LPA_NO_PER_MAPPING_PAGE):
-            if lpa_bitmap[i] == 1:
-                sector_bitmap[i // LPA_NO_PER_SECTOR] = 1
-        return sector_bitmap
 
     def generate_mapping_read_transaction(self, trigger_tr: Transaction, mvpn) -> Transaction:
         mapping_page_address = self.gtd[mvpn].address
         access_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
-        access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE // SECTOR_PER_PAGE] = 1
-        access_bitmap = self.translate_lpa_bitmap_to_sector_bitmap(access_bitmap)
+        access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE] = 1
         read_tr = Transaction(
             source_req=trigger_tr.source_req,
             type=TransactionType.MAPPING_READ,
@@ -934,6 +960,30 @@ class Address_Mapping_Unit:
             page=-1
         )
         return address
+
+    def translate_address_to_ppa(self, address: FlashAddress) -> int:
+        channel_id = address.channel
+        chip_id = address.chip
+        die_id = address.die
+        plane_id = address.plane
+        sub_plane_id = address.sub_plane
+        page_id = address.page
+        return (((((channel_id * CHIP_PER_CHANNEL + chip_id) * DIE_PER_CHIP + die_id) * PLANE_PER_DIE + plane_id) * BLOCK_PER_PLANE + sub_plane_id) * PAGE_PER_BLOCK + page_id)
+
+
+    def translate_ppa_to_address(self, ppa: int) -> FlashAddress:
+        page_id = ppa % PAGE_PER_BLOCK
+        ppa //= PAGE_PER_BLOCK
+        sub_plane_id = ppa % BLOCK_PER_PLANE
+        ppa //= BLOCK_PER_PLANE
+        plane_id = ppa % PLANE_PER_DIE
+        ppa //= PLANE_PER_DIE
+        die_id = ppa % DIE_PER_CHIP
+        ppa //= DIE_PER_CHIP
+        chip_id = ppa % CHIP_PER_CHANNEL
+        channel_id = ppa // CHIP_PER_CHANNEL
+        return FlashAddress(channel=channel_id, chip=chip_id, die=die_id, plane=plane_id, sub_plane=sub_plane_id, page=page_id)
+
 
 class FTL:
     def Validate_construction(self):

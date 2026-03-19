@@ -148,7 +148,7 @@ class Host:
                 req = message.payload["req"]
                 req.finish_time = CURRENT_TIME()
                 req.status = message.payload["status"]
-                print(f"\n[Host] Received REQ_COMP:\n{req}")
+                print(f"\n[Host] Received REQ_COMP:{req}\n")
                 self.queue_ptrs.cq_tails[req.sq_id] += 1
             else:
                 raise ValueError(f"Invalid message type: {message.type}")

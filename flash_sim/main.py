@@ -64,5 +64,5 @@ if __name__ == "__main__":
         print(f"Simulation time: {sim_engine.Get_current_time()}")
         print(format_event_queue(sim_engine.event_queue.queue))
         # print_tsu_chip_queues(sim_engine)
-        print("\n\naddress_mapping_unit.gtd:")
-        print(sim_engine.device.ftl.address_mapping_unit.gtd)
+        # print("\n\naddress_mapping_unit.gtd:")
+        # print(sim_engine.device.ftl.address_mapping_unit.gtd)
