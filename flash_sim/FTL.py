@@ -770,7 +770,7 @@ class TSU:
 
 class Address_Mapping_Domain:
     def __init__(self):
-        self.cmt = CMT()
+        self.cmt: CMT
         self.gmt: dict[int, cmt_entry] = {}
         self.DepartingEntry = []
         self.ArrivingEntry = []
@@ -821,16 +821,28 @@ class Address_Mapping_Unit:
         self.domains = [Address_Mapping_Domain() for _ in range(NUM_OF_QUEUES)]
         self.waiting_for_mapping_trans: dict[int, list[Transaction]] = defaultdict(list)
         self.tsu: TSU
+        self.cmt: CMT
         self.gtd: dict[int, GTDEntry] = {}
         self.block_manager: Block_Manager
         for domain in self.domains:
             domain.gtd = self.gtd
+        if CMT_TYPE == "seperated":
+            for domain in self.domains:
+                domain.cmt = CMT()
+            self.cmt = None
+        elif CMT_TYPE == "shared":
+            self.cmt = CMT()
+            for domain in self.domains:
+                domain.cmt = self.cmt
+        else:
+            raise ValueError(f"Invalid CMT type: {CMT_TYPE}")
     
     def _handle_mapping_read_response(self, tr: Transaction):
         # handle response for tr waiting mapping info
         if tr.type == TransactionType.MAPPING_READ:
             print(f"[AMU] <_handle_mapping_read_response> response tr: {repr(tr)}")
             self.tsu.Prepare_trans_submission()
+            # get arriving lpa in the finished mapping read transaction
             arriving_lpa = []
             for i in range(len(tr.bitmap)):
                 if tr.bitmap[i] == 0:
@@ -838,19 +850,24 @@ class Address_Mapping_Unit:
                 lpa = i + tr.lpa * LPA_NO_PER_MAPPING_PAGE
                 arriving_lpa.append(lpa) 
             debug_info(f"[AMU] <_handle_mapping_read_response> arriving_lpa: {arriving_lpa}, response: {tr.response}")
+            # check if the arriving lpa number matches the response number
             if len(arriving_lpa) != len(tr.response):
                 raise ValueError(f"Arriving lpa number mismatch, arriving_lpa: {arriving_lpa}, response: {tr.response}")
+            # submit the waiting transactions for the arriving lpa, and update the cmt meanwhile
             for i in range(len(arriving_lpa)):
                 lpa = arriving_lpa[i]
                 ppa = tr.response[i]
                 waiting_trs = self.waiting_for_mapping_trans[lpa]
                 debug_info(f"[AMU] <_handle_mapping_read_response> number of waiting trs: {len(waiting_trs)}")
                 for waiting_tr in waiting_trs:
-                    waiting_tr.address = self.translate_ppa_to_address(ppa)
-                    debug_info(f"[AMU] <_handle_mapping_read_response> submitted waiting tr: {repr(waiting_tr)}")
+                    address = self.translate_ppa_to_address(ppa)
+                    waiting_tr.address = address
+                    domain = self.domains[waiting_tr.source_req.sq_id]
+                    domain.cmt.write(lpa, address, dirty=False)
                     self.tsu.Submit_trans(waiting_tr)
                 self.waiting_for_mapping_trans[lpa].clear()
             self.tsu.Schedule()
+        debug_info(f"[AMU] <_handle_mapping_read_response> done")
         return
     
     def translate_and_submit(self, req: Request):
@@ -1004,10 +1021,6 @@ class Address_Mapping_Unit:
         )
         return read_tr
 
-
-    def handle_mapping_read_response(self, response):
-        # 用 response 更新 CMT/GMT，并继续处理 waiting_read_write_trans / waiting_search_compute_req
-        pass
 
     def get_plane_address_for_mvpn(self, mvpn) -> FlashAddress:
         """

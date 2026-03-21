@@ -1,0 +1,1273 @@
+Initializing simulation engine...
+Initializing Host...
+Host initialization complete.
+Initializing HIL...
+HIL initialization complete.
+Initializing FTL...
+Initializing Address Mapping Unit...
+Initializing GC/WL Manager...
+GC/WL Manager initialization complete.
+Initializing Block Manager...
+Initializing block keeping book...
+Block Manager initialization complete.
+Initializing TSU...
+TSU initialization complete.
+FTL initialization complete.
+Initializing PHY...
+PHY initialization complete.
+Engine initialization complete.
+Module construction complete.
+
+
+Validating Host construction...
+Host construction validation complete.
+Validating Device construction...
+Validating TSU construction...
+Validating Block Manager construction...
+Block Manager construction validation complete.
+TSU construction validation complete.
+HIL construction validation complete.
+Device construction validation complete.
+Construction validation complete.
+[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=0
+[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=100
+Event queue initialization complete.
+
+
+Event queue (2 events):
+
+========== Event [1/2] (time=0) ==========
+SimEvent:
+  type:    EventType.REQ_INIT
+  target:  Host(id=2884804944544)
+  time:    0
+  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
+  ignored: False
+
+========== Event [2/2] (time=100) ==========
+SimEvent:
+  type:    EventType.REQ_INIT
+  target:  Host(id=2884804944544)
+  time:    100
+  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
+  ignored: False
+
+--------------------------------------------------------
+
+Starting simulation...
+
+--------------------------------------------------------
+
+--------------------------------------------------------
+module <Host> is executing event:
+SimEvent:
+  type:    EventType.REQ_INIT
+  target:  Host(id=2884804944544)
+  time:    0
+  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 0, Register_event: type=EventType.DELIVER, scheduled_time=100
+--------------------------------------------------------
+module <Host> is executing event:
+SimEvent:
+  type:    EventType.REQ_INIT
+  target:  Host(id=2884804944544)
+  time:    100
+  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <PCIe_link> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    100
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000029FADA5E0C0>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <HIL> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    100
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000029FADA5E0C0>, 'message': PCIe_message(type=<MessageType.WRITE_REQ: 'WRITE_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>})}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200
+[AMU] translate_and_submit: handling new request: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
+[TSU] <Prepare_trans_submission> 1
+Cache miss
+New mapping page
+[AMU] <translate_and_submit> tr got user write page address: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[AMU] <translate_and_submit> ppa: 1024
+[Block Manager] set_barrier: tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=1 transaction(s), required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <Submit_trans> submitting trans: <type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>
+[Block Manager] set_barrier: tr: <type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>
+[AMU] <translate_and_submit> Prepare trans submission complete
+[TSU] <Schedule> 0
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <issue_command> q1: [<type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> dispatching 1 transactions to PHY
+[Engine] Time = 100, Register_event: type=EventType.PHY_WRITE_CMD_TRANSFERRED, scheduled_time=5200
+[TSU] <try_activate> write dispatched for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[AMU] <translate_and_submit> TSU Schedule complete
+[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200
+--------------------------------------------------------
+module <PCIe_link> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    200
+  param:   {'target': <flash_sim.Host.Host object at 0x0000029FABC622A0>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <Host> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    200
+  param:   {'target': <flash_sim.Host.Host object at 0x0000029FABC622A0>, 'message': PCIe_message(type=<MessageType.WRITE_DATA_REQ: 'WRITE_DATA_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=1 transaction(s), required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>})}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <PCIe_link> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    200
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000029FADA5E0C0>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <HIL> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    200
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000029FADA5E0C0>, 'message': PCIe_message(type=<MessageType.READ_REQ: 'READ_REQ'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[], lha_start=4096, size=1, issue_time=100, finish_time=None, status=None,>})}
+  ignored: False
+--------------------------------------------------------
+[AMU] translate_and_submit: handling new request: <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=100, finish_time=None, status=None,>
+[TSU] <Prepare_trans_submission> 1
+Cache miss
+Read mapping page
+[TSU] <Submit_trans> facing barrier, lpa: 0, trans: <type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>
+[AMU] <translate_and_submit> Prepare trans submission complete
+[TSU] <Schedule> 0
+[TSU] <Schedule> channel 0 is busy, move to next channel
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[AMU] <translate_and_submit> TSU Schedule complete
+[Engine] Time = 200, Register_event: type=EventType.DELIVER, scheduled_time=300
+--------------------------------------------------------
+module <PCIe_link> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    300
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000029FADA5E0C0>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <HIL> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    300
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000029FADA5E0C0>, 'message': PCIe_message(type=<MessageType.WRITE_DATA: 'WRITE_DATA'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=1 transaction(s), required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>, 'data': [11]})}
+  ignored: False
+--------------------------------------------------------
+[HIL] <broadcast_data_ready_signal> req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=1 transaction(s), required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
+[TSU] <Prepare_trans_submission> 1
+[TSU] <Schedule> 0
+[TSU] <Schedule> channel 0 is busy, move to next channel
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[HIL] <broadcast_data_ready_signal> done
+[HIL] received data for req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=1 transaction(s), required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_WRITE_CMD_TRANSFERRED
+  target:  PHY(id=2884804950352)
+  time:    5200
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 5200, Register_event: type=EventType.PHY_CHIP_WRITE_COMPLETE, scheduled_time=755200
+[TSU] <_on_channel_idle> handling channel 0 idle
+[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_CHIP_WRITE_COMPLETE
+  target:  PHY(id=2884804950352)
+  time:    755200
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[PHY] following tr completed: <type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=True, exec_event=None>
+[PHY] removing reliance by <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[HIL] _on_transaction_serviced: tr: <type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: source_req is not serviced yet
+[AMU] <_handle_mapping_read_response> done
+[Block Manager] <_remove_barrier> tr: <type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=True, exec_event=None>
+[TSU] <Prepare_trans_submission> 1
+[TSU] <_removing_barrier> following tr is removing barrier: <type=TransactionType.MAPPING_WRITE, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=True, exec_event=None>
+[TSU] <Submit_trans> submitting trans: <type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>
+[TSU] <Schedule> 0
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[PHY] _handle_array_execution_finished, chip (0, 0) is idle
+[TSU] <_on_chip_idle> handling chip (0, 0) idle
+[TSU] <issue_command> q1: [<type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> dispatching 1 transactions to PHY
+[Engine] Time = 755200, Register_event: type=EventType.PHY_READ_CMD_TRANSFERRED, scheduled_time=755300
+[TSU] <try_activate> read dispatched for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_READ_CMD_TRANSFERRED
+  target:  PHY(id=2884804950352)
+  time:    755300
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 755300, Register_event: type=EventType.PHY_CHIP_READ_COMPLETE, scheduled_time=830300
+[TSU] <_on_channel_idle> handling channel 0 idle
+[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_CHIP_READ_COMPLETE
+  target:  PHY(id=2884804950352)
+  time:    830300
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 830300, Register_event: type=EventType.PHY_READ_DATA_TRANSFERRED, scheduled_time=835300
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_READ_DATA_TRANSFERRED
+  target:  PHY(id=2884804950352)
+  time:    835300
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[PHY] PHY_READ_DATA_TRANSFERRED, tr: <type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=[1024], rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=True, exec_event=None>
+[PHY] PHY_READ_DATA_TRANSFERRED, required_by_tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[HIL] _on_transaction_serviced: tr: <type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=[1024], rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: source_req is not serviced yet
+[AMU] <_handle_mapping_read_response> response tr: <type=TransactionType.MAPPING_READ, lpa=0, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=[1024], rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=True, exec_event=None>
+[TSU] <Prepare_trans_submission> 1
+[AMU] <_handle_mapping_read_response> arriving_lpa: [64], response: [1024]
+[AMU] <_handle_mapping_read_response> number of waiting trs: 2
+[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <Submit_trans> facing barrier, lpa: 64, trans: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <Schedule> 0
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[AMU] <_handle_mapping_read_response> done
+[TSU] <Prepare_trans_submission> 1
+[TSU] <Schedule> 0
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[TSU] <_on_channel_idle> handling channel 0 idle
+[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> dispatching 1 transactions to PHY
+[Engine] Time = 835300, Register_event: type=EventType.PHY_WRITE_CMD_TRANSFERRED, scheduled_time=840400
+[TSU] <try_activate> write dispatched for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+[TSU] <_on_channel_idle> channel 0 is busy, moving to next chip
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_WRITE_CMD_TRANSFERRED
+  target:  PHY(id=2884804950352)
+  time:    840400
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 840400, Register_event: type=EventType.PHY_CHIP_WRITE_COMPLETE, scheduled_time=1590400
+[TSU] <_on_channel_idle> handling channel 0 idle
+[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_CHIP_WRITE_COMPLETE
+  target:  PHY(id=2884804950352)
+  time:    1590400
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[PHY] following tr completed: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.WRITE, lha_start=4096, size=1)
+[Engine] Time = 1590400, Register_event: type=EventType.DELIVER, scheduled_time=1590500
+[AMU] <_handle_mapping_read_response> done
+[Block Manager] <_remove_barrier> tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[TSU] <Prepare_trans_submission> 1
+[TSU] <_removing_barrier> following tr is removing barrier: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <Schedule> 0
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[PHY] _handle_array_execution_finished, chip (0, 0) is idle
+[TSU] <_on_chip_idle> handling chip (0, 0) idle
+[TSU] <issue_command> q1: [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> dispatching 1 transactions to PHY
+[Engine] Time = 1590400, Register_event: type=EventType.PHY_READ_CMD_TRANSFERRED, scheduled_time=1590500
+[TSU] <try_activate> read dispatched for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+--------------------------------------------------------
+module <PCIe_link> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    1590500
+  param:   {'target': <flash_sim.Host.Host object at 0x0000029FABC622A0>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <Host> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    1590500
+  param:   {'target': <flash_sim.Host.Host object at 0x0000029FABC622A0>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>, 'status': 'completed'})}
+  ignored: False
+--------------------------------------------------------
+
+[Host] Received REQ_COMP:<Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=1590500, status=completed,>
+
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_READ_CMD_TRANSFERRED
+  target:  PHY(id=2884804950352)
+  time:    1590500
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 1590500, Register_event: type=EventType.PHY_CHIP_READ_COMPLETE, scheduled_time=1665500
+[TSU] <_on_channel_idle> handling channel 0 idle
+[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_CHIP_READ_COMPLETE
+  target:  PHY(id=2884804950352)
+  time:    1665500
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[Engine] Time = 1665500, Register_event: type=EventType.PHY_READ_DATA_TRANSFERRED, scheduled_time=1670500
+--------------------------------------------------------
+module <PHY> is executing event:
+SimEvent:
+  type:    EventType.PHY_READ_DATA_TRANSFERRED
+  target:  PHY(id=2884804950352)
+  time:    1670500
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  ignored: False
+--------------------------------------------------------
+[PHY] PHY_READ_DATA_TRANSFERRED, tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=[], rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=[], rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.READ, lha_start=4096, size=1)
+[Engine] Time = 1670500, Register_event: type=EventType.DELIVER, scheduled_time=1670600
+[AMU] <_handle_mapping_read_response> done
+[TSU] <Prepare_trans_submission> 1
+[TSU] <Schedule> 0
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+[TSU] <try_activate> read failed for chip (1, 0)
+[TSU] <try_activate> write failed for chip (1, 0)
+[TSU] <try_activate> erase failed for chip (1, 0)
+[TSU] <try_activate> read failed for chip (1, 1)
+[TSU] <try_activate> write failed for chip (1, 1)
+[TSU] <try_activate> erase failed for chip (1, 1)
+[TSU] <try_activate> read failed for chip (1, 2)
+[TSU] <try_activate> write failed for chip (1, 2)
+[TSU] <try_activate> erase failed for chip (1, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
+[TSU] <try_activate> compute failed for chip (1, 3)
+[TSU] <try_activate> search failed for chip (1, 3)
+[TSU] <try_activate> static write failed for chip (1, 3)
+[TSU] <try_activate> read failed for chip (2, 0)
+[TSU] <try_activate> write failed for chip (2, 0)
+[TSU] <try_activate> erase failed for chip (2, 0)
+[TSU] <try_activate> read failed for chip (2, 1)
+[TSU] <try_activate> write failed for chip (2, 1)
+[TSU] <try_activate> erase failed for chip (2, 1)
+[TSU] <try_activate> read failed for chip (2, 2)
+[TSU] <try_activate> write failed for chip (2, 2)
+[TSU] <try_activate> erase failed for chip (2, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
+[TSU] <try_activate> compute failed for chip (2, 3)
+[TSU] <try_activate> search failed for chip (2, 3)
+[TSU] <try_activate> static write failed for chip (2, 3)
+[TSU] <try_activate> read failed for chip (3, 0)
+[TSU] <try_activate> write failed for chip (3, 0)
+[TSU] <try_activate> erase failed for chip (3, 0)
+[TSU] <try_activate> read failed for chip (3, 1)
+[TSU] <try_activate> write failed for chip (3, 1)
+[TSU] <try_activate> erase failed for chip (3, 1)
+[TSU] <try_activate> read failed for chip (3, 2)
+[TSU] <try_activate> write failed for chip (3, 2)
+[TSU] <try_activate> erase failed for chip (3, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
+[TSU] <try_activate> compute failed for chip (3, 3)
+[TSU] <try_activate> search failed for chip (3, 3)
+[TSU] <try_activate> static write failed for chip (3, 3)
+[TSU] <try_activate> read failed for chip (4, 0)
+[TSU] <try_activate> write failed for chip (4, 0)
+[TSU] <try_activate> erase failed for chip (4, 0)
+[TSU] <try_activate> read failed for chip (4, 1)
+[TSU] <try_activate> write failed for chip (4, 1)
+[TSU] <try_activate> erase failed for chip (4, 1)
+[TSU] <try_activate> read failed for chip (4, 2)
+[TSU] <try_activate> write failed for chip (4, 2)
+[TSU] <try_activate> erase failed for chip (4, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
+[TSU] <try_activate> compute failed for chip (4, 3)
+[TSU] <try_activate> search failed for chip (4, 3)
+[TSU] <try_activate> static write failed for chip (4, 3)
+[TSU] <try_activate> read failed for chip (5, 0)
+[TSU] <try_activate> write failed for chip (5, 0)
+[TSU] <try_activate> erase failed for chip (5, 0)
+[TSU] <try_activate> read failed for chip (5, 1)
+[TSU] <try_activate> write failed for chip (5, 1)
+[TSU] <try_activate> erase failed for chip (5, 1)
+[TSU] <try_activate> read failed for chip (5, 2)
+[TSU] <try_activate> write failed for chip (5, 2)
+[TSU] <try_activate> erase failed for chip (5, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
+[TSU] <try_activate> compute failed for chip (5, 3)
+[TSU] <try_activate> search failed for chip (5, 3)
+[TSU] <try_activate> static write failed for chip (5, 3)
+[TSU] <try_activate> read failed for chip (6, 0)
+[TSU] <try_activate> write failed for chip (6, 0)
+[TSU] <try_activate> erase failed for chip (6, 0)
+[TSU] <try_activate> read failed for chip (6, 1)
+[TSU] <try_activate> write failed for chip (6, 1)
+[TSU] <try_activate> erase failed for chip (6, 1)
+[TSU] <try_activate> read failed for chip (6, 2)
+[TSU] <try_activate> write failed for chip (6, 2)
+[TSU] <try_activate> erase failed for chip (6, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
+[TSU] <try_activate> compute failed for chip (6, 3)
+[TSU] <try_activate> search failed for chip (6, 3)
+[TSU] <try_activate> static write failed for chip (6, 3)
+[TSU] <try_activate> read failed for chip (7, 0)
+[TSU] <try_activate> write failed for chip (7, 0)
+[TSU] <try_activate> erase failed for chip (7, 0)
+[TSU] <try_activate> read failed for chip (7, 1)
+[TSU] <try_activate> write failed for chip (7, 1)
+[TSU] <try_activate> erase failed for chip (7, 1)
+[TSU] <try_activate> read failed for chip (7, 2)
+[TSU] <try_activate> write failed for chip (7, 2)
+[TSU] <try_activate> erase failed for chip (7, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
+[TSU] <try_activate> compute failed for chip (7, 3)
+[TSU] <try_activate> search failed for chip (7, 3)
+[TSU] <try_activate> static write failed for chip (7, 3)
+[TSU] <_on_channel_idle> handling channel 0 idle
+[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
+[TSU] <try_activate> read failed for chip (0, 1)
+[TSU] <try_activate> write failed for chip (0, 1)
+[TSU] <try_activate> erase failed for chip (0, 1)
+[TSU] <try_activate> read failed for chip (0, 2)
+[TSU] <try_activate> write failed for chip (0, 2)
+[TSU] <try_activate> erase failed for chip (0, 2)
+[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
+[TSU] <try_activate> compute failed for chip (0, 3)
+[TSU] <try_activate> search failed for chip (0, 3)
+[TSU] <try_activate> static write failed for chip (0, 3)
+[TSU] <try_activate> read failed for chip (0, 0)
+[TSU] <try_activate> write failed for chip (0, 0)
+[TSU] <try_activate> erase failed for chip (0, 0)
+--------------------------------------------------------
+module <PCIe_link> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    1670600
+  param:   {'target': <flash_sim.Host.Host object at 0x0000029FABC622A0>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <Host> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2889195819744)
+  time:    1670600
+  param:   {'target': <flash_sim.Host.Host object at 0x0000029FABC622A0>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=[], rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=100, finish_time=None, status=None,>, 'status': 'completed'})}
+  ignored: False
+--------------------------------------------------------
+
+[Host] Received REQ_COMP:<Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=[], rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=100, finish_time=1670600, status=completed,>
+
+Simulation completed.
+Simulation time: 1670600
+Event queue (0 events):
+  (empty)

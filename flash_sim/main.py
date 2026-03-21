@@ -1,5 +1,51 @@
 import sys
+import threading
 import traceback
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# 运行配置：改这里即可；命令行直接执行：py main.py（在 flash_sim 目录下或设好 PYTHONPATH）
+# - INPUT_JSON：传给 Start_simulation 的配置文件路径（建议写绝对路径）
+# - MERGED_LOG：stdout 与 stderr 合并写入同一文件；None 表示仍输出到控制台。
+# - MERGED_LOG_MIRROR_CONSOLE：为 True 时同时镜像到终端（等同 tee 的另一路 stdout）。
+#   单文件句柄 + 互斥写入；每次 write 即 flush，顺序与「python -u … 2>&1 | tee file」一致。
+# ---------------------------------------------------------------------------
+_BASE = Path(__file__).resolve().parent
+INPUT_JSON = str(_BASE.parent / "examples" / "test.json")
+MERGED_LOG = str(_BASE / "output" / "test.log")
+MERGED_LOG_MIRROR_CONSOLE = True
+
+
+class _LockedMergedStream:
+    """合并写文件；可选镜像到原 stdout（stderr 经本对象写入时也在终端同一流显示，同 2>&1 | tee）。"""
+
+    __slots__ = ("_f", "_lock", "_console")
+
+    def __init__(self, f, console=None):
+        self._f = f
+        self._lock = threading.Lock()
+        self._console = console
+
+    def write(self, s):
+        if not s:
+            return 0
+        with self._lock:
+            n = self._f.write(s)
+            self._f.flush()
+            if self._console is not None:
+                self._console.write(s)
+                self._console.flush()
+            return n
+
+    def flush(self):
+        with self._lock:
+            self._f.flush()
+            if self._console is not None:
+                self._console.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._f, name)
+
 
 if __package__ in (None, ""):
     import os
@@ -43,26 +89,59 @@ def print_tsu_chip_queues(engine):
 
 
 if __name__ == "__main__":
-    # 禁止缓冲，使 print 立即输出（便于日志/重定向时实时查看）
-    sys.stdout.reconfigure(line_buffering=True)
-    sys.stderr.reconfigure(line_buffering=True)
-
-    sim_engine = Engine()
-    print("Module construction complete.\n\n")
+    _orig_stdout, _orig_stderr = sys.stdout, sys.stderr
+    _merged_backing = None
     try:
-        sim_engine.Start_simulation(r"E:\Files\Li_Meng\HBF\Flash-Sim\examples\static_write_test.json")
-    except Exception as e:
-        print(f"Error: {e}")
+        if MERGED_LOG:
+            Path(MERGED_LOG).parent.mkdir(parents=True, exist_ok=True)
+            _merged_backing = open(
+                MERGED_LOG, "w", encoding="utf-8", newline="\n", buffering=1
+            )
+            _mirror = (
+                _orig_stdout if MERGED_LOG_MIRROR_CONSOLE else None
+            )
+            _merged = _LockedMergedStream(_merged_backing, _mirror)
+            sys.stdout = _merged
+            sys.stderr = _merged
+        else:
+            if hasattr(sys.stdout, "reconfigure"):
+                sys.stdout.reconfigure(line_buffering=True)
+            if hasattr(sys.stderr, "reconfigure"):
+                sys.stderr.reconfigure(line_buffering=True)
+
+        sim_engine = Engine()
+        print("Module construction complete.\n\n")
         try:
-            print("address_mapping_unit.gtd:", sim_engine.device.ftl.address_mapping_unit.gtd)
-        except Exception as _:
-            print("(address_mapping_unit.gtd not available:", _)
-        print("\n--- Traceback (most recent call last) ---")
-        traceback.print_exc()
+            sim_engine.Start_simulation(INPUT_JSON)
+        except Exception as e:
+            print(f"Error: {e}")
+            try:
+                print(
+                    "address_mapping_unit.gtd:",
+                    sim_engine.device.ftl.address_mapping_unit.gtd,
+                )
+            except Exception as _:
+                print("(address_mapping_unit.gtd not available:", _)
+            print("\n--- Traceback (most recent call last) ---")
+            traceback.print_exc()
+        finally:
+            print("Simulation completed.")
+            print(f"Simulation time: {sim_engine.Get_current_time()}")
+            print(format_event_queue(sim_engine.event_queue.queue))
+            # print_tsu_chip_queues(sim_engine)
+            # print("\n\naddress_mapping_unit.gtd:")
+            # print(sim_engine.device.ftl.address_mapping_unit.gtd)
     finally:
-        print("Simulation completed.")
-        print(f"Simulation time: {sim_engine.Get_current_time()}")
-        print(format_event_queue(sim_engine.event_queue.queue))
-        # print_tsu_chip_queues(sim_engine)
-        # print("\n\naddress_mapping_unit.gtd:")
-        # print(sim_engine.device.ftl.address_mapping_unit.gtd)
+        if _merged_backing is not None:
+            try:
+                sys.stdout.flush()
+            except Exception:
+                pass
+            try:
+                sys.stderr.flush()
+            except Exception:
+                pass
+            _merged_backing.flush()
+            _merged_backing.close()
+            sys.stdout = _orig_stdout
+            sys.stderr = _orig_stderr

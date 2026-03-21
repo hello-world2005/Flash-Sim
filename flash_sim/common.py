@@ -87,6 +87,9 @@ class TransactionType(Enum):
 CQ_ENTRY_SIZE_BASIC = 128
 SQ_ENTRY_SIZE = 128
 
+# FTL CMT config
+CMT_TYPE = "seperated"
+
 # 硬件配置
 geometry = FlashGeometry()
 CHANNEL_NO = geometry.channel_no
@@ -237,9 +240,11 @@ class Request:
             f"Request type={self.type},",
             f"sq_id={self.sq_id},",
             f"transaction_list={self.transaction_list},",
-            f"serviced_trans={self.serviced_trans},",
             f"lha_start={self.lha_start},",
             f"size={self.size},",
+            f"issue_time={self.issue_time},",
+            f"finish_time={self.finish_time},",
+            f"status={self.status},",
         ]
         return "<" + " ".join(items) + ">"
 

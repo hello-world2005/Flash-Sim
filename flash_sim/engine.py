@@ -69,7 +69,6 @@ class Engine:
                 type=RequestType(cmd["type"].upper()),
                 sq_id=None,
                 transaction_list=[],
-                serviced_trans=0,
                 lha_start=cmd["start_lha"],
                 size=cmd["size"],
                 data_address=cmd.get("data_address"),
