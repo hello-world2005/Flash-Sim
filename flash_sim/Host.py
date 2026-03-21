@@ -43,6 +43,8 @@ class Host:
                 return self.read(req.data_address, req.data_size)
             elif req.type == RequestType.COMPUTE:
                 return self.read(req.data_address, req.data_size)
+            elif req.type == RequestType.STATIC_WRITE:
+                return self.read(req.data_address, req.data_size)
             else:
                 raise ValueError(f"{req.type} request has no data attached!")
 
@@ -205,6 +207,8 @@ class Host:
             msg_type = MessageType.SEARCH_REQ
         elif req.type == RequestType.COMPUTE:
             msg_type = MessageType.COMPUTE_REQ
+        elif req.type == RequestType.STATIC_WRITE:
+            msg_type = MessageType.STATIC_WRITE_REQ
         else: raise ValueError(f"Invalid request type: {req.type}")
         message = PCIe_message(msg_type, payload={"req": req})
         self.pcie_link.send(message, self.pcie_link.device)

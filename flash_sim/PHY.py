@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Flash 物理层：芯片/Die 状态管理与事件驱动命令执行。
 
-对标 MQSim NVM_PHY_ONFI_NVDDR2。
 SEARCH/COMPUTE 专属操作由子类或独立路径扩展，此处仅实现 READ/WRITE/ERASE。
 """
 
@@ -34,8 +33,6 @@ def _op_kind(trans_type: TransactionType) -> str:
 
 class ActiveCommandInfo:
     """Bundles an operation kind with its pending transactions.
-
-    Analogous to MQSim's Flash_Command plus its ActiveTransactions list.
     """
 
     def __init__(self, cmd_type: str, transactions: list):
@@ -45,8 +42,6 @@ class ActiveCommandInfo:
 
 class DieBKE:
     """Die-level book-keeping entry.
-
-    对标 MQSim DieBookKeepingEntry。
     """
 
     def __init__(self, die_id: int):
@@ -78,9 +73,7 @@ class DieBKE:
 
 
 class ChipBKE:
-    """Chip-level book-keeping entry.
-
-    对标 MQSim ChipBookKeepingEntry。TSU 直接读取此类的字段来做调度决策。
+    """Chip-level book-keeping entry. TSU 直接读取此类的字段来做调度决策。
     """
 
     def __init__(self, chip_id: Tuple[int, int]):
@@ -109,14 +102,8 @@ class PageData:
 # ── PHY class ─────────────────────────────────────────────────────────────────
 
 class PHY():
-    """Flash 物理层。
-
-    对标 MQSim NVM_PHY_ONFI_NVDDR2，实现：
-    - 接收 TSU 下发的命令（send_command_to_chip）
-    - 通过仿真事件驱动 chip/channel 状态机
-    - 事务完成时通过回调通知 TSU 及上层
+    """Flash 物理层。接收 TSU 下发的命令（send_command_to_chip），通过仿真事件驱动 chip/channel 状态机，事务完成时通过回调通知 TSU 及上层。
     """
-
     def __init__(self):
         print("Initializing PHY...")
         self._construction_valid: bool = False
@@ -166,7 +153,7 @@ class PHY():
     def channel_is_busy(self, channel_id: int) -> bool:
         return self._channel_busy[channel_id]
 
-    # ── Callback registration (対标 ConnectTo*Signal) ──────────────────────────
+    # ── Callback registration ────────────────────────────────────────────────
 
     def connect_channel_idle_signal(self, cb: Callable[[int], None]) -> None:
         self._channel_idle_cbs.append(cb)
@@ -198,7 +185,7 @@ class PHY():
         transactions: list,
         suspension_required: bool,
     ) -> None:
-        """下发命令到 chip，对标 NVM_PHY_ONFI_NVDDR2::Send_command_to_chip()。
+        """下发命令到 chip
 
         1. 若 suspension_required 且 chip 非 IDLE，先执行挂起操作。
         2. 将新命令登记为 Die 的 active_command。
@@ -469,7 +456,7 @@ class PHY():
         cmd_type: str,
         transactions: list[Transaction]
     ) -> None:
-        """启动读数据回传阶段，对标 transfer_read_data_from_chip()。"""
+        """启动读数据回传阶段"""
         channel_id = chip_id[0]
         self._channel_busy[channel_id] = True
         if cmd_type == "read":
@@ -483,7 +470,7 @@ class PHY():
         Register_event(event_type=ev, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=CURRENT_TIME() + PHY_DATA_OUT_TIME)
 
     def _send_resume_command(self, chip_id: Tuple[int, int]) -> None:
-        """恢复被挂起的命令，对标 send_resume_command_to_chip()。"""
+        """恢复被挂起的命令"""
         chip_bke = self.get_chip_bke(chip_id)
         now = CURRENT_TIME()
 

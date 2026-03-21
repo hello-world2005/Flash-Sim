@@ -50,7 +50,7 @@ if __name__ == "__main__":
     sim_engine = Engine()
     print("Module construction complete.\n\n")
     try:
-        sim_engine.Start_simulation(r"E:\Files\Li_Meng\HBF\Flash-Sim\examples\search_test.json")
+        sim_engine.Start_simulation(r"E:\Files\Li_Meng\HBF\Flash-Sim\examples\static_write_test.json")
     except Exception as e:
         print(f"Error: {e}")
         try:

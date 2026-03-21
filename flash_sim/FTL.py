@@ -133,7 +133,7 @@ class Block_Manager:
         self.lpa_protected_book[tr.lpa] = tr
 
     def _remove_barrier(self, tr: Transaction):
-        if "write" in tr.type.value.lower() or "erase" in tr.type.value.lower(): # only write and erase need to remove barrier
+        if tr.type in [TransactionType.USER_WRITE, TransactionType.MAPPING_WRITE, TransactionType.GC_WRITE, TransactionType.GC_ERASE]: # only these transactions need to remove barrier
             debug_info(f"[Block Manager] <_remove_barrier> tr: {repr(tr)}")
             self.lpa_protected_book.pop(tr.lpa)
 
@@ -205,6 +205,7 @@ class TSU:
             TransactionType.GC_READ,
             TransactionType.GC_WRITE,
             TransactionType.GC_ERASE,
+            TransactionType.USER_STATIC_WRITE,
         ]
         # deques[channel][chip][type] = list of Transaction
         self.queues = [
@@ -355,6 +356,11 @@ class TSU:
                 dispatched = True
             else:
                 debug_info(f"[TSU] <try_activate> search failed for chip {chip_id}")
+            if not dispatched and self.try_static_write(chip_id):
+                debug_info(f"[TSU] <try_activate> static write dispatched for chip {chip_id}")
+                dispatched = True
+            else:
+                debug_info(f"[TSU] <try_activate> static write failed for chip {chip_id}")
             return dispatched
         if not dispatched and self.try_read(chip_id):
             debug_info(f"[TSU] <try_activate> read dispatched for chip {chip_id}")
@@ -507,6 +513,22 @@ class TSU:
         if not q:
             return False
         self.issue_search_command(chip_id, q)
+        return True
+
+    def try_static_write(self, chip_id) -> bool:
+        """Try to issue a static write command to the chip.
+
+        Static write 只能在 chip IDLE 时触发，直接选取 user_static_write 队列，
+        调用 issue_static_write_command 下发。
+        """
+        chip_bke = self.phy.get_chip_bke(chip_id)
+        if chip_bke.status != ChipStatus.IDLE:
+            return False
+
+        q = self.queues[chip_id[0]][chip_id[1]].get(TransactionType.USER_STATIC_WRITE)
+        if not q:
+            return False
+        self.issue_static_write_command(chip_id, q)
         return True
 
     # ── Command dispatch to PHY ───────────────────────────────────────────────
@@ -672,6 +694,12 @@ class TSU:
             for tr in list(q):
                 if tr.address.die != die_id:
                     continue
+                if tr.rely_on_transactions:
+                    debug_info(f"[TSU] <issue_compute_command> tr has rely_on_transactions, skipping {repr(tr)}")
+                    continue
+                if not tr.data_ready:
+                    debug_info(f"[TSU] <issue_compute_command> data not ready, skipping {repr(tr)}")
+                    continue
                 tr_plane = tr.address.plane
                 count = plane_count.get(tr_plane, 0)
                 if count >= max_per_plane:
@@ -685,6 +713,51 @@ class TSU:
                     q.remove(tr)
                 self.phy.send_command_to_chip(chip_id, dispatch_slots, False)
 
+    def issue_static_write_command(self, chip_id, q: list):
+        """按 die-plane 粒度选取 static write transactions 并下发给 PHY。
+
+        Static write 地址最细粒度为 address[4]（sub_plane/操作单元），address[5] 恒为 0。
+        约束：每个 die 的每个 plane 中最多选中一个操作单元。
+        对每个 die，从队列中收集满足约束的 transactions 后立即发给 PHY，
+        找到第一个有候选的 die 后返回 True。
+        """
+        if not q:
+            raise ValueError("Issued an empty static write transactions deque to PHY")
+
+        die_no = DIE_PER_CHIP
+        plane_no = PLANE_PER_DIE
+
+        start_die = q[0].address.die
+
+        for _step in range(die_no):
+            die_id = (start_die + _step) % die_no
+            plane_vector = 0
+            dispatch_slots: list = []
+
+            for tr in list(q):
+                if tr.address.die != die_id:
+                    continue
+                if tr.rely_on_transactions:
+                    debug_info(f"[TSU] <issue_static_write_command> tr has rely_on_transactions, skipping {repr(tr)}")
+                    continue
+                if not tr.data_ready:
+                    debug_info(f"[TSU] <issue_static_write_command> data not ready, skipping {repr(tr)}")
+                    continue
+                tr_plane = tr.address.plane
+                if plane_vector & (1 << tr_plane):
+                    debug_info(f"[TSU] <issue_static_write_command> tr plane already selected, skipping {repr(tr)}")
+                    continue
+                tr.SuspendRequired = False
+                plane_vector |= 1 << tr_plane
+                dispatch_slots.append(tr)
+                if bin(plane_vector).count("1") >= plane_no:
+                    break
+
+            if dispatch_slots:
+                for tr in dispatch_slots:
+                    q.remove(tr)
+                self.phy.send_command_to_chip(chip_id, dispatch_slots, False)   
+        return
     # ── Helpers ───────────────────────────────────────────────────────────────
 
     def channel_is_busy(self, channel_id: int) -> bool:
@@ -783,7 +856,7 @@ class Address_Mapping_Unit:
     def translate_and_submit(self, req: Request):
         # SEARCH and COMPUTE requests don't need to be translated
         print(f"[AMU] translate_and_submit: handling new request: {repr(req)}")
-        if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
+        if req.type in (RequestType.SEARCH, RequestType.COMPUTE, RequestType.STATIC_WRITE):
             self.tsu.Prepare_trans_submission()
             for tr in req.transaction_list:
                 self.tsu.Submit_trans(tr)

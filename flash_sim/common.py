@@ -34,23 +34,28 @@ class MessageType(Enum):
     READ_REQ = "READ_REQ"
     SEARCH_REQ = "SEARCH_REQ"
     COMPUTE_REQ = "COMPUTE_REQ"
+    STATIC_WRITE_REQ = "STATIC_WRITE_REQ"
 
     WRITE_DATA = "WRITE_DATA"
     SEARCH_DATA = "SEARCH_DATA"
     COMPUTE_DATA = "COMPUTE_DATA"
+    STATIC_WRITE_DATA = "STATIC_WRITE_DATA"
     # Device send, Host excute
     WRITE_DATA_REQ = "WRITE_DATA_REQ"
     SEARCH_DATA_REQ = "SEARCH_DATA_REQ"
     COMPUTE_DATA_REQ = "COMPUTE_DATA_REQ"
+    STATIC_WRITE_DATA_REQ = "STATIC_WRITE_DATA_REQ"
 
     WRITE_DATA_RECEIVED = "WRITE_DATA_RECEIVED"
     SEARCH_DATA_RECEIVED = "SEARCH_DATA_RECEIVED"
     COMPUTE_DATA_RECEIVED = "COMPUTE_DATA_RECEIVED"
     READ_REQ_RECEIVED = "READ_REQ_RECEIVED"
+    STATIC_WRITE_DATA_RECEIVED = "STATIC_WRITE_DATA_RECEIVED"
 
     READ_RES_SEND_BACK = "READ_RES_SEND_BACK"
     SEARCH_RES_SEND_BACK = "SEARCH_RES_SEND_BACK"
     COMPUTE_RES_SEND_BACK = "COMPUTE_RES_SEND_BACK"
+    STATIC_WRITE_RES_SEND_BACK = "STATIC_WRITE_RES_SEND_BACK"
 
     REQ_COMP = "REQ_COMP"
 
@@ -64,6 +69,7 @@ class RequestType(Enum):
     WRITE = "WRITE"
     SEARCH = "SEARCH"
     COMPUTE = "COMPUTE"
+    STATIC_WRITE = "STATIC_WRITE"
 
 class TransactionType(Enum):
     MAPPING_READ = "MAPPING_READ"
@@ -72,6 +78,7 @@ class TransactionType(Enum):
     USER_WRITE = "USER_WRITE"
     USER_SEARCH = "USER_SEARCH"
     USER_COMPUTE = "USER_COMPUTE"
+    USER_STATIC_WRITE = "USER_STATIC_WRITE"
     GC_WRITE = "GC_WRITE"
     GC_ERASE = "GC_ERASE"
     GC_READ = "GC_READ"
@@ -174,6 +181,7 @@ class Transaction:
             f"type={self.type},",
             f"lpa={self.lpa},",
             f"address={repr(self.address)},",
+            f"data_ready={self.data_ready},",
             f"Transaction source_req={source_req_brief},",
             f"bitmap={repr(self.bitmap)},",
             f"response={repr(self.response)},",
@@ -204,7 +212,6 @@ class Request:
     type: RequestType  # READ, WRITE, SEARCH, COMPUTE, MAPPING
     sq_id: Optional[int] = None
     transaction_list: List[Transaction] = field(default_factory=list)
-    serviced_trans: int = 0
     lha_start: int = 0   # start logical sector address
     size: int = 0   # size of request
     data_address: Optional[int] = None

@@ -53,14 +53,14 @@ class HIL:
         # only segment once
         if req.transaction_list:
             return
-        # search and compute operation should do address translation while segmenting
-        if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
+        # search, compute and static write operation should do address translation while segmenting
+        if req.type in (RequestType.SEARCH, RequestType.COMPUTE, RequestType.STATIC_WRITE):
             size = req.size
             for i in range(size):
                 sub_plane_id = req.lha_start + i
                 address = self.ftl.get_static_address(sub_plane_id)
                 lpa  = utils.translate_lha_to_lpa(sub_plane_id)
-                tr_type = TransactionType.USER_SEARCH if req.type == RequestType.SEARCH else TransactionType.USER_COMPUTE
+                tr_type = TransactionType.USER_SEARCH if req.type == RequestType.SEARCH else TransactionType.USER_COMPUTE if req.type == RequestType.COMPUTE else TransactionType.USER_STATIC_WRITE if req.type == RequestType.STATIC_WRITE else None
                 tr = Transaction(source_req=req, type=tr_type, address=address, lpa=lpa, data_ready=False)
                 req.transaction_list.append(tr)
             return
@@ -146,12 +146,12 @@ class HIL:
                 self.pcie_link.send(comp_msg, self.host)
                 return
             self.ftl.handle_new_req(req)
-        elif message.type in (MessageType.WRITE_REQ, MessageType.SEARCH_REQ, MessageType.COMPUTE_REQ):
+        elif message.type in (MessageType.WRITE_REQ, MessageType.SEARCH_REQ, MessageType.COMPUTE_REQ, MessageType.STATIC_WRITE_REQ):
             req = message.payload["req"]
             self.fetch_data(req)
             self.segment(req)
             self.ftl.handle_new_req(req)
-        elif message.type in (MessageType.WRITE_DATA, MessageType.SEARCH_DATA, MessageType.COMPUTE_DATA):
+        elif message.type in (MessageType.WRITE_DATA, MessageType.SEARCH_DATA, MessageType.COMPUTE_DATA, MessageType.STATIC_WRITE_DATA):
             req = message.payload["req"]
             self.broadcast_data_ready_signal(req)
             debug_info(f"[HIL] received data for req: {req}")
@@ -159,10 +159,12 @@ class HIL:
             raise ValueError(f"Unexpected message type for HIL: {message.type}")
 
     def broadcast_data_ready_signal(self, req):
+        debug_info(f"[HIL] <broadcast_data_ready_signal> req: {req}")
         self.ftl.tsu.Prepare_trans_submission()
         for tr in req.transaction_list:
             tr.data_ready = True
         self.ftl.tsu.Schedule()
+        debug_info(f"[HIL] <broadcast_data_ready_signal> done")
 
 class Cache:
     def __init__(self, max_entries: int = 1024):
