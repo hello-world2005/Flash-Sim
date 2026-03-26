@@ -1,9 +1,6 @@
-帮我把common.py文件中跟flash硬件配置有关的内容加入到config.py文件中的FlashGeometry类中
-
-
-请帮我根据parser.COMMAND_SCHEMA生成一个test_trace.json文件，在time为0的时刻生成read, write, search, compute操作各一个
-start_lha和size随机。
-需要注意search和compute的操作start_lha需要大于FlashGeometry.static_area_base_address，并且满足要求的lha将对应一个sub_plane
-
-在engine.py文件中的Initialize_event_queue()函数中，调用parser.py中的函数，将test_trace.json文件中的req利用Register_sim_event()压入
-event_queue中，req放在event.param字段上
+帮我在Flash-Sim项目中完成以下任务：
+1. 在./precondition/pre_trace.json文件中生成一个用于初始条件生成的trace，指令结构与parser中的COMMAND_SCHEMA相同，但是只包含write, read, static_write三种指令
+2. 在engine中写好precondition函数，读取pre_trace_path路径对应的文件，调用parser完成解析，并压入event_queue，scheduled_time均为0时刻
+3. 在engine中加入一个pre_sim属性，bool，在调用precondition函数完成pre_trace解析之后将其赋值为true，并调用Start_simulation()开始仿真
+4. 所有execute()函数中加入一个判断，当pre_sim为真时，登记事件的scheduled_time均为0
+5. 

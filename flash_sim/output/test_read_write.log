@@ -30,7 +30,7 @@ HIL construction validation complete.
 Device construction validation complete.
 Construction validation complete.
 [Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=0
-[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=100
+[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=50
 Event queue initialization complete.
 
 
@@ -39,17 +39,17 @@ Event queue (2 events):
 ========== Event [1/2] (time=0) ==========
 SimEvent:
   type:    EventType.REQ_INIT
-  target:  Host(id=2262112548144)
+  target:  Host(id=2263010573344)
   time:    0
-  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=128, issue_time=None, finish_time=None, status=None,>}
+  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
   ignored: False
 
-========== Event [2/2] (time=100) ==========
+========== Event [2/2] (time=50) ==========
 SimEvent:
   type:    EventType.REQ_INIT
-  target:  Host(id=2262112548144)
-  time:    100
-  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=64, issue_time=None, finish_time=None, status=None,>}
+  target:  Host(id=2263010573344)
+  time:    50
+  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
   ignored: False
 
 --------------------------------------------------------
@@ -62,9 +62,9 @@ Starting simulation...
 module <Host> is executing event:
 SimEvent:
   type:    EventType.REQ_INIT
-  target:  Host(id=2262112548144)
+  target:  Host(id=2263010573344)
   time:    0
-  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=128, issue_time=None, finish_time=None, status=None,>}
+  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
   ignored: False
 --------------------------------------------------------
 [Engine] Time = 0, Register_event: type=EventType.DELIVER, scheduled_time=100
@@ -72,33 +72,33 @@ SimEvent:
 module <Host> is executing event:
 SimEvent:
   type:    EventType.REQ_INIT
-  target:  Host(id=2262112548144)
-  time:    100
-  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=64, issue_time=None, finish_time=None, status=None,>}
+  target:  Host(id=2263010573344)
+  time:    50
+  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
   ignored: False
 --------------------------------------------------------
 --------------------------------------------------------
 module <PCIe_link> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    100
-  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EB0C01B20>}
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EE6472660>}
   ignored: False
 --------------------------------------------------------
 --------------------------------------------------------
 module <HIL> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    100
-  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EB0C01B20>, 'message': PCIe_message(type=<MessageType.WRITE_REQ: 'WRITE_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[], lha_start=4096, size=128, issue_time=0, finish_time=None, status=None,>})}
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EE6472660>, 'message': PCIe_message(type=<MessageType.WRITE_REQ: 'WRITE_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>})}
   ignored: False
 --------------------------------------------------------
 [Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200
-[AMU] translate_and_submit: handling new request: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=128, issue_time=0, finish_time=None, status=None,>
+[AMU] translate_and_submit: handling new request: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
 [TSU] <Prepare_trans_submission> 1
-[Block Manager] set_barrier: tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[Block Manager] set_barrier: tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
 [AMU] <translate_and_submit> add new entry to cmt: 64, FlashAddress:
   channel:   0
   chip:      0
@@ -106,28 +106,15 @@ SimEvent:
   plane:     0
   sub_plane: 0
   page:      0
-[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[Block Manager] set_barrier: tr: <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[AMU] <translate_and_submit> add new entry to cmt: 65, FlashAddress:
-  channel:   0
-  chip:      0
-  die:       0
-  plane:     0
-  sub_plane: 1
-  page:      0
-[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
 [AMU] <translate_and_submit> Prepare trans submission complete
 [TSU] <Schedule> 0
 [TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
 [TSU] <try_activate> write dispatched for chip (0, 0)
 [TSU] <try_activate> erase failed for chip (0, 0)
 [TSU] <try_activate> read failed for chip (0, 1)
@@ -237,54 +224,50 @@ SimEvent:
 module <PCIe_link> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    200
-  param:   {'target': <flash_sim.Host.Host object at 0x0000020EB06A3530>}
+  param:   {'target': <flash_sim.Host.Host object at 0x0000020EE5F0FC20>}
   ignored: False
 --------------------------------------------------------
 --------------------------------------------------------
 module <Host> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    200
-  param:   {'target': <flash_sim.Host.Host object at 0x0000020EB06A3530>, 'message': PCIe_message(type=<MessageType.WRITE_DATA_REQ: 'WRITE_DATA_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=128, issue_time=0, finish_time=None, status=None,>})}
+  param:   {'target': <flash_sim.Host.Host object at 0x0000020EE5F0FC20>, 'message': PCIe_message(type=<MessageType.WRITE_DATA_REQ: 'WRITE_DATA_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>})}
   ignored: False
 --------------------------------------------------------
 --------------------------------------------------------
 module <PCIe_link> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    200
-  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EB0C01B20>}
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EE6472660>}
   ignored: False
 --------------------------------------------------------
 --------------------------------------------------------
 module <HIL> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    200
-  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EB0C01B20>, 'message': PCIe_message(type=<MessageType.READ_REQ: 'READ_REQ'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[], lha_start=4096, size=64, issue_time=100, finish_time=None, status=None,>})}
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EE6472660>, 'message': PCIe_message(type=<MessageType.READ_REQ: 'READ_REQ'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[], lha_start=4096, size=1, issue_time=50, finish_time=None, status=None,>})}
   ignored: False
 --------------------------------------------------------
-[AMU] translate_and_submit: handling new request: <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=64, issue_time=100, finish_time=None, status=None,>
+[AMU] translate_and_submit: handling new request: <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=50, finish_time=None, status=None,>
 [TSU] <Prepare_trans_submission> 1
-[AMU] <translate_and_submit> Cache hit for tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <Submit_trans> facing barrier, lpa: 64, trans: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[AMU] <translate_and_submit> Cache hit for tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <Submit_trans> facing barrier, lpa: 64, trans: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
 [AMU] <translate_and_submit> Prepare trans submission complete
 [TSU] <Schedule> 0
 [TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <issue_command> data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
 [TSU] <try_activate> write dispatched for chip (0, 0)
 [TSU] <try_activate> erase failed for chip (0, 0)
 [TSU] <try_activate> read failed for chip (0, 1)
@@ -394,25 +377,25 @@ SimEvent:
 module <PCIe_link> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    300
-  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EB0C01B20>}
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EE6472660>}
   ignored: False
 --------------------------------------------------------
 --------------------------------------------------------
 module <HIL> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
+  target:  PCIe_link(id=2263010466448)
   time:    300
-  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EB0C01B20>, 'message': PCIe_message(type=<MessageType.WRITE_DATA: 'WRITE_DATA'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=128, issue_time=0, finish_time=None, status=None,>, 'data': [11]})}
+  param:   {'target': <flash_sim.HIL.HIL object at 0x0000020EE6472660>, 'message': PCIe_message(type=<MessageType.WRITE_DATA: 'WRITE_DATA'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>, 'data': [11]})}
   ignored: False
 --------------------------------------------------------
-[HIL] <broadcast_data_ready_signal> req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=128, issue_time=0, finish_time=None, status=None,>
+[HIL] <broadcast_data_ready_signal> req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=False, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
 [TSU] <Prepare_trans_submission> 1
 [TSU] <Schedule> 0
 [TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
 [TSU] <issue_command> dispatching 1 transactions to PHY
 [Engine] Time = 300, Register_event: type=EventType.PHY_WRITE_CMD_TRANSFERRED, scheduled_time=5400
 [TSU] <try_activate> write dispatched for chip (0, 0)
@@ -509,14 +492,14 @@ SimEvent:
 [TSU] <try_activate> search failed for chip (7, 3)
 [TSU] <try_activate> static write failed for chip (7, 3)
 [HIL] <broadcast_data_ready_signal> done
-[HIL] received data for req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=128, issue_time=0, finish_time=None, status=None,>
+[HIL] received data for req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
 --------------------------------------------------------
 module <PHY> is executing event:
 SimEvent:
   type:    EventType.PHY_WRITE_CMD_TRANSFERRED
-  target:  PHY(id=2262112430336)
+  target:  PHY(id=2262370057536)
   time:    5400
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
   ignored: False
 --------------------------------------------------------
 [Engine] Time = 5400, Register_event: type=EventType.PHY_CHIP_WRITE_COMPLETE, scheduled_time=755400
@@ -539,19 +522,20 @@ SimEvent:
 module <PHY> is executing event:
 SimEvent:
   type:    EventType.PHY_CHIP_WRITE_COMPLETE
-  target:  PHY(id=2262112430336)
+  target:  PHY(id=2262370057536)
   time:    755400
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
   ignored: False
 --------------------------------------------------------
-[PHY] following tr completed: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: source_req is not serviced yet
+[PHY] following tr completed: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.WRITE, lha_start=4096, size=1)
+[Engine] Time = 755400, Register_event: type=EventType.DELIVER, scheduled_time=755500
 [AMU] <_handle_mapping_read_response> done
-[Block Manager] <_remove_barrier> tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[Block Manager] <_remove_barrier> tr: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
 [TSU] <Prepare_trans_submission> 1
-[TSU] <_removing_barrier> following tr is removing barrier: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
+[TSU] <_removing_barrier> following tr is removing barrier: <type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
 [TSU] <Schedule> 0
 [TSU] <try_activate> read failed for chip (0, 1)
 [TSU] <try_activate> write failed for chip (0, 1)
@@ -659,19 +643,40 @@ SimEvent:
 [TSU] <try_activate> static write failed for chip (7, 3)
 [PHY] _handle_array_execution_finished, chip (0, 0) is idle
 [TSU] <_on_chip_idle> handling chip (0, 0) idle
-[TSU] <issue_command> q1: [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
+[TSU] <issue_command> q1: [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
 [TSU] <issue_command> dispatching 1 transactions to PHY
 [Engine] Time = 755400, Register_event: type=EventType.PHY_READ_CMD_TRANSFERRED, scheduled_time=755500
 [TSU] <try_activate> read dispatched for chip (0, 0)
 [TSU] <try_activate> write failed for chip (0, 0)
 [TSU] <try_activate> erase failed for chip (0, 0)
 --------------------------------------------------------
+module <PCIe_link> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2263010466448)
+  time:    755500
+  param:   {'target': <flash_sim.Host.Host object at 0x0000020EE5F0FC20>}
+  ignored: False
+--------------------------------------------------------
+--------------------------------------------------------
+module <Host> is executing event:
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=2263010466448)
+  time:    755500
+  param:   {'target': <flash_sim.Host.Host object at 0x0000020EE5F0FC20>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>, 'status': 'completed'})}
+  ignored: False
+--------------------------------------------------------
+
+[Host] Received REQ_COMP:<Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=755500, status=completed,>
+
+--------------------------------------------------------
 module <PHY> is executing event:
 SimEvent:
   type:    EventType.PHY_READ_CMD_TRANSFERRED
-  target:  PHY(id=2262112430336)
+  target:  PHY(id=2262370057536)
   time:    755500
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
   ignored: False
 --------------------------------------------------------
 [Engine] Time = 755500, Register_event: type=EventType.PHY_CHIP_READ_COMPLETE, scheduled_time=830500
@@ -694,9 +699,9 @@ SimEvent:
 module <PHY> is executing event:
 SimEvent:
   type:    EventType.PHY_CHIP_READ_COMPLETE
-  target:  PHY(id=2262112430336)
+  target:  PHY(id=2262370057536)
   time:    830500
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
   ignored: False
 --------------------------------------------------------
 [Engine] Time = 830500, Register_event: type=EventType.PHY_READ_DATA_TRANSFERRED, scheduled_time=835500
@@ -704,14 +709,14 @@ SimEvent:
 module <PHY> is executing event:
 SimEvent:
   type:    EventType.PHY_READ_DATA_TRANSFERRED
-  target:  PHY(id=2262112430336)
+  target:  PHY(id=2262370057536)
   time:    835500
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
   ignored: False
 --------------------------------------------------------
-[PHY] PHY_READ_DATA_TRANSFERRED, tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.READ, lha_start=4096, size=64)
+[PHY] PHY_READ_DATA_TRANSFERRED, tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
+[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.READ, lha_start=4096, size=1)
 [Engine] Time = 835500, Register_event: type=EventType.DELIVER, scheduled_time=835600
 [AMU] <_handle_mapping_read_response> done
 [TSU] <Prepare_trans_submission> 1
@@ -833,210 +838,33 @@ SimEvent:
 [TSU] <try_activate> search failed for chip (0, 3)
 [TSU] <try_activate> static write failed for chip (0, 3)
 [TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> dispatching 1 transactions to PHY
-[Engine] Time = 835500, Register_event: type=EventType.PHY_WRITE_CMD_TRANSFERRED, scheduled_time=840600
-[TSU] <try_activate> write dispatched for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
-[TSU] <_on_channel_idle> channel 0 is busy, moving to next chip
---------------------------------------------------------
-module <PCIe_link> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
-  time:    835600
-  param:   {'target': <flash_sim.Host.Host object at 0x0000020EB06A3530>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <Host> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
-  time:    835600
-  param:   {'target': <flash_sim.Host.Host object at 0x0000020EB06A3530>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=64, issue_time=100, finish_time=None, status=None,>, 'status': 'completed'})}
-  ignored: False
---------------------------------------------------------
-
-[Host] Received REQ_COMP:<Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=64), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=64, issue_time=100, finish_time=835600, status=completed,>
-
---------------------------------------------------------
-module <PHY> is executing event:
-SimEvent:
-  type:    EventType.PHY_WRITE_CMD_TRANSFERRED
-  target:  PHY(id=2262112430336)
-  time:    840600
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
-  ignored: False
---------------------------------------------------------
-[Engine] Time = 840600, Register_event: type=EventType.PHY_CHIP_WRITE_COMPLETE, scheduled_time=1590600
-[TSU] <_on_channel_idle> handling channel 0 idle
-[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
---------------------------------------------------------
-module <PHY> is executing event:
-SimEvent:
-  type:    EventType.PHY_CHIP_WRITE_COMPLETE
-  target:  PHY(id=2262112430336)
-  time:    1590600
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
-  ignored: False
---------------------------------------------------------
-[PHY] following tr completed: <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.WRITE, lha_start=4096, size=128)
-[Engine] Time = 1590600, Register_event: type=EventType.DELIVER, scheduled_time=1590700
-[AMU] <_handle_mapping_read_response> done
-[Block Manager] <_remove_barrier> tr: <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[TSU] <Prepare_trans_submission> 1
-[TSU] <_removing_barrier> following tr is removing barrier: <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[TSU] <Schedule> 0
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
-[TSU] <try_activate> read failed for chip (1, 0)
-[TSU] <try_activate> write failed for chip (1, 0)
-[TSU] <try_activate> erase failed for chip (1, 0)
-[TSU] <try_activate> read failed for chip (1, 1)
-[TSU] <try_activate> write failed for chip (1, 1)
-[TSU] <try_activate> erase failed for chip (1, 1)
-[TSU] <try_activate> read failed for chip (1, 2)
-[TSU] <try_activate> write failed for chip (1, 2)
-[TSU] <try_activate> erase failed for chip (1, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
-[TSU] <try_activate> compute failed for chip (1, 3)
-[TSU] <try_activate> search failed for chip (1, 3)
-[TSU] <try_activate> static write failed for chip (1, 3)
-[TSU] <try_activate> read failed for chip (2, 0)
-[TSU] <try_activate> write failed for chip (2, 0)
-[TSU] <try_activate> erase failed for chip (2, 0)
-[TSU] <try_activate> read failed for chip (2, 1)
-[TSU] <try_activate> write failed for chip (2, 1)
-[TSU] <try_activate> erase failed for chip (2, 1)
-[TSU] <try_activate> read failed for chip (2, 2)
-[TSU] <try_activate> write failed for chip (2, 2)
-[TSU] <try_activate> erase failed for chip (2, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
-[TSU] <try_activate> compute failed for chip (2, 3)
-[TSU] <try_activate> search failed for chip (2, 3)
-[TSU] <try_activate> static write failed for chip (2, 3)
-[TSU] <try_activate> read failed for chip (3, 0)
-[TSU] <try_activate> write failed for chip (3, 0)
-[TSU] <try_activate> erase failed for chip (3, 0)
-[TSU] <try_activate> read failed for chip (3, 1)
-[TSU] <try_activate> write failed for chip (3, 1)
-[TSU] <try_activate> erase failed for chip (3, 1)
-[TSU] <try_activate> read failed for chip (3, 2)
-[TSU] <try_activate> write failed for chip (3, 2)
-[TSU] <try_activate> erase failed for chip (3, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
-[TSU] <try_activate> compute failed for chip (3, 3)
-[TSU] <try_activate> search failed for chip (3, 3)
-[TSU] <try_activate> static write failed for chip (3, 3)
-[TSU] <try_activate> read failed for chip (4, 0)
-[TSU] <try_activate> write failed for chip (4, 0)
-[TSU] <try_activate> erase failed for chip (4, 0)
-[TSU] <try_activate> read failed for chip (4, 1)
-[TSU] <try_activate> write failed for chip (4, 1)
-[TSU] <try_activate> erase failed for chip (4, 1)
-[TSU] <try_activate> read failed for chip (4, 2)
-[TSU] <try_activate> write failed for chip (4, 2)
-[TSU] <try_activate> erase failed for chip (4, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
-[TSU] <try_activate> compute failed for chip (4, 3)
-[TSU] <try_activate> search failed for chip (4, 3)
-[TSU] <try_activate> static write failed for chip (4, 3)
-[TSU] <try_activate> read failed for chip (5, 0)
-[TSU] <try_activate> write failed for chip (5, 0)
-[TSU] <try_activate> erase failed for chip (5, 0)
-[TSU] <try_activate> read failed for chip (5, 1)
-[TSU] <try_activate> write failed for chip (5, 1)
-[TSU] <try_activate> erase failed for chip (5, 1)
-[TSU] <try_activate> read failed for chip (5, 2)
-[TSU] <try_activate> write failed for chip (5, 2)
-[TSU] <try_activate> erase failed for chip (5, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
-[TSU] <try_activate> compute failed for chip (5, 3)
-[TSU] <try_activate> search failed for chip (5, 3)
-[TSU] <try_activate> static write failed for chip (5, 3)
-[TSU] <try_activate> read failed for chip (6, 0)
-[TSU] <try_activate> write failed for chip (6, 0)
-[TSU] <try_activate> erase failed for chip (6, 0)
-[TSU] <try_activate> read failed for chip (6, 1)
-[TSU] <try_activate> write failed for chip (6, 1)
-[TSU] <try_activate> erase failed for chip (6, 1)
-[TSU] <try_activate> read failed for chip (6, 2)
-[TSU] <try_activate> write failed for chip (6, 2)
-[TSU] <try_activate> erase failed for chip (6, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
-[TSU] <try_activate> compute failed for chip (6, 3)
-[TSU] <try_activate> search failed for chip (6, 3)
-[TSU] <try_activate> static write failed for chip (6, 3)
-[TSU] <try_activate> read failed for chip (7, 0)
-[TSU] <try_activate> write failed for chip (7, 0)
-[TSU] <try_activate> erase failed for chip (7, 0)
-[TSU] <try_activate> read failed for chip (7, 1)
-[TSU] <try_activate> write failed for chip (7, 1)
-[TSU] <try_activate> erase failed for chip (7, 1)
-[TSU] <try_activate> read failed for chip (7, 2)
-[TSU] <try_activate> write failed for chip (7, 2)
-[TSU] <try_activate> erase failed for chip (7, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
-[TSU] <try_activate> compute failed for chip (7, 3)
-[TSU] <try_activate> search failed for chip (7, 3)
-[TSU] <try_activate> static write failed for chip (7, 3)
-[PHY] _handle_array_execution_finished, chip (0, 0) is idle
-[TSU] <_on_chip_idle> handling chip (0, 0) idle
-[TSU] <try_activate> read failed for chip (0, 0)
 [TSU] <try_activate> write failed for chip (0, 0)
 [TSU] <try_activate> erase failed for chip (0, 0)
 --------------------------------------------------------
 module <PCIe_link> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
-  time:    1590700
-  param:   {'target': <flash_sim.Host.Host object at 0x0000020EB06A3530>}
+  target:  PCIe_link(id=2263010466448)
+  time:    835600
+  param:   {'target': <flash_sim.Host.Host object at 0x0000020EE5F0FC20>}
   ignored: False
 --------------------------------------------------------
 --------------------------------------------------------
 module <Host> is executing event:
 SimEvent:
   type:    EventType.DELIVER
-  target:  PCIe_link(id=2271277022096)
-  time:    1590700
-  param:   {'target': <flash_sim.Host.Host object at 0x0000020EB06A3530>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=128, issue_time=0, finish_time=None, status=None,>, 'status': 'completed'})}
+  target:  PCIe_link(id=2263010466448)
+  time:    835600
+  param:   {'target': <flash_sim.Host.Host object at 0x0000020EE5F0FC20>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=50, finish_time=None, status=None,>, 'status': 'completed'})}
   ignored: False
 --------------------------------------------------------
 
-[Host] Received REQ_COMP:<Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>, <type=TransactionType.USER_WRITE, lpa=65, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=128), bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=128, issue_time=0, finish_time=1590700, status=completed,>
+[Host] Received REQ_COMP:<Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, data_ready=True, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], response=PageData(valid_bitmap=[], data=[], lpa=None, mvpn=None, function=None), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=50, finish_time=835600, status=completed,>
 
 Simulation completed.
-Simulation time: 1590700
+Simulation time: 835600
 Event queue (0 events):
   (empty)
-{64: cmt_entry(address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, dirty=True), 65: cmt_entry(address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=1, page=0,>, dirty=True)}
+{64: cmt_entry(address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, dirty=True)}
 {}
 {}

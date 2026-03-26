@@ -6,6 +6,7 @@ from typing import Mapping
 from pathlib import Path
 import json
 from collections import defaultdict
+from dataclasses import field
 
 from .common import *
 from .PHY import PHY
@@ -14,8 +15,9 @@ from collections import deque as deque
 
 class CMT:
     def __init__(self):
-        self.cache: dict[int, cmt_entry] = {}
-        self.lru_list: list[int] = []
+        self.cache: dict[int, cmt_entry] = field(default_factory=dict)
+        self.lru_list: list[int] = field(default_factory=list)
+        self.address_mapping_unit: Address_Mapping_Unit
 
     def is_cached(self, lpa: int) -> bool:
         return lpa in self.cache
@@ -33,36 +35,53 @@ class CMT:
         self.lru_list.insert(0, lpa)
         return
     
-    def add_entry(self, lpa: int, address: FlashAddress, dirty: bool) -> tuple[int, cmt_entry] | None:
+    def eject_entry(self, lpa: int = None) -> tuple[int, cmt_entry]:
+        if lpa is None:
+            # ejecting least recently used entry
+            lru_lpa = self.lru_list.pop()
+            leaving_entry = (lru_lpa, self.cache.pop(lru_lpa))
+            debug_info(f"[CMT] <eject_entry> ejecting entry: ({lru_lpa}, {repr(leaving_entry[1])})")
+            return leaving_entry
+        else:
+            lru_lpa = lpa
+            self.lru_list.remove(lpa)
+            leaving_entry = (lpa, self.cache.pop(lpa))
+            debug_info(f"[CMT] <eject_entry> ejecting entry: ({lpa}, {repr(leaving_entry[1])})")
+            return leaving_entry
+    
+    def add_entry(self, lpa: int, address: FlashAddress, dirty: bool) -> None:
         entry = cmt_entry(address=address, dirty=dirty)
         self.cache[lpa] = entry
         self.lru_list.insert(0, lpa)
         if len(self.cache) >= CMT_SIZE:
-            lru_lpa = self.lru_list.pop()
-            leaving_entry = (lru_lpa, self.cache.pop(lru_lpa))
-            debug_info(f"[CMT] <add_entry> leaving entry: ({lru_lpa}, {repr(leaving_entry[1])})")
-            return leaving_entry
-        return None
+            lru_lpa, leaving_entry = self.eject_entry()
+            debug_info(f"[CMT] <add_entry> ejecting entry: ({lru_lpa}, {repr(leaving_entry[1])})")
+            self.address_mapping_unit.generate_mapping_write_transaction(self.cache, lru_lpa/LPA_NO_PER_MAPPING_PAGE)
 
 
 from dataclasses import dataclass
 
 @dataclass
 class blockBKE:
-    free_pages: deque      # 存储空闲页的 page_id
-    valid_pages: deque     # 存储有效页的 page_id
-    invalid_pages: deque   # 存储无效页的 page_id
+    invalid_pages: int   # 存储无效页的 page_id
     write_frontier: int  # 下次写入的目标page_id
     wl_level: int        # 该block被erase的次数
-    def __init__(self, free_pages: deque, valid_pages: deque, invalid_pages: deque, write_frontier: int, wl_level: int) -> None:
-        self.free_pages = free_pages
-        self.valid_pages = valid_pages
+    def __init__(self, invalid_pages: int, write_frontier: int, wl_level: int) -> None:
         self.invalid_pages = invalid_pages
         self.write_frontier = write_frontier
         self.wl_level = wl_level
-        self.page_protected = []
-        for _ in range(PAGE_PER_BLOCK):
-            self.page_protected.append(False)
+
+@dataclass
+class PlaneBKE:
+    num_free_pages: int
+    block_entries: list[blockBKE] = field(default_factory=list)
+    write_frontier_block: int
+    def __init__(self) -> None:
+        self.num_free_pages = PAGE_PER_BLOCK * BLOCK_PER_PLANE
+        self.block_entries = [blockBKE(invalid_pages=0, write_frontier=0, wl_level=0) for _ in range(BLOCK_PER_PLANE)]
+        self.write_frontier_block = 0
+
+
 
 class Block_Manager:
     def Validate_construction(self):
@@ -95,16 +114,7 @@ class Block_Manager:
             [
                 [
                     [
-                        [
-                            blockBKE(
-                                free_pages=deque(list(range(pages_per_block))),
-                                valid_pages=deque(),
-                                invalid_pages=deque(),
-                                write_frontier=0,
-                                wl_level=0
-                            ) for _ in range(block_no_per_plane)
-                        ]
-                        for _ in range(plane_no_per_die)
+                        PlaneBKE() for _ in range(plane_no_per_die)
                     ]
                     for _ in range(die_no_per_chip)
                 ]
@@ -119,22 +129,15 @@ class Block_Manager:
         chip_id = plane_address.chip
         die_id = plane_address.die
         plane_id = plane_address.plane
-        block_keeping_books = self.block_keeping_book[channel_id][chip_id][die_id][plane_id]
-        max_free_pages = -1
-        chosen_block_id = -1
-        for i in range(self.block_no_per_plane):
-            bke = block_keeping_books[i]
-            if len(bke.free_pages) > max_free_pages:
-                max_free_pages = len(bke.free_pages)
-                chosen_block_id = i
-        if chosen_block_id == -1:
-            raise ValueError(f"No free block found in plane {plane_address}")
-        bke = block_keeping_books[chosen_block_id]
+        plane_bke = self.block_keeping_book[channel_id][chip_id][die_id][plane_id]
+        plane_bke.num_free_pages -= 1
+        bke = plane_bke.block_entries[plane_bke.write_frontier_block]
         page_id = bke.write_frontier
-        bke.free_pages.remove(page_id)
-        bke.valid_pages.append(page_id)
-        bke.write_frontier = bke.free_pages.popleft()
-        return FlashAddress(channel=channel_id, chip=chip_id, die=die_id, plane=plane_id, sub_plane=chosen_block_id, page=page_id)
+        bke.write_frontier += 1
+        if bke.write_frontier == PAGE_PER_BLOCK:
+            bke.write_frontier = 0
+            plane_bke.write_frontier_block += 1
+        return FlashAddress(channel=channel_id, chip=chip_id, die=die_id, plane=plane_id, sub_plane=plane_bke.write_frontier_block, page=page_id)
     
     def _set_barrier(self, tr: Transaction):
         debug_info(f"[Block Manager] set_barrier: tr: {repr(tr)}")
@@ -779,11 +782,6 @@ class TSU:
 class Address_Mapping_Domain:
     def __init__(self):
         self.cmt: CMT
-        self.gmt: dict[int, cmt_entry] = {}
-        self.DepartingEntry = []
-        self.ArrivingEntry = []
-        self.tsu : TSU
-        self.gtd: dict[int, GTDEntry]
         self._construction_valid: bool = False
     
     def Validate_construction(self):
@@ -846,6 +844,8 @@ class Address_Mapping_Unit:
                 domain.cmt = self.cmt
         else:
             raise ValueError(f"Invalid CMT type: {CMT_TYPE}")
+        for domain in self.domains:
+            domain.cmt.address_mapping_unit = self
     
     def _handle_mapping_read_response(self, tr: Transaction):
         # handle response for tr waiting mapping info
@@ -867,6 +867,10 @@ class Address_Mapping_Unit:
             for i in range(len(arriving_lpa)):
                 lpa = arriving_lpa[i]
                 ppa = tr.response[i]
+                # add entry in cmt
+                domain = self.domains[tr.source_req.sq_id]
+                if not domain.cmt.is_cached(lpa):
+                    domain.cmt.add_entry(lpa, self.translate_ppa_to_address(ppa), dirty=False)
                 waiting_trs = self.waiting_for_mapping_trans[lpa]
                 debug_info(f"[AMU] <_handle_mapping_read_response> number of waiting trs: {len(waiting_trs)}")
                 for waiting_tr in waiting_trs:
@@ -923,16 +927,8 @@ class Address_Mapping_Unit:
                 tr.address = page_address
                 self.block_manager._set_barrier(tr)
                 domain = self.domains[req.sq_id]
-                leaving_entry = domain.cmt.add_entry(tr.lpa, page_address, dirty=True) # dirty is true because a write tr must update the ppa of a lpa
+                domain.cmt.add_entry(tr.lpa, page_address, dirty=True) # dirty is true because a write tr must update the ppa of a lpa
                 debug_info(f"[AMU] <translate_and_submit> add new entry to cmt: {tr.lpa}, {page_address}")
-                if leaving_entry is not None:
-                    debug_info(f"[AMU] <translate_and_submit> cmt full, ejecting entry: {repr(leaving_entry)}")
-                    self.gmt.pop(leaving_entry[0])
-                    self.gmt[tr.lpa] = leaving_entry[1]
-                    if len(self.gmt) >= GMT_SIZE:
-                        debug_info(f"[AMU] <translate_and_submit> GMT is full, triggering mapping write for all gmt entries")
-                        mvpn = leaving_entry[0] // LPA_NO_PER_MAPPING_PAGE
-                        self.generate_mapping_write_transaction(mvpn)
                 self.tsu.Submit_trans(tr)
         # process search and compute requests, whose transaction ppa is decided in segment step
         elif req.type == RequestType.SEARCH:
@@ -950,16 +946,18 @@ class Address_Mapping_Unit:
         print("[AMU] <translate_and_submit> TSU Schedule complete")
         return
     
-    def generate_mapping_write_transaction(self, mvpn) -> None:
+    def generate_mapping_write_transaction(self, cache: dict[int, cmt_entry], mvpn: int) -> None:
         self.tsu.Prepare_trans_submission()
         bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
         data = [None for _ in range(LPA_NO_PER_MAPPING_PAGE)]
-        for lpa, entry in self.gmt.items():
-            if lpa // LPA_NO_PER_MAPPING_PAGE != mvpn:
+        for lpa, entry in cache.items():
+            if lpa // LPA_NO_PER_MAPPING_PAGE != mvpn: # write back clear entry in the meantime
                 continue
             index = lpa % LPA_NO_PER_MAPPING_PAGE
             bitmap[index] = 1
             data[index] = self.translate_address_to_ppa(entry.address)
+            self.gmt[lpa] = entry
+            self.cmt.eject_entry(lpa)
         if mvpn not in self.gtd:
             # writing to a new mapping page, get page address for it
             page_address = self.get_plane_address_for_mvpn(mvpn)

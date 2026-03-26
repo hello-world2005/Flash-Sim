@@ -1,0 +1,5 @@
+[
+    {"type": "cmd", "lpa": 1, "channel": 0, "chip": 0, "die": 0, "plane": 0, "sub-plane": 0, "page": 0, "dirty": 0},
+    {"type": "storage", "lpa": 1, "mvpn": -1, "channel": 0, "chip": 0, "die": 0, "plane": 0, "sub-plane": 0, "page": 0, "bitmap": [1], "data":[111]},
+    {"type": "block_manager", ""}
+]
