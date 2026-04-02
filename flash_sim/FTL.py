@@ -26,6 +26,8 @@ class CMT:
     def update_entry(self, lpa: int, address: FlashAddress, dirty: bool):
         entry = self.cache[lpa]
         entry.address = address
+        if entry.dirty != dirty:
+            self.address_mapping_unit.gc_wl_manager._mark_invalid(address)
         entry.dirty = dirty
         self.lru_list.remove(lpa)
         self.lru_list.insert(0, lpa)
@@ -47,9 +49,6 @@ class CMT:
         self.cache[lpa] = entry
         self.lru_list.insert(0, lpa)
 
-
-from dataclasses import dataclass
-
 @dataclass
 class blockBKE:
     invalid_page_count: int = 0
@@ -57,6 +56,8 @@ class blockBKE:
     free_page_count: int = PAGE_PER_BLOCK
     write_frontier: int = 0  # 下次写入的目标page_id
     wl_level: int = 0  # 记录该block被erase的次数
+    valid_pages: set[int] = field(default_factory=set)
+    invalid_pages: set[int] = field(default_factory=set)
 
 @dataclass
 class PlaneBKE:
@@ -67,7 +68,7 @@ class PlaneBKE:
     valid_page_count: int = 0
     invalid_page_count: int = 0
     def __init__(self) -> None:
-        self.block_entries = [blockBKE(invalid_pages=0, write_frontier=0, wl_level=0) for _ in range(BLOCK_PER_PLANE)]
+        self.block_entries = [blockBKE() for _ in range(BLOCK_PER_PLANE)]
         self.write_frontier_block = 0
         self.free_block_pool = set[int](range(BLOCK_PER_PLANE))
         self.free_page_count = PAGE_PER_BLOCK * BLOCK_PER_PLANE
@@ -128,10 +129,8 @@ class Block_Manager:
         bke = plane_bke.block_entries[plane_bke.write_frontier_block]
         page_id = bke.write_frontier
         bke.write_frontier += 1
-        bke.free_page_count -= 1
-        bke.valid_page_count += 1
+        bke.free_page_count -= 1                # free page count is subtracted immediately when issue an write transaction
         plane_bke.free_page_count -= 1
-        plane_bke.valid_page_count += 1
         if bke.write_frontier == PAGE_PER_BLOCK:
             bke.write_frontier = 0
             plane_bke.free_block_pool.pop(plane_bke.write_frontier_block)
@@ -149,12 +148,19 @@ class Block_Manager:
             raise ValueError(f"[Block Manager] <_set_barrier> unknown transaction type: {tr.type}")
         
 
-    def _remove_barrier(self, tr: Transaction):
+    def _on_transaction_serviced(self, tr: Transaction) -> None:
+        """
+        Handle transaction serviced event.
+        1. remove barrier from protected book
+        2. check gc
+        3. update block keeping book
+        """
         if tr.type in [TransactionType.USER_WRITE]:
             self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
+            self._mark_valid(tr.address)
+            self.gc_wl_manager.check_gc()
         elif tr.type in [TransactionType.MAPPING_WRITE, TransactionType.GC_WRITE, TransactionType.GC_ERASE]:
-            self.ppa_protected_book.pop(utils.translate_address_to_ppa(tr.address)) if utils.translate_address_to_ppa(tr.address) in self.ppa_protected_book else None
-        return
+            self.ppa_protected_book.pop(utils.translate_address_to_ppa(tr.address)) if utils.translate_address_to_ppa(tr.address) in self.ppa_protected_book else None        
 
     def get_block_bke(self, addr: FlashAddress) -> blockBKE:
         channel_id, chip_id, die_id, plane_id, block_id = addr.channel, addr.chip, addr.die, addr.plane, addr.sub_plane
@@ -172,21 +178,26 @@ class Block_Manager:
         # 这里按需求增加是否保护的判断，可添加bke的protected属性
         bke = self.block_keeping_book[addr.channel][addr.chip][addr.die][addr.plane][addr.sub_plane]
         return bke.page_protected[addr.page]
-
-    def mark_used(self, addr: FlashAddress, page_id: int):
+    
+    def _mark_valid(self, addr: FlashAddress):
         bke = self.get_block_bke(addr)
-        # 将 page_id 从 free_pages 移动到 valid_pages，更新写前沿
-        if page_id in bke.free_pages:
-            bke.free_pages.remove(page_id)
-        bke.valid_pages.add(page_id)
-        bke.write_frontier = (page_id + 1) % self.pages_per_block
+        plane_bke = self.get_plane_bke(addr)
 
-    def mark_invalid(self, addr: FlashAddress, page_id: int):
+        bke.valid_pages.add(addr.page)          # update valid_pages when write transaction completed
+        bke.valid_page_count += 1
+        plane_bke.valid_page_count += 1
+
+    def _mark_invalid(self, addr: FlashAddress):
+        if addr.page not in bke.valid_pages:
+            raise ValueError(f"[Block Manager] <_mark_invalid> address {addr} is not valid!")
         bke = self.get_block_bke(addr)
-        # 将 page_id 从 valid_pages 移动到 invalid_pages
-        if page_id in bke.valid_pages:
-            bke.valid_pages.remove(page_id)
-        bke.invalid_pages.add(page_id)
+        plane_bke = self.get_plane_bke(addr)
+        bke.invalid_pages.add(addr.page)          # update invalid_pages when an update write transaction is issued
+        bke.invalid_page_count += 1
+        plane_bke.invalid_page_count += 1
+        bke.valid_pages.remove(addr.page)
+        bke.valid_page_count -= 1
+        plane_bke.valid_page_count -= 1
 
     def erase_block(self, addr: FlashAddress):
         bke = self.get_block_bke(addr)
@@ -1084,9 +1095,10 @@ class GC_WL_Manager:
                     for plane in range(PLANE_PER_DIE):
                         plane_bke = self.block_manager.get_plane_bke(FlashAddress(channel=channel, chip=chip, die=die, plane=plane, block=-1, page=-1))
                         if len(plane_bke.free_block_pool) <= GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD:
-                            self.trigger_gc(FlashAddress(channel=channel, chip=chip, die=die, plane=plane, block=-1, page=-1))
+                            self._trigger_gc(FlashAddress(channel=channel, chip=chip, die=die, plane=plane, block=-1, page=-1))
+        pass
     
-    def trigger_gc(self, addr: FlashAddress):
+    def _trigger_gc(self, addr: FlashAddress):
         print("[GC] trigger gc for addr: {addr}")
         plane_bke = self.block_manager.get_plane_bke(addr)
         max_invalid_page_count = 0
@@ -1104,11 +1116,16 @@ class GC_WL_Manager:
         if max_invalid_page_count_block == -1:
             print("[GC] <trigger_gc> No block with invalid page found! Erasing block_id 0")
             max_invalid_page_count_block = 0
-        self.block_manager.erase_block(FlashAddress(channel=addr.channel, chip=addr.chip, die=addr.die, plane=addr.plane, block=max_invalid_page_count_block, page=-1))
-        plane_bke.free_block_pool.add(max_invalid_page_count_block)
-        plane_bke.free_page_count += PAGE_PER_BLOCK
-        plane_bke.valid_page_count -= PAGE_PER_BLOCK
-        plane_bke.invalid_page_count -= max_invalid_page_count
+        self._gc(addr, max_invalid_page_count_block, min_wl_level_block)
+    
+    def _gc(self, addr: FlashAddress, max_invalid_page_count_block: int, min_wl_level_block: int):
+        plane_bke = self.block_manager.get_plane_bke(addr)
+        erase_target_block = plane_bke.block_entries[max_invalid_page_count_block]
+        if erase_target_block.valid_page_count > 0:
+            print("[GC] <_gc> Erasing block with valid page count: {erase_target_block.valid_page_count}")
+        raise NotImplementedError("[GC] <_gc> is not implemented yet")
+            
+            
 
 class FTL:
     def Validate_construction(self):
