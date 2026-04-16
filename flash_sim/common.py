@@ -5,7 +5,10 @@ from dataclasses import dataclass, field, fields
 import time
 from typing import Any, List, Optional
 from enum import Enum
-from config import TimingConfig, FlashGeometry
+try:
+    from .config import TimingConfig, FlashGeometry
+except ImportError:
+    from config import TimingConfig, FlashGeometry
 
 class EventType(Enum):
     # ----- 事件类型常量 -----
@@ -245,6 +248,7 @@ class Transaction:
 class Request:
     """Host 下发的 IO 请求，供 Host、HIL、FTL 使用。"""
     type: RequestType  # READ, WRITE, SEARCH, COMPUTE, MAPPING
+    stream_id: int = 0
     sq_id: Optional[int] = None
     transaction_list: List[Transaction] = field(default_factory=list)
     lha_start: int = 0   # start logical sector address

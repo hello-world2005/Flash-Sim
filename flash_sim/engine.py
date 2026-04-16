@@ -13,7 +13,7 @@ if __package__ in (None, ""):
     from flash_sim import pcie_link
     from flash_sim import Device
     from flash_sim import common as _common
-    from flash_sim.common import EventType, SimEvent, Request, RequestType
+    from flash_sim.common import EventType, SimEvent, Request, RequestType, format_event_queue
     from flash_sim.parser import parse_trace
 else:
     from . import Host
@@ -67,6 +67,7 @@ class Engine:
             scheduled_time = cmd["time"]
             req = Request(
                 type=RequestType(cmd["type"].upper()),
+                stream_id=cmd.get("stream_id", 0),
                 sq_id=None,
                 transaction_list=[],
                 lha_start=cmd["start_lha"],

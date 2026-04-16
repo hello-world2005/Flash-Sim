@@ -11,10 +11,20 @@ from pathlib import Path
 #   单文件句柄 + 互斥写入；每次 write 即 flush，顺序与「python -u … 2>&1 | tee file」一致。
 # ---------------------------------------------------------------------------
 _BASE = Path(__file__).resolve().parent
-INPUT_JSON = str(_BASE.parent / "test_case" / "gc_test.json")
-PRE_INPUT_JSON = str(_BASE.parent / "precondition" / "pre_trace.json")
+_REPO_ROOT = _BASE.parent
+INPUT_JSON = str(_REPO_ROOT / "test_case" / "gc_test.json")
+PRE_INPUT_JSON = str(_REPO_ROOT / "precondition" / "pre_trace.json")
 MERGED_LOG = str(_BASE / "output" / "gc_test.log")
 MERGED_LOG_MIRROR_CONSOLE = True
+
+
+def _validate_input_paths() -> None:
+    missing = []
+    for path_str in (INPUT_JSON, PRE_INPUT_JSON):
+        if path_str and not Path(path_str).exists():
+            missing.append(path_str)
+    if missing:
+        raise FileNotFoundError("Missing input file(s): " + ", ".join(missing))
 
 
 class _LockedMergedStream:
@@ -105,14 +115,17 @@ if __name__ == "__main__":
             sys.stdout = _merged
             sys.stderr = _merged
         else:
-            if hasattr(sys.stdout, "reconfigure"):
-                sys.stdout.reconfigure(line_buffering=True)
-            if hasattr(sys.stderr, "reconfigure"):
-                sys.stderr.reconfigure(line_buffering=True)
+            stdout_reconfigure = getattr(sys.stdout, "reconfigure", None)
+            stderr_reconfigure = getattr(sys.stderr, "reconfigure", None)
+            if callable(stdout_reconfigure):
+                stdout_reconfigure(line_buffering=True)
+            if callable(stderr_reconfigure):
+                stderr_reconfigure(line_buffering=True)
 
         sim_engine = Engine()
         print("Module construction complete.\n\n")
         try:
+            _validate_input_paths()
             sim_engine.Start_simulation(INPUT_JSON, PRE_INPUT_JSON)
         except Exception as e:
             print(f"Error: {e}")

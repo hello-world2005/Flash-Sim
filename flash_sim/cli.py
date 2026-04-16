@@ -1,16 +1,29 @@
 """Command-line interface for the flash simulator."""
 
 import argparse
-import json
+import os
 import random
 import sys
 import time
 from pathlib import Path
 from typing import Optional
 
-from .config import FlashConfig, FlashGeometry, FlashAddress
-from .simulator import FlashSimulator
-from .parser import parse_trace, format_results, load_config, ParseError, ValidationError
+if __package__ in (None, ""):
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    from flash_sim.config import FlashConfig, FlashGeometry, FlashAddress
+    from flash_sim.simulator import FlashSimulator
+    from flash_sim.parser import parse_trace, format_results, load_config, ParseError, ValidationError
+    from flash_sim.engine import Engine
+    from flash_sim.timeline_recorder import TimelineRecorder
+else:
+    from .config import FlashConfig, FlashGeometry, FlashAddress
+    from .simulator import FlashSimulator
+    from .parser import parse_trace, format_results, load_config, ParseError, ValidationError
+    from .engine import Engine
+    from .timeline_recorder import TimelineRecorder
 
 
 def print_geometry(geo: FlashGeometry) -> None:
@@ -224,6 +237,45 @@ def cmd_interactive(args) -> int:
     return 0
 
 
+def cmd_run_engine(args) -> int:
+    """Run event-driven engine simulation and optionally generate timeline visualization."""
+    recorder = TimelineRecorder()
+    engine = Engine()
+    recorder.attach(engine)
+
+    pre_trace = args.pre_trace
+    if pre_trace is None:
+        default_pre = Path(args.trace).resolve().parent.parent / "precondition" / "pre_trace.json"
+        pre_trace = str(default_pre) if default_pre.exists() else ""
+
+    try:
+        engine.Start_simulation(args.trace, pre_trace)
+    except Exception as e:
+        print(f"Engine simulation failed: {e}", file=sys.stderr)
+        return 1
+
+    events_path = recorder.dump_json(args.events)
+    print(f"Timeline events written to {events_path}")
+
+    if args.no_viz:
+        return 0
+
+    try:
+        from .visualizer import visualize_timeline
+    except Exception as e:
+        print(f"Failed to import visualizer dependencies: {e}", file=sys.stderr)
+        print("Install with: conda run -n flash-sim pip install plotly", file=sys.stderr)
+        return 1
+
+    html_path = visualize_timeline(
+        events_path=events_path,
+        html_output=args.viz_output,
+        auto_open=not args.no_open,
+    )
+    print(f"Timeline html written to {html_path}")
+    return 0
+
+
 def main(argv: Optional[list] = None) -> int:
     """Main entry point for CLI.
 
@@ -243,7 +295,7 @@ def main(argv: Optional[list] = None) -> int:
         first_arg = argv[0]
         # Check if it's a trace file (not a known command, ends with .json, or file exists)
         if (not first_arg.startswith('-') and
-            first_arg not in ['info', 'lba', 'addr', 'run', 'interactive', 'bench', 'help', '--help', '-h'] and
+            first_arg not in ['info', 'lba', 'addr', 'run', 'run-engine', 'interactive', 'bench', 'help', '--help', '-h'] and
             (first_arg.endswith('.json') or Path(first_arg).exists())):
             # Convert to legacy run mode: insert "run" as first argument
             argv = ['run'] + argv
@@ -270,6 +322,9 @@ Examples:
   # Run a trace file (legacy or new style)
   flash-sim trace.json -o results.json
   flash-sim run trace.json -c my_3d_config.json
+
+    # Run event-driven engine and auto-open timeline
+    flash-sim run-engine test_case/gc_test.json --events output/timeline_events.json
 
   # Interactive mode
   flash-sim interactive -c my_3d_config.json
@@ -315,6 +370,16 @@ Examples:
     run_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     run_parser.set_defaults(func=cmd_run)
 
+    # run-engine command
+    run_engine_parser = subparsers.add_parser("run-engine", help="Run engine simulation and generate timeline visualization")
+    run_engine_parser.add_argument("trace", help="Path to engine trace JSON file")
+    run_engine_parser.add_argument("--pre-trace", default=None, help="Path to precondition trace JSON file")
+    run_engine_parser.add_argument("--events", default="timeline_events.json", help="Output path for extracted timeline events JSON")
+    run_engine_parser.add_argument("--viz-output", default="timeline.html", help="Output path for timeline html")
+    run_engine_parser.add_argument("--no-viz", action="store_true", help="Only export timeline events, do not generate html")
+    run_engine_parser.add_argument("--no-open", action="store_true", help="Generate html but do not open browser")
+    run_engine_parser.set_defaults(func=cmd_run_engine)
+
     # interactive command
     interactive_parser = subparsers.add_parser("interactive", help="Run in interactive mode")
     interactive_parser.set_defaults(func=cmd_interactive)
@@ -325,7 +390,7 @@ Examples:
     bench_parser.set_defaults(func=cmd_bench)
 
     # Add config argument to all subparsers
-    for subparser in [info_parser, lba_parser, addr_parser, run_parser, interactive_parser, bench_parser]:
+    for subparser in [info_parser, lba_parser, addr_parser, run_parser, run_engine_parser, interactive_parser, bench_parser]:
         subparser.add_argument("-c", "--config", help="Path to JSON configuration file")
 
     args = parser.parse_args(argv)
