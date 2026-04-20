@@ -44,7 +44,8 @@ class Engine:
     def Register_event(self, event_type, target, param, scheduled_time):
         event = SimEvent(type=event_type, target=target, time=scheduled_time, param=param)
         self.event_queue.put(event)
-        print(f"[Engine] Time = {self.current_time}, Register_event: type={event_type}, scheduled_time={scheduled_time}")
+        print(f"[Engine] Time = {self.current_time}, Register_event: type={event_type}, scheduled_time={scheduled_time}, target={target.__class__.__name__}, param={param}")
+        print()
 
     def Execute_event(self):
         event = self.event_queue.get()

@@ -12,10 +12,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from .common import EventType, MessageType
+from .common import CHIP_PER_CHANNEL, CHANNEL_NO, EventType, MessageType
 
 
-REQ_PHASE_ORDER = ["REQ_INIT", "DELIVER", "DATA", "REQ_COMP"]
+REQ_PHASE_ORDER = [
+    "REQ_INIT",
+    "DELIVER",
+    "WRITE_DATA",
+    "SEARCH_DATA",
+    "COMPUTE_DATA",
+    "STATIC_WRITE_DATA",
+    "REQ_COMP",
+]
 TXN_PHASE_ORDER = ["dispatch", "CMP_TRANSFERED", "COMPLETE", "DATA_TRANSFERED"]
 
 CMD_TRANSFER_EVENTS = {
@@ -141,7 +149,7 @@ class TimelineRecorder:
                 MessageType.STATIC_WRITE_DATA,
             }:
                 if req is not None:
-                    self._mark_req_phase(req, "DATA", now)
+                    self._mark_req_phase(req, msg_type.value, now)
             elif msg_type == MessageType.REQ_COMP:
                 if req is not None:
                     self._mark_req_phase(req, "REQ_COMP", now)
@@ -275,6 +283,8 @@ class TimelineRecorder:
                 "final_time": int(self.engine.current_time if self.engine is not None else 0),
                 "request_count": len(requests),
                 "transaction_count": len(transactions),
+                "channel_count": CHANNEL_NO,
+                "chip_count": CHIP_PER_CHANNEL,
             },
             "requests": requests,
             "transactions": transactions,

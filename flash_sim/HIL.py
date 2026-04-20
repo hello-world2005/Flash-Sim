@@ -110,14 +110,14 @@ class HIL:
         
     def _on_transaction_serviced(self, tr): # handle trnasaction serviced signal from PHY
         # get source req of tr
-        print(f"[HIL] _on_transaction_serviced: tr: {repr(tr)}")
+        debug_info(f"[HIL] _on_transaction_serviced: tr: {repr(tr)}")
         source_req = tr.source_req
         tr.completed = True
         if source_req is None:
             return
         if source_req.is_serviced():
             req_brief = f"Request(type={source_req.type}, lha_start={source_req.lha_start}, size={source_req.size})"
-            print(f"[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: {req_brief}")
+            debug_info(f"[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: {req_brief}")
             # 目前仅考虑把所有信息全部塞进CQ_Entry里，因此所有的req类型操作是一样的，都是发个CQ_Entry给Host
             payload = {"req": source_req, "status": "completed"}
             self.host.queue_ptrs.cq_tails[source_req.sq_id] += 1

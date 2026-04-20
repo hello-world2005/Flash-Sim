@@ -15,7 +15,10 @@ from plotly.subplots import make_subplots
 REQ_COLORS = {
     "REQ_INIT": "#4E79A7",
     "DELIVER": "#F28E2B",
-    "DATA": "#59A14F",
+    "WRITE_DATA": "#59A14F",
+    "SEARCH_DATA": "#59A14F",
+    "COMPUTE_DATA": "#59A14F",
+    "STATIC_WRITE_DATA": "#59A14F",
     "REQ_COMP": "#B07AA1",
 }
 
@@ -45,7 +48,14 @@ def _lane_order_for_requests(requests: list[dict[str, Any]]) -> list[int]:
     return sorted({int(r.get("stream_id", 0)) for r in requests})
 
 
-def _lane_order_for_transactions(transactions: list[dict[str, Any]]) -> list[tuple[int, int]]:
+def _lane_order_for_transactions(
+    transactions: list[dict[str, Any]],
+    channel_count: int | None = None,
+    chip_count: int | None = None,
+) -> list[tuple[int, int]]:
+    if channel_count is not None and chip_count is not None and channel_count > 0 and chip_count > 0:
+        return [(channel, chip) for channel in range(channel_count) for chip in range(chip_count)]
+
     lanes = {(int(t.get("channel", -1)), int(t.get("chip", -1))) for t in transactions}
     return sorted(lanes, key=lambda x: (x[0], x[1]))
 
@@ -95,11 +105,16 @@ def _add_phase_bars(fig: go.Figure, row: int, items: list[dict[str, Any]], phase
 
 
 def build_timeline_figure(payload: dict[str, Any]) -> go.Figure:
+    meta = payload.get("meta", {})
     requests = payload.get("requests", [])
     transactions = payload.get("transactions", [])
 
     req_lanes = _lane_order_for_requests(requests)
-    txn_lanes = _lane_order_for_transactions(transactions)
+    txn_lanes = _lane_order_for_transactions(
+        transactions,
+        channel_count=meta.get("channel_count"),
+        chip_count=meta.get("chip_count"),
+    )
 
     fig = make_subplots(
         rows=2,

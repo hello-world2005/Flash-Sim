@@ -319,7 +319,7 @@ class TSU:
     
     def _reschedule(self, tr: Transaction):
         self.Prepare_trans_submission()
-        print(f"[TSU] <_reschedule> transaction serviced, rescheduling: {repr(tr)}")
+        debug_info(f"[TSU] <_reschedule> transaction serviced, rescheduling: {repr(tr)}")
         self.Schedule()
         return
 
@@ -339,7 +339,7 @@ class TSU:
     def Prepare_trans_submission(self):
         """Open a submission batch; must be paired with Schedule()."""
         self._onfly_schedule_req_no += 1
-        print(f"[TSU] <Prepare_trans_submission> {self._onfly_schedule_req_no}")
+        debug_info(f"[TSU] <Prepare_trans_submission> {self._onfly_schedule_req_no}")
 
     def Submit_trans(self, trans: Transaction):
         """Endeque a transaction to the appropriate per-chip priority deque."""
@@ -380,14 +380,14 @@ class TSU:
         对标 TSU_OutOfOrder::Schedule()。
         """
         self._onfly_schedule_req_no -= 1
-        print(f"[TSU] <Schedule> {self._onfly_schedule_req_no}")
+        debug_info(f"[TSU] <Schedule> {self._onfly_schedule_req_no}")
         if self._onfly_schedule_req_no < 0:
             raise RuntimeError("onfly_schedule_req_no should not be negative")
         if self._onfly_schedule_req_no > 0:
             return
         for ch in range(self.channel_no):
             if self.channel_is_busy(ch):
-                print(f"[TSU] <Schedule> channel {ch} is busy, move to next channel")
+                debug_info(f"[TSU] <Schedule> channel {ch} is busy, move to next channel")
                 continue   # channel occupied; move to next channel
             for _ in range(self.chip_no_per_channel):
                 chip_id = (ch, self.round_robin_turn[ch])
@@ -451,7 +451,7 @@ class TSU:
         # #endregion
         if is_static:
             # SEARCH/COMPUTE-dedicated chip: handled separately
-            print(f"[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip {chip_id}")
+            debug_info(f"[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip {chip_id}")
             if self.try_compute(chip_id):
                 debug_info(f"[TSU] <try_activate> compute dispatched for chip {chip_id}")
                 dispatched = True
@@ -654,7 +654,7 @@ class TSU:
         """
         if not q1:
             raise ValueError("Issued an empty command to PHY")
-        print(f"[TSU] <issue_command> q1: {q1}, q2: {q2}, suspension_required: {suspension_required}")
+        debug_info(f"[TSU] <issue_command> q1: {q1}, q2: {q2}, suspension_required: {suspension_required}")
         die_no = DIE_PER_CHIP
         plane_no = PLANE_PER_DIE
 
@@ -669,10 +669,10 @@ class TSU:
 
             for tr in list(q1):
                 if tr.rely_on_transactions:
-                    print(f"[TSU] <issue_command> tr has rely_on_transactions, skipping {repr(tr)}")
+                    debug_info(f"[TSU] <issue_command> tr has rely_on_transactions, skipping {repr(tr)}")
                     continue
                 if not tr.data_ready:
-                    print(f"[TSU] <issue_command> tr data not ready, skipping {repr(tr)}")
+                    debug_info(f"[TSU] <issue_command> tr data not ready, skipping {repr(tr)}")
                     continue
                 if self._transaction_blocked_by_barrier(tr):
                     debug_info(f"[TSU] <issue_command> tr blocked by barrier, skipping {repr(tr)}")
@@ -696,10 +696,10 @@ class TSU:
             if q2 is not None and len(dispatch_slots) < plane_no:
                 for tr in list(q2):
                     if tr.rely_on_transactions:
-                        print(f"[TSU] <issue_command> tr has rely_on_transactions, skipping {repr(tr)}")
+                        debug_info(f"[TSU] <issue_command> tr has rely_on_transactions, skipping {repr(tr)}")
                         continue
                     if not tr.data_ready:
-                        print(f"[TSU] <issue_command> tr data not ready, skipping {repr(tr)}")
+                        debug_info(f"[TSU] <issue_command> tr data not ready, skipping {repr(tr)}")
                         continue
                     if self._transaction_blocked_by_barrier(tr):
                         debug_info(f"[TSU] <issue_command> tr blocked by barrier, skipping {repr(tr)}")
@@ -722,7 +722,7 @@ class TSU:
 
             if dispatch_slots:
                 dispatched = True
-                print(f"[TSU] <issue_command> dispatching {len(dispatch_slots)} transactions to PHY")
+                debug_info(f"[TSU] <issue_command> dispatching {len(dispatch_slots)} transactions to PHY")
                 for tr in dispatch_slots:
                     if tr in q1:
                         q1.remove(tr)
@@ -758,7 +758,7 @@ class TSU:
                     debug_info(f"[TSU] <issue_search_command> tr has rely_on_transactions, skipping {repr(tr)}")
                     continue
                 if not tr.data_ready:
-                    print(f"[TSU] <issue_search_command> tr data not ready, skipping {repr(tr)}")
+                    debug_info(f"[TSU] <issue_search_command> tr data not ready, skipping {repr(tr)}")
                     continue
                 if self._transaction_blocked_by_barrier(tr):
                     debug_info(f"[TSU] <issue_search_command> tr blocked by barrier, skipping {repr(tr)}")
@@ -811,7 +811,7 @@ class TSU:
                     debug_info(f"[TSU] <issue_compute_command> tr has rely_on_transactions, skipping {repr(tr)}")
                     continue
                 if not tr.data_ready:
-                    print(f"[TSU] <issue_compute_command> tr data not ready, skipping {repr(tr)}")
+                    debug_info(f"[TSU] <issue_compute_command> tr data not ready, skipping {repr(tr)}")
                     continue
                 if self._transaction_blocked_by_barrier(tr):
                     debug_info(f"[TSU] <issue_compute_command> tr blocked by barrier, skipping {repr(tr)}")
@@ -859,7 +859,7 @@ class TSU:
                     debug_info(f"[TSU] <issue_static_write_command> tr has rely_on_transactions, skipping {repr(tr)}")
                     continue
                 if not tr.data_ready:
-                    print(f"[TSU] <issue_static_write_command> tr data not ready, skipping {repr(tr)}")
+                    debug_info(f"[TSU] <issue_static_write_command> tr data not ready, skipping {repr(tr)}")
                     continue
                 if self._transaction_blocked_by_barrier(tr):
                     debug_info(f"[TSU] <issue_static_write_command> tr blocked by barrier, skipping {repr(tr)}")
@@ -964,7 +964,7 @@ class Address_Mapping_Unit:
     def _handle_mapping_response(self, tr: Transaction):
         # handle response for tr waiting mapping info
         if tr.type == TransactionType.MAPPING_READ:
-            print(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
+            debug_info(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
             self.tsu.Prepare_trans_submission()
             # get arriving lpa in the finished mapping read transaction
             arriving_lpa = []
@@ -996,7 +996,7 @@ class Address_Mapping_Unit:
                 self.waiting_for_mapping_trans[lpa].clear()
             self.tsu.Schedule()
         elif tr.type == TransactionType.MAPPING_WRITE:
-            print(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
+            debug_info(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
             leaving_lpa = []
             for i in range(len(tr.bitmap)):
                 if tr.bitmap[i] == 0:
@@ -1011,7 +1011,7 @@ class Address_Mapping_Unit:
     
     def translate_and_submit(self, req: Request):
         # SEARCH and COMPUTE requests don't need to be translated
-        print(f"[AMU] translate_and_submit: handling new request: {repr(req)}")
+        debug_info(f"[AMU] translate_and_submit: handling new request: {repr(req)}")
         if req.type in (RequestType.SEARCH, RequestType.COMPUTE, RequestType.STATIC_WRITE):
             self.tsu.Prepare_trans_submission()
             for tr in req.transaction_list:
@@ -1073,9 +1073,9 @@ class Address_Mapping_Unit:
                 self.block_manager._set_barrier(tr)
         else:
             raise ValueError("Invalid request type for translate_and_submit")
-        print("[AMU] <translate_and_submit> Prepare trans submission complete")
+        debug_info("[AMU] <translate_and_submit> Prepare trans submission complete")
         self.tsu.Schedule()
-        print("[AMU] <translate_and_submit> TSU Schedule complete")
+        debug_info("[AMU] <translate_and_submit> TSU Schedule complete")
         return
     
     def generate_mapping_write_transaction(self, cache: dict[int, cmt_entry], mvpn: int) -> None:

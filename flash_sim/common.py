@@ -126,7 +126,9 @@ NUM_OF_QUEUES = 8
 VIRTUAL_DATA_ADDRESS = 0xFFFFFFFFFFFFFFFF
 GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD = 62
 
-debug_info = print
+# debug_info = print
+def debug_info(*args, **kwargs):
+    pass
 
 # ── Flash timing constants (nanoseconds) ────────────────────────────────────
 PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
@@ -350,10 +352,10 @@ def _format_param(param: Any, indent: str = "") -> str:
 def log_execute_event(module_name: str, event: SimEvent) -> None:
     """在 execute 开始时调用：打印当前模块名和 event 完整信息。"""
     sep = "--------------------------------------------------------"
-    print(sep)
-    print(f"module <{module_name}> is executing event:")
-    print(event)
-    print(sep)
+    debug_info(sep)
+    debug_info(f"module <{module_name}> is executing event:")
+    debug_info(event)
+    debug_info(sep)
 
 
 def format_event_queue(event_list) -> str:
