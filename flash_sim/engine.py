@@ -96,7 +96,10 @@ class Engine:
     def Start_simulation(self, trace_path):
         self.Validate_construction()
         # 在 validation 之后执行 preconditioning 阶段
-        self.device.ftl.block_manager.preconditioning()
+        self.device.ftl.block_manager.preconditioning(
+            phy=self.device.ftl.tsu.phy,
+            amu=self.device.ftl.address_mapping_unit,
+        )
         self.Initialize_event_queue(trace_path)
         print("Event queue initialization complete.\n\n")
         print(format_event_queue(self.event_queue.queue))

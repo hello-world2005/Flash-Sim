@@ -12,14 +12,14 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 _BASE = Path(__file__).resolve().parent
 _REPO_ROOT = _BASE.parent
-INPUT_JSON = str(_REPO_ROOT / "test_case" / "gc_test.json")
-MERGED_LOG = str(_BASE / "output" / "gc_test.log")
+INPUT_JSON = str(_REPO_ROOT / "test_case" / "test_read_write.json")
+MERGED_LOG = str(_BASE / "output" / "test_read_write.log")
 MERGED_LOG_MIRROR_CONSOLE = True
 
 
 def _validate_input_paths() -> None:
     missing = []
-    for path_str in (INPUT_JSON):
+    for path_str in (INPUT_JSON,):
         if path_str and not Path(path_str).exists():
             missing.append(path_str)
     if missing:

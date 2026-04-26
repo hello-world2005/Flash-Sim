@@ -1,199 +1,176 @@
 """
-Block Manager Preconditioning 功能测试。
+Block Manager Preconditioning 功能测试（数据驱动版）。
 
 验证 preconditioning 函数的正确性：
-1. free block pool 的大小和内容
+1. free block pool 中所有 block 都是 free 的
 2. write frontier block 的初始化
-3. full block 中 valid/invalid page 的比例
+3. full block 中 valid/invalid page 的比例及 PHY storage 写入
 4. plane 统计信息的准确性
+5. static chip 跳过
 """
 
 import sys
 import os
+import json
+import random
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from flash_sim.FTL import Block_Manager, blockBKE, PlaneBKE
-from flash_sim.common import PAGE_PER_BLOCK, GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD, BLOCK_PER_PLANE
+from flash_sim.PHY import PHY, PageData
+from flash_sim.common import (
+    PAGE_PER_BLOCK, GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD,
+    BLOCK_PER_PLANE, STATIC_CHIP_PER_CHANNEL, SECTOR_PER_PAGE,
+)
 from flash_sim.config import FlashGeometry
 import unittest
 
+# 测试用 precondition_data.json 路径
+_DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'pre_data', 'precondition_data.json')
+
+# 固定参数：block_no 须 > GC_threshold + 1；plane/die 与数据生成脚本对齐
+_BLOCK_NO = 128
+
+
+def _make_bm_and_phy(block_no=_BLOCK_NO):
+    """构造测试用的 Block_Manager 和 PHY（不连接 gc_wl_manager）。"""
+    bm = Block_Manager(
+        channel_no=1,
+        chip_no_per_channel=2,   # chip 0: regular, chip 1: static
+        die_no_per_chip=1,
+        plane_no_per_die=1,
+        block_no_per_plane=block_no,
+        pages_per_block=PAGE_PER_BLOCK,
+    )
+    # 构造一个最小 PHY，仅用于存储检查
+    class _MinPHY:
+        def __init__(self):
+            self._storage = [
+                [
+                    [
+                        [
+                            [
+                                [PageData() for _ in range(PAGE_PER_BLOCK)]
+                                for _ in range(block_no)
+                            ]
+                            for _ in range(1)   # plane_no_per_die=1
+                        ]
+                        for _ in range(1)   # die_no_per_chip=1
+                    ]
+                    for _ in range(2)   # chip_no_per_channel=2
+                ]
+                for _ in range(1)   # channel_no=1
+            ]
+    return bm, _MinPHY()
+
+
+def _load_data():
+    with open(_DATA_PATH) as f:
+        return json.load(f)
+
 
 class TestPreconditioning(unittest.TestCase):
-    """测试 Block Manager 的 preconditioning 功能。"""
-    
+    """测试 Block Manager 数据驱动 preconditioning 功能。"""
+
     def setUp(self):
-        """设置测试环境。"""
-        # 使用较小的尺寸以加快测试
-        self.block_manager = Block_Manager(
-            channel_no=1,
-            chip_no_per_channel=2,  # 1 static chip，1 regular chip
-            die_no_per_chip=1,
-            plane_no_per_die=1,
-            block_no_per_plane=64,
-            pages_per_block=PAGE_PER_BLOCK
-        )
-        # 注意：Block Manager 在构造时所有 block 都是 free 的
-    
-    def test_preconditioning_initialization(self):
-        """测试 preconditioning 后 block 的初始化状态。"""
-        print("\n[TEST] test_preconditioning_initialization")
-        
-        # 调用 preconditioning
-        self.block_manager.preconditioning()
-        
-        # 验证 static chip 未被初始化
-        # 注意：block_manager 的默认值会初始化所有 plane，所以我们只验证 regular chip
-        # 获取 regular chip 的 plane
-        plane_bke = self.block_manager.block_keeping_book[0][0][0][0]  # channel 0, regular chip 0
-        
-        # 验证 free block pool 的大小
-        self.assertEqual(len(plane_bke.free_block_pool), GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD,
-                        f"Free block pool size should be {GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD}")
-        
-        # 验证 write frontier block 已设置
-        write_frontier_block_id = plane_bke.write_frontier_block
-        self.assertNotIn(write_frontier_block_id, plane_bke.free_block_pool,
-                        "Write frontier block should not be in free block pool")
-        
-        # 验证 write frontier block 的 write_frontier 值在有效范围内
-        write_frontier_bke = plane_bke.block_entries[write_frontier_block_id]
-        self.assertGreater(write_frontier_bke.write_frontier, 0,
-                          "Write frontier should be > 0")
-        self.assertLess(write_frontier_bke.write_frontier, PAGE_PER_BLOCK,
-                       "Write frontier should be < PAGE_PER_BLOCK")
-        
-        print(f"✓ Free block pool size: {len(plane_bke.free_block_pool)}")
-        print(f"✓ Write frontier block: {write_frontier_block_id} (frontier: {write_frontier_bke.write_frontier}/{PAGE_PER_BLOCK})")
-    
+        self.bm, self.phy = _make_bm_and_phy()
+        self.bm.preconditioning(data_path=_DATA_PATH, phy=self.phy, amu=None)
+        self.plane_bke = self.bm.block_keeping_book[0][0][0][0]
+
     def test_free_block_pool_pages(self):
-        """测试 free block pool 中所有 block 的 page 都是 free 的。"""
+        """free block pool 中每个 block 的 page 都应全为 free。"""
         print("\n[TEST] test_free_block_pool_pages")
-        
-        self.block_manager.preconditioning()
-        plane_bke = self.block_manager.block_keeping_book[0][0][0][0]
-        
-        # 验证 free block pool 中的每个 block
-        for block_id in plane_bke.free_block_pool:
-            bke = plane_bke.block_entries[block_id]
-            # 所有 page 应该是 free 的
+        for block_id in self.plane_bke.free_block_pool:
+            bke = self.plane_bke.block_entries[block_id]
             self.assertEqual(bke.free_page_count, PAGE_PER_BLOCK,
-                           f"Block {block_id} in free pool should have {PAGE_PER_BLOCK} free pages")
-            self.assertEqual(bke.valid_page_count, 0,
-                           f"Block {block_id} in free pool should have 0 valid pages")
-            self.assertEqual(bke.invalid_page_count, 0,
-                           f"Block {block_id} in free pool should have 0 invalid pages")
+                             f"Block {block_id} in free pool: free_page_count should be {PAGE_PER_BLOCK}")
+            self.assertEqual(bke.valid_page_count, 0)
+            self.assertEqual(bke.invalid_page_count, 0)
             self.assertEqual(len(bke.valid_pages), 0)
             self.assertEqual(len(bke.invalid_pages), 0)
-        
-        print(f"✓ All {len(plane_bke.free_block_pool)} free blocks verified")
-    
+        print(f"[OK] All {len(self.plane_bke.free_block_pool)} free blocks verified")
+
+    def test_write_frontier_block(self):
+        """write_frontier_block 不在 free_block_pool 内，frontier 值合法。"""
+        print("\n[TEST] test_write_frontier_block")
+        wfb_id = self.plane_bke.write_frontier_block
+        self.assertNotIn(wfb_id, self.plane_bke.free_block_pool)
+        wfb = self.plane_bke.block_entries[wfb_id]
+        self.assertGreaterEqual(wfb.write_frontier, 0)
+        self.assertLessEqual(wfb.write_frontier, PAGE_PER_BLOCK)
+        print(f"[OK] Write frontier block: {wfb_id} (frontier: {wfb.write_frontier}/{PAGE_PER_BLOCK})")
+
     def test_full_block_valid_invalid_ratio(self):
-        """测试已写满 block 中 valid/invalid page 的比例。"""
+        """full block 的 valid+invalid == PAGE_PER_BLOCK，free == 0。"""
         print("\n[TEST] test_full_block_valid_invalid_ratio")
-        
-        geometry = FlashGeometry()
-        valid_invalid_ratio = geometry.valid_invalid_ratio
-        
-        self.block_manager.preconditioning()
-        plane_bke = self.block_manager.block_keeping_book[0][0][0][0]
-        
-        # 获取所有 full block（非 free pool，非 write frontier block）
-        all_blocks = set(range(self.block_manager.block_no_per_plane))
-        free_blocks = plane_bke.free_block_pool
-        write_frontier_block = plane_bke.write_frontier_block
-        full_blocks = all_blocks - free_blocks - {write_frontier_block}
-        
-        print(f"Valid/Invalid ratio config: {valid_invalid_ratio}")
-        print(f"Full blocks count: {len(full_blocks)}")
-        
-        # 验证每个 full block
+        all_blocks = set(range(self.bm.block_no_per_plane))
+        full_blocks = all_blocks - self.plane_bke.free_block_pool - {self.plane_bke.write_frontier_block}
+
         total_valid = 0
         total_invalid = 0
         for block_id in full_blocks:
-            bke = plane_bke.block_entries[block_id]
-            # 验证 block 是写满的
+            bke = self.plane_bke.block_entries[block_id]
             self.assertEqual(bke.free_page_count, 0,
-                           f"Full block {block_id} should have 0 free pages")
-            # 验证 valid + invalid = PAGE_PER_BLOCK
+                             f"Full block {block_id}: free_page_count should be 0")
             self.assertEqual(bke.valid_page_count + bke.invalid_page_count, PAGE_PER_BLOCK,
-                           f"Block {block_id}: valid + invalid should equal PAGE_PER_BLOCK")
-            # 验证 valid_pages 和 invalid_pages 集合正确
-            self.assertEqual(len(bke.valid_pages), bke.valid_page_count)
-            self.assertEqual(len(bke.invalid_pages), bke.invalid_page_count)
-            # 验证没有重叠
+                             f"Full block {block_id}: valid+invalid should equal PAGE_PER_BLOCK")
             self.assertEqual(len(bke.valid_pages & bke.invalid_pages), 0,
-                           f"Block {block_id}: valid_pages and invalid_pages should not overlap")
-            
+                             f"Full block {block_id}: valid and invalid pages should not overlap")
             total_valid += bke.valid_page_count
             total_invalid += bke.invalid_page_count
-        
-        # 验证 plane 的统计信息
-        self.assertEqual(plane_bke.valid_page_count, total_valid,
-                        "Plane valid_page_count should match sum of block valid_pages")
-        self.assertEqual(plane_bke.invalid_page_count, total_invalid,
-                        "Plane invalid_page_count should match sum of block invalid_pages")
-        
-        print(f"✓ Total valid pages: {total_valid}")
-        print(f"✓ Total invalid pages: {total_invalid}")
-        if len(full_blocks) > 0:
-            actual_ratio = total_valid / (total_valid + total_invalid) if (total_valid + total_invalid) > 0 else 0
-            print(f"✓ Actual valid/invalid ratio: {actual_ratio:.2f}")
-    
-    def test_plane_statistics(self):
-        """测试 plane 统计信息的准确性。"""
-        print("\n[TEST] test_plane_statistics")
-        
-        self.block_manager.preconditioning()
-        plane_bke = self.block_manager.block_keeping_book[0][0][0][0]
-        
-        # 统计实际的 page 数
-        total_free_pages = 0
-        total_valid_pages = 0
-        total_invalid_pages = 0
-        
-        for block_id, bke in enumerate(plane_bke.block_entries):
-            total_free_pages += bke.free_page_count
-            total_valid_pages += bke.valid_page_count
-            total_invalid_pages += bke.invalid_page_count
-        
-        # 验证 plane 统计与实际值一致
-        self.assertEqual(plane_bke.free_page_count, total_free_pages,
-                        "Plane free_page_count mismatch")
-        self.assertEqual(plane_bke.valid_page_count, total_valid_pages,
-                        "Plane valid_page_count mismatch")
-        self.assertEqual(plane_bke.invalid_page_count, total_invalid_pages,
-                        "Plane invalid_page_count mismatch")
-        
-        # 验证总页数
-        total_pages = total_free_pages + total_valid_pages + total_invalid_pages
-        expected_total = PAGE_PER_BLOCK * self.block_manager.block_no_per_plane
-        self.assertEqual(total_pages, expected_total,
-                        f"Total pages should be {expected_total}")
-        
-        print(f"✓ Free pages: {total_free_pages}")
-        print(f"✓ Valid pages: {total_valid_pages}")
-        print(f"✓ Invalid pages: {total_invalid_pages}")
-        print(f"✓ Total: {total_pages}/{expected_total}")
-    
-    def test_static_chip_skipped(self):
-        """测试 static chip 在 preconditioning 中被跳过。"""
-        print("\n[TEST] test_static_chip_skipped")
-        
-        # 创建一个 block manager 并手动检查 is_static_chip 函数
-        self.block_manager.preconditioning()
-        
-        # 验证 static chip 判断逻辑
-        # static chip 是指 chip_id >= chip_per_channel - static_chip_per_channel
-        from flash_sim.common import STATIC_CHIP_PER_CHANNEL, CHIP_PER_CHANNEL
-        
-        for chip_id in range(self.block_manager.chip_no_per_channel):
-            is_static = self.block_manager._is_static_chip(chip_id)
-            expected_static = chip_id >= self.block_manager.chip_no_per_channel - STATIC_CHIP_PER_CHANNEL
-            self.assertEqual(is_static, expected_static,
-                           f"Static chip detection for chip {chip_id} mismatch")
-        
-        print(f"✓ Static chip detection correct")
 
+        wfb = self.plane_bke.block_entries[self.plane_bke.write_frontier_block]
+        total_valid += wfb.valid_page_count
+        total_invalid += wfb.invalid_page_count
+
+        self.assertEqual(self.plane_bke.valid_page_count, total_valid)
+        self.assertEqual(self.plane_bke.invalid_page_count, total_invalid)
+        print(f"[OK] Full blocks: {len(full_blocks)}, valid: {total_valid}, invalid: {total_invalid}")
+
+    def test_phy_storage_written(self):
+        """所有 valid page 对应的 PHY storage 都应写入 lpa 和 data。"""
+        print("\n[TEST] test_phy_storage_written")
+        all_blocks = set(range(self.bm.block_no_per_plane))
+        non_free = all_blocks - self.plane_bke.free_block_pool
+        written = 0
+        for block_id in non_free:
+            bke = self.plane_bke.block_entries[block_id]
+            for page_idx in bke.valid_pages:
+                pd = self.phy._storage[0][0][0][0][block_id][page_idx]
+                self.assertIsNotNone(pd.lpa, f"Block {block_id} page {page_idx}: lpa should not be None")
+                written += 1
+        print(f"[OK] PHY storage written for {written} valid pages")
+
+    def test_plane_statistics(self):
+        """plane 统计数与各 block 实际值之和一致，总页数等于 BLOCK * PAGE。"""
+        print("\n[TEST] test_plane_statistics")
+        total_free = total_valid = total_invalid = 0
+        for bke in self.plane_bke.block_entries:
+            total_free += bke.free_page_count
+            total_valid += bke.valid_page_count
+            total_invalid += bke.invalid_page_count
+
+        self.assertEqual(self.plane_bke.free_page_count, total_free)
+        self.assertEqual(self.plane_bke.valid_page_count, total_valid)
+        self.assertEqual(self.plane_bke.invalid_page_count, total_invalid)
+        expected = PAGE_PER_BLOCK * self.bm.block_no_per_plane
+        self.assertEqual(total_free + total_valid + total_invalid, expected)
+        print(f"[OK] Total pages: {total_free + total_valid + total_invalid}/{expected}")
+
+    def test_static_chip_skipped(self):
+        """static chip 的 plane 不应被赋值（free_block_pool 仍是初始全集）。"""
+        print("\n[TEST] test_static_chip_skipped")
+        # chip 1 是 static chip（chip_no_per_channel=2, STATIC_CHIP_PER_CHANNEL=1）
+        static_plane_bke = self.bm.block_keeping_book[0][1][0][0]
+        # static chip 未做 preconditioning，valid/invalid count 都应为 0
+        self.assertEqual(static_plane_bke.valid_page_count, 0,
+                         "Static chip plane should have 0 valid pages")
+        self.assertEqual(static_plane_bke.invalid_page_count, 0,
+                         "Static chip plane should have 0 invalid pages")
+        # write_frontier_block 保持初始值 0
+        self.assertEqual(static_plane_bke.write_frontier_block, 0,
+                         "Static chip plane write_frontier_block should remain 0")
+        print("[OK] Static chip detection correct")
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

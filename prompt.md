@@ -1,8 +1,8 @@
-# Block Manager添加preconditioning模块
-
-请帮我在Block Manager中加一个preconditioning函数，在engine完成initialize和validation之后，跑一个preconditioning阶段，该阶段内对Block Manager内部的plane_bke, block_bke进行赋初值，具体规则如下：
-1. 对于static_chip，不进行赋值操作；对于其它chip，赋值时每个对每个die内的每个plane进行循环，每个plane进行一遍赋值操作
-2. 对每个plane进行的赋值操作中，需要根据common.py和config.py文件中对FlashGeometry的规定，随机抽取GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD个block，这些block必须是全部为free_page的；其它block中，选取1个block作为这个plane的write_frontier_block，并随机生成一个 `0 < write_frontier < page_per_block`，作为这个block的write_frontier
-3. 此时剩余的所有block都是全部写满的，即free_pages应该是一个空的set。设置一个可配置参数，为已经写满的block中invalid_page和valid_page的比例，按照这个比例随机将这些block中的page赋值成valid和invalid
-
-__构造agent来完成上述任务，要求至少构建两个智能体，一个负责coding，一个负责verification__
+# Block Manager _preconditioning函数功能修改
+目前的preconditioning模块只对block_manager中的状态维护表进行了赋值，导致在GC回收遇到preconditioning赋值的valid_page的时候会遇到无法读取lpa的报错。接下来需要进行如下修改：
+1. precondition阶段由随机赋值page state改为根据输入的precondition_data.json进行赋值
+    1. precondition_data.json文件的结构参考pre_data/precondition_data.json，为一个json列表，每个元素是包含lpa, valid_bitmap, data的字典
+    2. _preconditioning函数读取该文件，根据lpa映射到plane的规则，将所有data分给不同的plane，然后根据每个plane中分到的page数量以及给定的每个`block`中`invalid_pag`e与`valid_page`的比例，算出需要的full_block（全为invalid/valid page）数量，计算方式为：假设一个plane中分到了num_page个pagedata，`valid_page/page_per_block = ratio`，则`num_full_block = num_page // (page_per_block * ratio)`。如果算出`num_full_block + GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD >= block_per_plane`，说明这个plane已经写得过满，报overfull错误并停止程序
+    3. 在该plane中随机选取`num_full_block`个block，将其中比例为ratio的page赋值为valid，并赋值PHY.py文件中_storage数组里对应的pagedata的lpa, valid_bitmap, data字段
+    4. 在剩余的free_block中随机选一个作为write_frontier_block，如果上一步中`num_page % (page_per_block * ratio) = left_page > 0`，则将write_frontier_page设置成`left_page / ratio`，并且在`page_idx < write_frontier_page`的page中随机选取left_page个page，将其对应的page_data赋值
+2. 帮我写一个生成precondition_data.json文件的脚本，放在flash_sim目录下。该脚本读取common.py, config.py中关于flash的配置，在合理的lpa范围内随机生成`num_data`个preconditioning阶段需要赋值的数据

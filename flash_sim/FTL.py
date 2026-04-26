@@ -275,146 +275,230 @@ class Block_Manager:
             phy.clear_block_pages(addr)
         print(f"[Block Manager] <finalize_gc_erase> plane {addr.plane} block {addr.sub_plane} erased, free_block_num {len(plane_bke.free_block_pool)}, free_page_num {plane_bke.free_page_count}, valid_page_num {plane_bke.valid_page_count}, invalid_page_num {plane_bke.invalid_page_count}")
 
-    def preconditioning(self) -> None:
+    def preconditioning(self, data_path: str = None, phy=None, amu=None) -> None:
         """
-        预处理阶段：初始化 Block Manager 的 plane_bke 和 block_bke。
-        
+        预处理阶段：根据 precondition_data.json 初始化 Block Manager 与 PHY 存储。
+
         规则：
-        1. 对于 static_chip，不进行任何初始化操作
-        2. 对于其他 chip，对每个 die 的每个 plane 进行初始化：
-           - 随机选择 GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD 个 block，所有 page 为 free
-           - 从剩余 block 中随机选择 1 个作为 write_frontier_block，设置随机 write_frontier
-           - 剩余 block 全部设为写满状态，按 valid_invalid_ratio 分配 valid/invalid page
+        1. static_chip 跳过
+        2. 读取 JSON，按 LPA->plane 分组
+        3. 对每个 plane 计算 num_full_block，选出 full block，写入 PHY 数据和 AMU 映射
+        4. 处理 write_frontier_block 的剩余页
         """
-        print("\n" + "="*80)
-        print("[Block Manager] Starting preconditioning phase...")
-        print("="*80)
-        
-        for channel_id in range(self.channel_no):
-            for chip_id in range(self.chip_no_per_channel):
-                # 检查是否为 static chip，如果是则跳过
-                if self._is_static_chip(chip_id):
-                    print(f"[Block Manager] Skipping preconditioning for static chip {chip_id}")
-                    continue
-                
-                for die_id in range(self.die_no_per_chip):
-                    for plane_id in range(self.plane_no_per_die):
-                        self._precondition_plane(channel_id, chip_id, die_id, plane_id)
-        
-        print("[Block Manager] Preconditioning phase completed.")
-        print("="*80 + "\n")
+        import json
+        import os
+        from collections import defaultdict
 
-    def _is_static_chip(self, chip_id: int) -> bool:
-        """
-        判断 chip 是否为 static chip。
-        Static chip 用于 SEARCH/COMPUTE 操作，从芯片末尾开始分配。
-        """
-        return chip_id >= self.chip_no_per_channel - STATIC_CHIP_PER_CHANNEL
+        if data_path is None:
+            base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            data_path = os.path.join(base, 'pre_data', 'precondition_data.json')
 
-    def _precondition_plane(self, channel_id: int, chip_id: int, die_id: int, plane_id: int) -> None:
-        """
-        对单个 plane 进行预处理。
-        """
-        plane_bke = self.block_keeping_book[channel_id][chip_id][die_id][plane_id]
-        
-        # Step 1: 重置 plane_bke 的状态（将所有 block 初始化为 free）
-        plane_bke.block_entries = [blockBKE() for _ in range(self.block_no_per_plane)]
-        plane_bke.write_frontier_block = 0
-        plane_bke.free_block_pool = set(range(self.block_no_per_plane))
-        plane_bke.free_page_count = PAGE_PER_BLOCK * self.block_no_per_plane
-        plane_bke.valid_page_count = 0
-        plane_bke.invalid_page_count = 0
-        
-        # Step 2: 从所有 block 中随机选择 GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD 个作为 free block
-        all_blocks = set(range(self.block_no_per_plane))
-        free_blocks_num = min(GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD, len(all_blocks))
-        free_block_pool = set(random.sample(list(all_blocks), free_blocks_num))
-        plane_bke.free_block_pool = free_block_pool
-        
-        # Step 3: 从剩余 block 中随机选择 1 个作为 write_frontier_block
-        remaining_blocks = all_blocks - free_block_pool
-        if len(remaining_blocks) == 0:
-            raise ValueError(f"[Block Manager] No remaining blocks for write frontier in "
-                           f"channel {channel_id} chip {chip_id} die {die_id} plane {plane_id}")
-        
-        write_frontier_block_id = random.choice(list(remaining_blocks))
-        plane_bke.write_frontier_block = write_frontier_block_id
-        
-        # 为 write_frontier_block 设置 write_frontier 值
-        write_frontier_block_bke = plane_bke.block_entries[write_frontier_block_id]
-        # write_frontier 的值应该在 0 < write_frontier < PAGE_PER_BLOCK 之间
-        write_frontier = random.randint(1, PAGE_PER_BLOCK - 1)
-        write_frontier_block_bke.write_frontier = write_frontier
-        
-        # 初始化 write_frontier_block 中已经使用过的 page（0 到 write_frontier-1）
-        # 按照 valid_invalid_ratio 比例分配
+        print("\n" + "=" * 80)
+        print("[Block Manager] Starting preconditioning phase (data-driven)...")
+        print(f"[Block Manager] Loading precondition data from: {data_path}")
+        print("=" * 80)
+
+        with open(data_path, 'r') as f:
+            precondition_data = json.load(f)
+
+        # 获取 PHY 和 AMU 引用（由调用方传入或从 gc_wl_manager 取）
+        if phy is None:
+            try:
+                phy = self.gc_wl_manager.tsu.phy
+            except AttributeError:
+                phy = None
+        if amu is None:
+            try:
+                amu = self.gc_wl_manager.address_mapping_unit
+            except AttributeError:
+                amu = None
+
+        # 读取 valid_invalid_ratio
         try:
             from .config import FlashGeometry
             geometry = FlashGeometry()
             valid_invalid_ratio = geometry.valid_invalid_ratio
-        except:
+        except Exception:
             valid_invalid_ratio = 0.5
-        
-        # 验证比例的合法性
-        if not (0.0 <= valid_invalid_ratio <= 1.0):
+        if not (0.0 < valid_invalid_ratio <= 1.0):
             valid_invalid_ratio = 0.5
-        
-        # 计算 write_frontier_block 中 valid/invalid page 的数量
-        num_used_pages = write_frontier
-        num_valid_in_frontier = int(num_used_pages * valid_invalid_ratio)
-        num_invalid_in_frontier = num_used_pages - num_valid_in_frontier
-        
-        # 随机分配 valid/invalid page
-        used_pages = set(range(write_frontier))
-        valid_pages_frontier = set(random.sample(list(used_pages), num_valid_in_frontier))
-        invalid_pages_frontier = used_pages - valid_pages_frontier
-        
-        write_frontier_block_bke.valid_pages = valid_pages_frontier
-        write_frontier_block_bke.invalid_pages = invalid_pages_frontier
-        write_frontier_block_bke.valid_page_count = len(valid_pages_frontier)
-        write_frontier_block_bke.invalid_page_count = len(invalid_pages_frontier)
-        write_frontier_block_bke.free_page_count = PAGE_PER_BLOCK - write_frontier
-        
-        # 更新 plane 的统计信息
-        plane_bke.free_page_count = free_blocks_num * PAGE_PER_BLOCK + write_frontier_block_bke.free_page_count
-        plane_bke.valid_page_count = write_frontier_block_bke.valid_page_count
-        plane_bke.invalid_page_count = write_frontier_block_bke.invalid_page_count
-        
-        # Step 4: 处理剩余的 full block（已写满的 block）
-        full_blocks = remaining_blocks - {write_frontier_block_id}
-        
+
+        # 按 plane 地址分组 page data
+        pages_per_plane = self.block_no_per_plane * self.pages_per_block
+        plane_page_data = defaultdict(list)
+        for item in precondition_data:
+            lpa = item['lpa']
+            lpa_high = lpa // pages_per_plane
+            pid = lpa_high % self.plane_no_per_die
+            lpa_high //= self.plane_no_per_die
+            did = lpa_high % self.die_no_per_chip
+            lpa_high //= self.die_no_per_chip
+            cid = lpa_high % self.chip_no_per_channel
+            chid = lpa_high // self.chip_no_per_channel
+            plane_page_data[(chid, cid, did, pid)].append(item)
+
+        for channel_id in range(self.channel_no):
+            for chip_id in range(self.chip_no_per_channel):
+                if self._is_static_chip(chip_id):
+                    print(f"[Block Manager] Skipping preconditioning for static chip {chip_id}")
+                    continue
+                for die_id in range(self.die_no_per_chip):
+                    for plane_id in range(self.plane_no_per_die):
+                        items = plane_page_data.get((channel_id, chip_id, die_id, plane_id), [])
+                        self._precondition_plane_from_data(
+                            channel_id, chip_id, die_id, plane_id,
+                            items, valid_invalid_ratio, phy, amu
+                        )
+
+        print("[Block Manager] Preconditioning phase completed.")
+        print("=" * 80 + "\n")
+
+    def _is_static_chip(self, chip_id: int) -> bool:
+        """判断 chip 是否为 static chip（用于 SEARCH/COMPUTE，从末尾分配）。"""
+        return chip_id >= self.chip_no_per_channel - STATIC_CHIP_PER_CHANNEL
+
+    def _precondition_plane_from_data(
+        self,
+        channel_id: int, chip_id: int, die_id: int, plane_id: int,
+        items: list, valid_invalid_ratio: float, phy, amu
+    ) -> None:
+        """
+        对单个 plane 进行数据驱动的预处理。
+
+        - items: 该 plane 分到的 page data 列表（每项含 lpa, valid_bitmap, data）
+        - valid_invalid_ratio: full block 中 valid page 占总页数的比例
+        - phy: PHY 对象（写 _storage），可为 None（测试时跳过）
+        - amu: Address_Mapping_Unit 对象（写 gmt），可为 None（测试时跳过）
+        """
+        plane_bke = self.block_keeping_book[channel_id][chip_id][die_id][plane_id]
+
+        # 重置 plane 状态
+        plane_bke.block_entries = [blockBKE() for _ in range(self.block_no_per_plane)]
+        plane_bke.write_frontier_block = 0
+        plane_bke.free_block_pool = set(range(self.block_no_per_plane))
+        plane_bke.free_page_count = self.pages_per_block * self.block_no_per_plane
+        plane_bke.valid_page_count = 0
+        plane_bke.invalid_page_count = 0
+
+        num_page = len(items)
+        # 每个 full block 中的 valid page 数
+        valid_per_full_block = max(1, int(self.pages_per_block * valid_invalid_ratio))
+        num_invalid_per_full = self.pages_per_block - valid_per_full_block
+
+        num_full_block = num_page // valid_per_full_block
+        left_page = num_page % valid_per_full_block  # 放入 write_frontier_block 的剩余 valid page 数
+
+        # Overfull 检查：full block + GC 阈值不能 >= block_per_plane（还需留 write_frontier_block）
+        if num_full_block + GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD >= self.block_no_per_plane:
+            raise ValueError(
+                f"[Block Manager] Plane overfull! "
+                f"Channel {channel_id} Chip {chip_id} Die {die_id} Plane {plane_id}: "
+                f"num_full_block={num_full_block}, GC_threshold={GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD}, "
+                f"block_per_plane={self.block_no_per_plane}. "
+                f"Reduce num_data in precondition_data.json."
+            )
+
+        all_blocks = list(range(self.block_no_per_plane))
+
+        # 随机选 num_full_block 个 block 作为 full block
+        full_blocks = set(random.sample(all_blocks, num_full_block)) if num_full_block > 0 else set()
+        remaining_blocks = set(all_blocks) - full_blocks
+
+        # 从剩余 block 中随机选一个作为 write_frontier_block
+        write_frontier_block_id = random.choice(list(remaining_blocks))
+        remaining_blocks.remove(write_frontier_block_id)
+
+        # 剩余 block 全部进入 free_block_pool
+        plane_bke.free_block_pool = remaining_blocks.copy()
+        plane_bke.write_frontier_block = write_frontier_block_id
+
+        # 处理 full block：随机分配 valid/invalid page 位置，写入 PHY 和 AMU
+        data_idx = 0
         for block_id in full_blocks:
             bke = plane_bke.block_entries[block_id]
-            
-            # 设置 block 状态为写满（free_page_count = 0）
-            bke.write_frontier = PAGE_PER_BLOCK
+            bke.write_frontier = self.pages_per_block
             bke.free_page_count = 0
-            
-            # 按比例分配 valid 和 invalid page
-            num_valid_pages = int(PAGE_PER_BLOCK * valid_invalid_ratio)
-            num_invalid_pages = PAGE_PER_BLOCK - num_valid_pages
-            
-            # 随机选择哪些 page 是 valid，剩余的是 invalid
-            all_pages = set(range(PAGE_PER_BLOCK))
-            valid_pages = set(random.sample(list(all_pages), num_valid_pages))
-            invalid_pages = all_pages - valid_pages
-            
-            bke.valid_pages = valid_pages
-            bke.invalid_pages = invalid_pages
-            bke.valid_page_count = len(valid_pages)
-            bke.invalid_page_count = len(invalid_pages)
-            
-            # 更新 plane 统计
-            plane_bke.valid_page_count += bke.valid_page_count
-            plane_bke.invalid_page_count += bke.invalid_page_count
-        
+
+            all_pages = list(range(self.pages_per_block))
+            random.shuffle(all_pages)
+            valid_positions = all_pages[:valid_per_full_block]
+            invalid_positions = all_pages[valid_per_full_block:]
+
+            bke.valid_pages = set(valid_positions)
+            bke.valid_page_count = valid_per_full_block
+            bke.invalid_pages = set(invalid_positions)
+            bke.invalid_page_count = num_invalid_per_full
+
+            for page_idx in valid_positions:
+                item = items[data_idx]
+                data_idx += 1
+                lpa = item['lpa']
+                if phy is not None:
+                    pd = phy._storage[channel_id][chip_id][die_id][plane_id][block_id][page_idx]
+                    pd.lpa = lpa
+                    pd.valid_bitmap = item.get('valid_bitmap', [])
+                    pd.data = item.get('data', [])
+                if amu is not None:
+                    addr = FlashAddress(
+                        channel=channel_id, chip=chip_id, die=die_id, plane=plane_id,
+                        sub_plane=block_id, page=page_idx
+                    )
+                    amu.gmt[lpa] = cmt_entry(address=addr, dirty=False)
+
+            plane_bke.valid_page_count += valid_per_full_block
+            plane_bke.invalid_page_count += num_invalid_per_full
+
+        # 处理 write_frontier_block
+        frontier_bke = plane_bke.block_entries[write_frontier_block_id]
+        if left_page > 0:
+            # write_frontier_page: frontier block 中"已使用"的页数（含 valid + invalid）
+            write_frontier_page = min(int(left_page / valid_invalid_ratio), self.pages_per_block)
+            num_invalid_in_frontier = write_frontier_page - left_page
+
+            used_positions = list(range(write_frontier_page))
+            valid_positions_f = set(random.sample(used_positions, left_page))
+            invalid_positions_f = set(p for p in used_positions if p not in valid_positions_f)
+
+            frontier_bke.valid_pages = valid_positions_f
+            frontier_bke.valid_page_count = left_page
+            frontier_bke.invalid_pages = invalid_positions_f
+            frontier_bke.invalid_page_count = num_invalid_in_frontier
+            frontier_bke.free_page_count = self.pages_per_block - write_frontier_page
+            frontier_bke.write_frontier = write_frontier_page
+
+            for page_idx in valid_positions_f:
+                item = items[data_idx]
+                data_idx += 1
+                lpa = item['lpa']
+                if phy is not None:
+                    pd = phy._storage[channel_id][chip_id][die_id][plane_id][write_frontier_block_id][page_idx]
+                    pd.lpa = lpa
+                    pd.valid_bitmap = item.get('valid_bitmap', [])
+                    pd.data = item.get('data', [])
+                if amu is not None:
+                    addr = FlashAddress(
+                        channel=channel_id, chip=chip_id, die=die_id, plane=plane_id,
+                        sub_plane=write_frontier_block_id, page=page_idx
+                    )
+                    amu.gmt[lpa] = cmt_entry(address=addr, dirty=False)
+
+            plane_bke.valid_page_count += left_page
+            plane_bke.invalid_page_count += num_invalid_in_frontier
+        else:
+            frontier_bke.free_page_count = self.pages_per_block
+            frontier_bke.write_frontier = 0
+
+        # 重算 plane 的 free_page_count
+        plane_bke.free_page_count = (
+            len(plane_bke.free_block_pool) * self.pages_per_block
+            + frontier_bke.free_page_count
+        )
+
         print(f"[Block Manager] <preconditioning> Channel {channel_id} Chip {chip_id} Die {die_id} Plane {plane_id}:")
-        print(f"  - Free block pool size: {len(plane_bke.free_block_pool)}")
-        print(f"  - Write frontier block: {plane_bke.write_frontier_block} (frontier: {plane_bke.block_entries[write_frontier_block_id].write_frontier}/{PAGE_PER_BLOCK})")
-        print(f"  - Full blocks: {len(full_blocks)}")
-        print(f"  - Total free pages: {plane_bke.free_page_count}")
-        print(f"  - Total valid pages: {plane_bke.valid_page_count}")
-        print(f"  - Total invalid pages: {plane_bke.invalid_page_count}")
+        print(f"  - Data entries: {num_page} | Full blocks: {num_full_block} | Left pages: {left_page}")
+        print(f"  - Write frontier block: {write_frontier_block_id} (frontier: {frontier_bke.write_frontier}/{self.pages_per_block})")
+        print(f"  - Free block pool: {len(plane_bke.free_block_pool)}")
+        print(f"  - Total free/valid/invalid pages: {plane_bke.free_page_count}/{plane_bke.valid_page_count}/{plane_bke.invalid_page_count}")
 
 class TSU:
     """Transaction Scheduling Unit — Out-of-Order version.

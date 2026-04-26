@@ -27,8 +27,3097 @@ TSU construction validation complete.
 HIL construction validation complete.
 Device construction validation complete.
 Construction validation complete.
-[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=0
-[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=50
+
+================================================================================
+[Block Manager] Starting preconditioning phase...
+================================================================================
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 36 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 41 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 16 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 21 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 1 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 20 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 27 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 12 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 36 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 32 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 23 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 54 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 40 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 25 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 51 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 12 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 56 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 6 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 63 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 43 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 63 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 54 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 30 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 58 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 0 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 17 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 48 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 53 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 33 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 31 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 54 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 1 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 30 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 52 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 36 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 53 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 17 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 59 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 35 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 6 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 42 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 20 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 23 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 44 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 40 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 58 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 8 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 51 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 38 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 12 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 1 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 29 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 46 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 12 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 59 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 51 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 41 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 2 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 30 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 20 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 47 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 58 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 52 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 53 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 16 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 20 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 43 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 56 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 49 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 35 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 8 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 49 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 43 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 11 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 29 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 59 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 46 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 32 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 59 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 2 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 23 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 29 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 41 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 2 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 29 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 51 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 11 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 59 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 63 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 16 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 56 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 36 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 31 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 38 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 22 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 24 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 52 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 25 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 63 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 12 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 46 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 35 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 3 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 38 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 63 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 11 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 32 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 24 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 55 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 38 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 11 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 0 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 54 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 52 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 38 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 20 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 58 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 63 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 6 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 49 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 56 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 41 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 27 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 40 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 31 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 32 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 27 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 30 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 40 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 2 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 11 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 44 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 24 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 35 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 4 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 47 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 43 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 49 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 48 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 47 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 44 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 47 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 0 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 0 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 44 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 25 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 48 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 33 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 58 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 54 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 23 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 42 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 6 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 55 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 22 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 23 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 52 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 47 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 30 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 47 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 38 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 5 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 52 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 17 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 17 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 33 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 36 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 59 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 35 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 16 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 31 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 25 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 26 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 42 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 19 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 40 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 44 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 20 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 14 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 12 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 5 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 54 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 47 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 14 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 51 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 6 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 16 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 7 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 17 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 41 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 21 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 52 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 60 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 25 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 37 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 44 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 40 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 0 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 18 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 8 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 20 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 43 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 50 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 27 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 29 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 39 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 6 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 10 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 36 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 3 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 41 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 1 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 17 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 0 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 34 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 0 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 0 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 9 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 0 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 0 (frontier: 3/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 509
+  - Total valid pages: 1
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 1 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 61 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 1 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 13 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 1 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 2/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 510
+  - Total valid pages: 1
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 1 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 62 (frontier: 7/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 505
+  - Total valid pages: 3
+  - Total invalid pages: 4
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 2 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 45 (frontier: 1/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 511
+  - Total valid pages: 0
+  - Total invalid pages: 1
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 2 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 4 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 2 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 8 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 2 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 15 (frontier: 5/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 507
+  - Total valid pages: 2
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 3 Plane 0:
+  - Free block pool size: 63
+  - Write frontier block: 43 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 3 Plane 1:
+  - Free block pool size: 63
+  - Write frontier block: 57 (frontier: 4/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 508
+  - Total valid pages: 2
+  - Total invalid pages: 2
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 3 Plane 2:
+  - Free block pool size: 63
+  - Write frontier block: 33 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] <preconditioning> Channel 7 Chip 2 Die 3 Plane 3:
+  - Free block pool size: 63
+  - Write frontier block: 28 (frontier: 6/8)
+  - Full blocks: 0
+  - Extra free blocks: 0
+  - Total free pages: 506
+  - Total valid pages: 3
+  - Total invalid pages: 3
+[Block Manager] Skipping preconditioning for static chip 3
+[Block Manager] Preconditioning phase completed.
+================================================================================
+
+[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=0, target=Host, param={'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=128, size=1, issue_time=None, finish_time=None, status=None,>}
+
+[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=50, target=Host, param={'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=128, size=1, issue_time=None, finish_time=None, status=None,>}
+
 Event queue initialization complete.
 
 
@@ -37,17 +3126,17 @@ Event queue (2 events):
 ========== Event [1/2] (time=0) ==========
 SimEvent:
   type:    EventType.REQ_INIT
-  target:  Host(id=2049831395520)
+  target:  Host(id=1625238983728)
   time:    0
-  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
+  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=128, size=1, issue_time=None, finish_time=None, status=None,>}
   ignored: False
 
 ========== Event [2/2] (time=50) ==========
 SimEvent:
   type:    EventType.REQ_INIT
-  target:  Host(id=2049831395520)
+  target:  Host(id=1625238983728)
   time:    50
-  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
+  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=128, size=1, issue_time=None, finish_time=None, status=None,>}
   ignored: False
 
 --------------------------------------------------------
@@ -56,948 +3145,68 @@ Starting simulation...
 
 --------------------------------------------------------
 
---------------------------------------------------------
-module <Host> is executing event:
-SimEvent:
-  type:    EventType.REQ_INIT
-  target:  Host(id=2049831395520)
-  time:    0
-  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
-  ignored: False
---------------------------------------------------------
-[Engine] Time = 0, Register_event: type=EventType.DELIVER, scheduled_time=100
---------------------------------------------------------
-module <Host> is executing event:
-SimEvent:
-  type:    EventType.REQ_INIT
-  target:  Host(id=2049831395520)
-  time:    50
-  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=4096, size=1, issue_time=None, finish_time=None, status=None,>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <PCIe_link> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    100
-  param:   {'target': <flash_sim.HIL.HIL object at 0x000001DD43C7DC10>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <HIL> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    100
-  param:   {'target': <flash_sim.HIL.HIL object at 0x000001DD43C7DC10>, 'message': PCIe_message(type=<MessageType.WRITE_REQ: 'WRITE_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>})}
-  ignored: False
---------------------------------------------------------
-[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200
-[AMU] translate_and_submit: handling new request: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
-[TSU] <Prepare_trans_submission> 1
-[CMT] <add_entry> adding entry: (64, cmt_entry(address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, dirty=True))
-[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[Block Manager] <_set_barrier> setting barrier for tr: <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[AMU] <translate_and_submit> Prepare trans submission complete
-[TSU] <Schedule> 0
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.IDLE
-[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_write> chip (0, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_write> chip (0, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (1, 0)
-[TSU] <try_write> chip (1, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 0)
-[TSU] <try_activate> erase failed for chip (1, 0)
-[TSU] <try_activate> read failed for chip (1, 1)
-[TSU] <try_write> chip (1, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 1)
-[TSU] <try_activate> erase failed for chip (1, 1)
-[TSU] <try_activate> read failed for chip (1, 2)
-[TSU] <try_write> chip (1, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 2)
-[TSU] <try_activate> erase failed for chip (1, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
-[TSU] <try_activate> compute failed for chip (1, 3)
-[TSU] <try_activate> search failed for chip (1, 3)
-[TSU] <try_activate> static write failed for chip (1, 3)
-[TSU] <try_activate> read failed for chip (2, 0)
-[TSU] <try_write> chip (2, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 0)
-[TSU] <try_activate> erase failed for chip (2, 0)
-[TSU] <try_activate> read failed for chip (2, 1)
-[TSU] <try_write> chip (2, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 1)
-[TSU] <try_activate> erase failed for chip (2, 1)
-[TSU] <try_activate> read failed for chip (2, 2)
-[TSU] <try_write> chip (2, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 2)
-[TSU] <try_activate> erase failed for chip (2, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
-[TSU] <try_activate> compute failed for chip (2, 3)
-[TSU] <try_activate> search failed for chip (2, 3)
-[TSU] <try_activate> static write failed for chip (2, 3)
-[TSU] <try_activate> read failed for chip (3, 0)
-[TSU] <try_write> chip (3, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 0)
-[TSU] <try_activate> erase failed for chip (3, 0)
-[TSU] <try_activate> read failed for chip (3, 1)
-[TSU] <try_write> chip (3, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 1)
-[TSU] <try_activate> erase failed for chip (3, 1)
-[TSU] <try_activate> read failed for chip (3, 2)
-[TSU] <try_write> chip (3, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 2)
-[TSU] <try_activate> erase failed for chip (3, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
-[TSU] <try_activate> compute failed for chip (3, 3)
-[TSU] <try_activate> search failed for chip (3, 3)
-[TSU] <try_activate> static write failed for chip (3, 3)
-[TSU] <try_activate> read failed for chip (4, 0)
-[TSU] <try_write> chip (4, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 0)
-[TSU] <try_activate> erase failed for chip (4, 0)
-[TSU] <try_activate> read failed for chip (4, 1)
-[TSU] <try_write> chip (4, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 1)
-[TSU] <try_activate> erase failed for chip (4, 1)
-[TSU] <try_activate> read failed for chip (4, 2)
-[TSU] <try_write> chip (4, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 2)
-[TSU] <try_activate> erase failed for chip (4, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
-[TSU] <try_activate> compute failed for chip (4, 3)
-[TSU] <try_activate> search failed for chip (4, 3)
-[TSU] <try_activate> static write failed for chip (4, 3)
-[TSU] <try_activate> read failed for chip (5, 0)
-[TSU] <try_write> chip (5, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 0)
-[TSU] <try_activate> erase failed for chip (5, 0)
-[TSU] <try_activate> read failed for chip (5, 1)
-[TSU] <try_write> chip (5, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 1)
-[TSU] <try_activate> erase failed for chip (5, 1)
-[TSU] <try_activate> read failed for chip (5, 2)
-[TSU] <try_write> chip (5, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 2)
-[TSU] <try_activate> erase failed for chip (5, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
-[TSU] <try_activate> compute failed for chip (5, 3)
-[TSU] <try_activate> search failed for chip (5, 3)
-[TSU] <try_activate> static write failed for chip (5, 3)
-[TSU] <try_activate> read failed for chip (6, 0)
-[TSU] <try_write> chip (6, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 0)
-[TSU] <try_activate> erase failed for chip (6, 0)
-[TSU] <try_activate> read failed for chip (6, 1)
-[TSU] <try_write> chip (6, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 1)
-[TSU] <try_activate> erase failed for chip (6, 1)
-[TSU] <try_activate> read failed for chip (6, 2)
-[TSU] <try_write> chip (6, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 2)
-[TSU] <try_activate> erase failed for chip (6, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
-[TSU] <try_activate> compute failed for chip (6, 3)
-[TSU] <try_activate> search failed for chip (6, 3)
-[TSU] <try_activate> static write failed for chip (6, 3)
-[TSU] <try_activate> read failed for chip (7, 0)
-[TSU] <try_write> chip (7, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 0)
-[TSU] <try_activate> erase failed for chip (7, 0)
-[TSU] <try_activate> read failed for chip (7, 1)
-[TSU] <try_write> chip (7, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 1)
-[TSU] <try_activate> erase failed for chip (7, 1)
-[TSU] <try_activate> read failed for chip (7, 2)
-[TSU] <try_write> chip (7, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 2)
-[TSU] <try_activate> erase failed for chip (7, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
-[TSU] <try_activate> compute failed for chip (7, 3)
-[TSU] <try_activate> search failed for chip (7, 3)
-[TSU] <try_activate> static write failed for chip (7, 3)
-[AMU] <translate_and_submit> TSU Schedule complete
-[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200
---------------------------------------------------------
-module <PCIe_link> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    200
-  param:   {'target': <flash_sim.Host.Host object at 0x000001DD4378E0C0>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <Host> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    200
-  param:   {'target': <flash_sim.Host.Host object at 0x000001DD4378E0C0>, 'message': PCIe_message(type=<MessageType.WRITE_DATA_REQ: 'WRITE_DATA_REQ'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>})}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <PCIe_link> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    200
-  param:   {'target': <flash_sim.HIL.HIL object at 0x000001DD43C7DC10>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <HIL> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    200
-  param:   {'target': <flash_sim.HIL.HIL object at 0x000001DD43C7DC10>, 'message': PCIe_message(type=<MessageType.READ_REQ: 'READ_REQ'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[], lha_start=4096, size=1, issue_time=50, finish_time=None, status=None,>})}
-  ignored: False
---------------------------------------------------------
-[AMU] translate_and_submit: handling new request: <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=50, finish_time=None, status=None,>
-[TSU] <Prepare_trans_submission> 1
-[AMU] <translate_and_submit> Cache hit for tr: <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <Submit_trans> submitting trans: <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[AMU] <translate_and_submit> Prepare trans submission complete
-[TSU] <Schedule> 0
-[TSU] <issue_command> q1: [<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.IDLE
-[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr data not ready, skipping <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_write> chip (0, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_write> chip (0, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (1, 0)
-[TSU] <try_write> chip (1, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 0)
-[TSU] <try_activate> erase failed for chip (1, 0)
-[TSU] <try_activate> read failed for chip (1, 1)
-[TSU] <try_write> chip (1, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 1)
-[TSU] <try_activate> erase failed for chip (1, 1)
-[TSU] <try_activate> read failed for chip (1, 2)
-[TSU] <try_write> chip (1, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 2)
-[TSU] <try_activate> erase failed for chip (1, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
-[TSU] <try_activate> compute failed for chip (1, 3)
-[TSU] <try_activate> search failed for chip (1, 3)
-[TSU] <try_activate> static write failed for chip (1, 3)
-[TSU] <try_activate> read failed for chip (2, 0)
-[TSU] <try_write> chip (2, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 0)
-[TSU] <try_activate> erase failed for chip (2, 0)
-[TSU] <try_activate> read failed for chip (2, 1)
-[TSU] <try_write> chip (2, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 1)
-[TSU] <try_activate> erase failed for chip (2, 1)
-[TSU] <try_activate> read failed for chip (2, 2)
-[TSU] <try_write> chip (2, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 2)
-[TSU] <try_activate> erase failed for chip (2, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
-[TSU] <try_activate> compute failed for chip (2, 3)
-[TSU] <try_activate> search failed for chip (2, 3)
-[TSU] <try_activate> static write failed for chip (2, 3)
-[TSU] <try_activate> read failed for chip (3, 0)
-[TSU] <try_write> chip (3, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 0)
-[TSU] <try_activate> erase failed for chip (3, 0)
-[TSU] <try_activate> read failed for chip (3, 1)
-[TSU] <try_write> chip (3, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 1)
-[TSU] <try_activate> erase failed for chip (3, 1)
-[TSU] <try_activate> read failed for chip (3, 2)
-[TSU] <try_write> chip (3, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 2)
-[TSU] <try_activate> erase failed for chip (3, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
-[TSU] <try_activate> compute failed for chip (3, 3)
-[TSU] <try_activate> search failed for chip (3, 3)
-[TSU] <try_activate> static write failed for chip (3, 3)
-[TSU] <try_activate> read failed for chip (4, 0)
-[TSU] <try_write> chip (4, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 0)
-[TSU] <try_activate> erase failed for chip (4, 0)
-[TSU] <try_activate> read failed for chip (4, 1)
-[TSU] <try_write> chip (4, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 1)
-[TSU] <try_activate> erase failed for chip (4, 1)
-[TSU] <try_activate> read failed for chip (4, 2)
-[TSU] <try_write> chip (4, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 2)
-[TSU] <try_activate> erase failed for chip (4, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
-[TSU] <try_activate> compute failed for chip (4, 3)
-[TSU] <try_activate> search failed for chip (4, 3)
-[TSU] <try_activate> static write failed for chip (4, 3)
-[TSU] <try_activate> read failed for chip (5, 0)
-[TSU] <try_write> chip (5, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 0)
-[TSU] <try_activate> erase failed for chip (5, 0)
-[TSU] <try_activate> read failed for chip (5, 1)
-[TSU] <try_write> chip (5, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 1)
-[TSU] <try_activate> erase failed for chip (5, 1)
-[TSU] <try_activate> read failed for chip (5, 2)
-[TSU] <try_write> chip (5, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 2)
-[TSU] <try_activate> erase failed for chip (5, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
-[TSU] <try_activate> compute failed for chip (5, 3)
-[TSU] <try_activate> search failed for chip (5, 3)
-[TSU] <try_activate> static write failed for chip (5, 3)
-[TSU] <try_activate> read failed for chip (6, 0)
-[TSU] <try_write> chip (6, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 0)
-[TSU] <try_activate> erase failed for chip (6, 0)
-[TSU] <try_activate> read failed for chip (6, 1)
-[TSU] <try_write> chip (6, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 1)
-[TSU] <try_activate> erase failed for chip (6, 1)
-[TSU] <try_activate> read failed for chip (6, 2)
-[TSU] <try_write> chip (6, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 2)
-[TSU] <try_activate> erase failed for chip (6, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
-[TSU] <try_activate> compute failed for chip (6, 3)
-[TSU] <try_activate> search failed for chip (6, 3)
-[TSU] <try_activate> static write failed for chip (6, 3)
-[TSU] <try_activate> read failed for chip (7, 0)
-[TSU] <try_write> chip (7, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 0)
-[TSU] <try_activate> erase failed for chip (7, 0)
-[TSU] <try_activate> read failed for chip (7, 1)
-[TSU] <try_write> chip (7, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 1)
-[TSU] <try_activate> erase failed for chip (7, 1)
-[TSU] <try_activate> read failed for chip (7, 2)
-[TSU] <try_write> chip (7, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 2)
-[TSU] <try_activate> erase failed for chip (7, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
-[TSU] <try_activate> compute failed for chip (7, 3)
-[TSU] <try_activate> search failed for chip (7, 3)
-[TSU] <try_activate> static write failed for chip (7, 3)
-[AMU] <translate_and_submit> TSU Schedule complete
-[Engine] Time = 200, Register_event: type=EventType.DELIVER, scheduled_time=300
---------------------------------------------------------
-module <PCIe_link> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    300
-  param:   {'target': <flash_sim.HIL.HIL object at 0x000001DD43C7DC10>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <HIL> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    300
-  param:   {'target': <flash_sim.HIL.HIL object at 0x000001DD43C7DC10>, 'message': PCIe_message(type=<MessageType.WRITE_DATA: 'WRITE_DATA'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>, 'data': [11]})}
-  ignored: False
---------------------------------------------------------
-[HIL] received data for req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>
-[HIL] <_tile_data> req: <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>, data: [11]
-[TSU] <Prepare_trans_submission> 1
-[TSU] <Schedule> 0
-[TSU] <issue_command> q1: [<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.IDLE
-[TSU] <issue_command> q1: [<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> dispatching 1 transactions to PHY
-[Engine] Time = 300, Register_event: type=EventType.PHY_WRITE_CMD_TRANSFERRED, scheduled_time=5400
-[TSU] <try_activate> write dispatched for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
-[TSU] <try_activate> read failed for chip (1, 0)
-[TSU] <try_write> chip (1, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 0)
-[TSU] <try_activate> erase failed for chip (1, 0)
-[TSU] <try_activate> read failed for chip (1, 1)
-[TSU] <try_write> chip (1, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 1)
-[TSU] <try_activate> erase failed for chip (1, 1)
-[TSU] <try_activate> read failed for chip (1, 2)
-[TSU] <try_write> chip (1, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 2)
-[TSU] <try_activate> erase failed for chip (1, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
-[TSU] <try_activate> compute failed for chip (1, 3)
-[TSU] <try_activate> search failed for chip (1, 3)
-[TSU] <try_activate> static write failed for chip (1, 3)
-[TSU] <try_activate> read failed for chip (2, 0)
-[TSU] <try_write> chip (2, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 0)
-[TSU] <try_activate> erase failed for chip (2, 0)
-[TSU] <try_activate> read failed for chip (2, 1)
-[TSU] <try_write> chip (2, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 1)
-[TSU] <try_activate> erase failed for chip (2, 1)
-[TSU] <try_activate> read failed for chip (2, 2)
-[TSU] <try_write> chip (2, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 2)
-[TSU] <try_activate> erase failed for chip (2, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
-[TSU] <try_activate> compute failed for chip (2, 3)
-[TSU] <try_activate> search failed for chip (2, 3)
-[TSU] <try_activate> static write failed for chip (2, 3)
-[TSU] <try_activate> read failed for chip (3, 0)
-[TSU] <try_write> chip (3, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 0)
-[TSU] <try_activate> erase failed for chip (3, 0)
-[TSU] <try_activate> read failed for chip (3, 1)
-[TSU] <try_write> chip (3, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 1)
-[TSU] <try_activate> erase failed for chip (3, 1)
-[TSU] <try_activate> read failed for chip (3, 2)
-[TSU] <try_write> chip (3, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 2)
-[TSU] <try_activate> erase failed for chip (3, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
-[TSU] <try_activate> compute failed for chip (3, 3)
-[TSU] <try_activate> search failed for chip (3, 3)
-[TSU] <try_activate> static write failed for chip (3, 3)
-[TSU] <try_activate> read failed for chip (4, 0)
-[TSU] <try_write> chip (4, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 0)
-[TSU] <try_activate> erase failed for chip (4, 0)
-[TSU] <try_activate> read failed for chip (4, 1)
-[TSU] <try_write> chip (4, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 1)
-[TSU] <try_activate> erase failed for chip (4, 1)
-[TSU] <try_activate> read failed for chip (4, 2)
-[TSU] <try_write> chip (4, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 2)
-[TSU] <try_activate> erase failed for chip (4, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
-[TSU] <try_activate> compute failed for chip (4, 3)
-[TSU] <try_activate> search failed for chip (4, 3)
-[TSU] <try_activate> static write failed for chip (4, 3)
-[TSU] <try_activate> read failed for chip (5, 0)
-[TSU] <try_write> chip (5, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 0)
-[TSU] <try_activate> erase failed for chip (5, 0)
-[TSU] <try_activate> read failed for chip (5, 1)
-[TSU] <try_write> chip (5, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 1)
-[TSU] <try_activate> erase failed for chip (5, 1)
-[TSU] <try_activate> read failed for chip (5, 2)
-[TSU] <try_write> chip (5, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 2)
-[TSU] <try_activate> erase failed for chip (5, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
-[TSU] <try_activate> compute failed for chip (5, 3)
-[TSU] <try_activate> search failed for chip (5, 3)
-[TSU] <try_activate> static write failed for chip (5, 3)
-[TSU] <try_activate> read failed for chip (6, 0)
-[TSU] <try_write> chip (6, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 0)
-[TSU] <try_activate> erase failed for chip (6, 0)
-[TSU] <try_activate> read failed for chip (6, 1)
-[TSU] <try_write> chip (6, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 1)
-[TSU] <try_activate> erase failed for chip (6, 1)
-[TSU] <try_activate> read failed for chip (6, 2)
-[TSU] <try_write> chip (6, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 2)
-[TSU] <try_activate> erase failed for chip (6, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
-[TSU] <try_activate> compute failed for chip (6, 3)
-[TSU] <try_activate> search failed for chip (6, 3)
-[TSU] <try_activate> static write failed for chip (6, 3)
-[TSU] <try_activate> read failed for chip (7, 0)
-[TSU] <try_write> chip (7, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 0)
-[TSU] <try_activate> erase failed for chip (7, 0)
-[TSU] <try_activate> read failed for chip (7, 1)
-[TSU] <try_write> chip (7, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 1)
-[TSU] <try_activate> erase failed for chip (7, 1)
-[TSU] <try_activate> read failed for chip (7, 2)
-[TSU] <try_write> chip (7, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 2)
-[TSU] <try_activate> erase failed for chip (7, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
-[TSU] <try_activate> compute failed for chip (7, 3)
-[TSU] <try_activate> search failed for chip (7, 3)
-[TSU] <try_activate> static write failed for chip (7, 3)
---------------------------------------------------------
-module <PHY> is executing event:
-SimEvent:
-  type:    EventType.PHY_WRITE_CMD_TRANSFERRED
-  target:  PHY(id=2049832017824)
-  time:    5400
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
-  ignored: False
---------------------------------------------------------
-[Engine] Time = 5400, Register_event: type=EventType.PHY_CHIP_WRITE_COMPLETE, scheduled_time=755400
-[TSU] <_on_channel_idle> handling channel 0 idle
-[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_write> chip (0, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_write> chip (0, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <issue_command> q1: [<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: True
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <issue_command> tr blocked by barrier, skipping <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.WRITE
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
---------------------------------------------------------
-module <PHY> is executing event:
-SimEvent:
-  type:    EventType.PHY_CHIP_WRITE_COMPLETE
-  target:  PHY(id=2049832017824)
-  time:    755400
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
-  ignored: False
---------------------------------------------------------
-[PHY] following tr completed: <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.WRITE, lha_start=4096, size=1)
-[Engine] Time = 755400, Register_event: type=EventType.DELIVER, scheduled_time=755500
-[AMU] <_handle_mapping_response> done
-[GC] <check_gc> checking gc
-[TSU] <Prepare_trans_submission> 1
-[TSU] <_removing_barrier> transaction serviced, reschedule: <type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[TSU] <Schedule> 0
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_write> chip (0, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_write> chip (0, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.WRITE
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
-[TSU] <try_activate> read failed for chip (1, 0)
-[TSU] <try_write> chip (1, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 0)
-[TSU] <try_activate> erase failed for chip (1, 0)
-[TSU] <try_activate> read failed for chip (1, 1)
-[TSU] <try_write> chip (1, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 1)
-[TSU] <try_activate> erase failed for chip (1, 1)
-[TSU] <try_activate> read failed for chip (1, 2)
-[TSU] <try_write> chip (1, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 2)
-[TSU] <try_activate> erase failed for chip (1, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
-[TSU] <try_activate> compute failed for chip (1, 3)
-[TSU] <try_activate> search failed for chip (1, 3)
-[TSU] <try_activate> static write failed for chip (1, 3)
-[TSU] <try_activate> read failed for chip (2, 0)
-[TSU] <try_write> chip (2, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 0)
-[TSU] <try_activate> erase failed for chip (2, 0)
-[TSU] <try_activate> read failed for chip (2, 1)
-[TSU] <try_write> chip (2, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 1)
-[TSU] <try_activate> erase failed for chip (2, 1)
-[TSU] <try_activate> read failed for chip (2, 2)
-[TSU] <try_write> chip (2, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 2)
-[TSU] <try_activate> erase failed for chip (2, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
-[TSU] <try_activate> compute failed for chip (2, 3)
-[TSU] <try_activate> search failed for chip (2, 3)
-[TSU] <try_activate> static write failed for chip (2, 3)
-[TSU] <try_activate> read failed for chip (3, 0)
-[TSU] <try_write> chip (3, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 0)
-[TSU] <try_activate> erase failed for chip (3, 0)
-[TSU] <try_activate> read failed for chip (3, 1)
-[TSU] <try_write> chip (3, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 1)
-[TSU] <try_activate> erase failed for chip (3, 1)
-[TSU] <try_activate> read failed for chip (3, 2)
-[TSU] <try_write> chip (3, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 2)
-[TSU] <try_activate> erase failed for chip (3, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
-[TSU] <try_activate> compute failed for chip (3, 3)
-[TSU] <try_activate> search failed for chip (3, 3)
-[TSU] <try_activate> static write failed for chip (3, 3)
-[TSU] <try_activate> read failed for chip (4, 0)
-[TSU] <try_write> chip (4, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 0)
-[TSU] <try_activate> erase failed for chip (4, 0)
-[TSU] <try_activate> read failed for chip (4, 1)
-[TSU] <try_write> chip (4, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 1)
-[TSU] <try_activate> erase failed for chip (4, 1)
-[TSU] <try_activate> read failed for chip (4, 2)
-[TSU] <try_write> chip (4, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 2)
-[TSU] <try_activate> erase failed for chip (4, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
-[TSU] <try_activate> compute failed for chip (4, 3)
-[TSU] <try_activate> search failed for chip (4, 3)
-[TSU] <try_activate> static write failed for chip (4, 3)
-[TSU] <try_activate> read failed for chip (5, 0)
-[TSU] <try_write> chip (5, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 0)
-[TSU] <try_activate> erase failed for chip (5, 0)
-[TSU] <try_activate> read failed for chip (5, 1)
-[TSU] <try_write> chip (5, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 1)
-[TSU] <try_activate> erase failed for chip (5, 1)
-[TSU] <try_activate> read failed for chip (5, 2)
-[TSU] <try_write> chip (5, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 2)
-[TSU] <try_activate> erase failed for chip (5, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
-[TSU] <try_activate> compute failed for chip (5, 3)
-[TSU] <try_activate> search failed for chip (5, 3)
-[TSU] <try_activate> static write failed for chip (5, 3)
-[TSU] <try_activate> read failed for chip (6, 0)
-[TSU] <try_write> chip (6, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 0)
-[TSU] <try_activate> erase failed for chip (6, 0)
-[TSU] <try_activate> read failed for chip (6, 1)
-[TSU] <try_write> chip (6, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 1)
-[TSU] <try_activate> erase failed for chip (6, 1)
-[TSU] <try_activate> read failed for chip (6, 2)
-[TSU] <try_write> chip (6, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 2)
-[TSU] <try_activate> erase failed for chip (6, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
-[TSU] <try_activate> compute failed for chip (6, 3)
-[TSU] <try_activate> search failed for chip (6, 3)
-[TSU] <try_activate> static write failed for chip (6, 3)
-[TSU] <try_activate> read failed for chip (7, 0)
-[TSU] <try_write> chip (7, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 0)
-[TSU] <try_activate> erase failed for chip (7, 0)
-[TSU] <try_activate> read failed for chip (7, 1)
-[TSU] <try_write> chip (7, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 1)
-[TSU] <try_activate> erase failed for chip (7, 1)
-[TSU] <try_activate> read failed for chip (7, 2)
-[TSU] <try_write> chip (7, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 2)
-[TSU] <try_activate> erase failed for chip (7, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
-[TSU] <try_activate> compute failed for chip (7, 3)
-[TSU] <try_activate> search failed for chip (7, 3)
-[TSU] <try_activate> static write failed for chip (7, 3)
-[PHY] _handle_array_execution_finished, chip (0, 0) is idle
-[TSU] <_on_chip_idle> handling chip (0, 0) idle
-[TSU] <issue_command> q1: [<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>], q2: None, suspension_required: False
-[TSU] <issue_command> dispatching 1 transactions to PHY
-[Engine] Time = 755400, Register_event: type=EventType.PHY_READ_CMD_TRANSFERRED, scheduled_time=755500
-[TSU] <try_activate> read dispatched for chip (0, 0)
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
---------------------------------------------------------
-module <PCIe_link> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    755500
-  param:   {'target': <flash_sim.Host.Host object at 0x000001DD4378E0C0>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <Host> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    755500
-  param:   {'target': <flash_sim.Host.Host object at 0x000001DD4378E0C0>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=None, status=None,>, 'status': 'completed'})}
-  ignored: False
---------------------------------------------------------
+[Engine] Time = 0, Register_event: type=EventType.DELIVER, scheduled_time=100, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x0000017A6844BBC0>}
 
-[Host] Received REQ_COMP:<Request type=RequestType.WRITE, sq_id=0, transaction_list=[<type=TransactionType.USER_WRITE, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=0, finish_time=755500, status=completed,>
+[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200, target=PCIe_link, param={'target': <flash_sim.Host.Host object at 0x0000017A67CAD430>}
 
---------------------------------------------------------
-module <PHY> is executing event:
-SimEvent:
-  type:    EventType.PHY_READ_CMD_TRANSFERRED
-  target:  PHY(id=2049832017824)
-  time:    755500
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
-  ignored: False
---------------------------------------------------------
-[Engine] Time = 755500, Register_event: type=EventType.PHY_CHIP_READ_COMPLETE, scheduled_time=830500
-[TSU] <_on_channel_idle> handling channel 0 idle
-[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_write> chip (0, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_write> chip (0, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.READ
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
---------------------------------------------------------
-module <PHY> is executing event:
-SimEvent:
-  type:    EventType.PHY_CHIP_READ_COMPLETE
-  target:  PHY(id=2049832017824)
-  time:    830500
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
-  ignored: False
---------------------------------------------------------
-[Engine] Time = 830500, Register_event: type=EventType.PHY_READ_DATA_TRANSFERRED, scheduled_time=835500
---------------------------------------------------------
-module <PHY> is executing event:
-SimEvent:
-  type:    EventType.PHY_READ_DATA_TRANSFERRED
-  target:  PHY(id=2049832017824)
-  time:    835500
-  param:   {'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
-  ignored: False
---------------------------------------------------------
-[PHY] PHY_READ_DATA_TRANSFERRED, tr: <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=PageData(valid_bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], data=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], lpa=64, mvpn=None, function=<PageType.USER: 'USER'>), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: tr: <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=PageData(valid_bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], data=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], lpa=64, mvpn=None, function=<PageType.USER: 'USER'>), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: Request(type=RequestType.READ, lha_start=4096, size=1)
-[Engine] Time = 835500, Register_event: type=EventType.DELIVER, scheduled_time=835600
-[AMU] <_handle_mapping_response> done
-[TSU] <Prepare_trans_submission> 1
-[TSU] <_removing_barrier> transaction serviced, reschedule: <type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=PageData(valid_bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], data=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], lpa=64, mvpn=None, function=<PageType.USER: 'USER'>), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>
-[TSU] <Schedule> 0
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_write> chip (0, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_write> chip (0, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.READ
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
-[TSU] <try_activate> read failed for chip (1, 0)
-[TSU] <try_write> chip (1, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 0)
-[TSU] <try_activate> erase failed for chip (1, 0)
-[TSU] <try_activate> read failed for chip (1, 1)
-[TSU] <try_write> chip (1, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 1)
-[TSU] <try_activate> erase failed for chip (1, 1)
-[TSU] <try_activate> read failed for chip (1, 2)
-[TSU] <try_write> chip (1, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (1, 2)
-[TSU] <try_activate> erase failed for chip (1, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (1, 3)
-[TSU] <try_activate> compute failed for chip (1, 3)
-[TSU] <try_activate> search failed for chip (1, 3)
-[TSU] <try_activate> static write failed for chip (1, 3)
-[TSU] <try_activate> read failed for chip (2, 0)
-[TSU] <try_write> chip (2, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 0)
-[TSU] <try_activate> erase failed for chip (2, 0)
-[TSU] <try_activate> read failed for chip (2, 1)
-[TSU] <try_write> chip (2, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 1)
-[TSU] <try_activate> erase failed for chip (2, 1)
-[TSU] <try_activate> read failed for chip (2, 2)
-[TSU] <try_write> chip (2, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (2, 2)
-[TSU] <try_activate> erase failed for chip (2, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (2, 3)
-[TSU] <try_activate> compute failed for chip (2, 3)
-[TSU] <try_activate> search failed for chip (2, 3)
-[TSU] <try_activate> static write failed for chip (2, 3)
-[TSU] <try_activate> read failed for chip (3, 0)
-[TSU] <try_write> chip (3, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 0)
-[TSU] <try_activate> erase failed for chip (3, 0)
-[TSU] <try_activate> read failed for chip (3, 1)
-[TSU] <try_write> chip (3, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 1)
-[TSU] <try_activate> erase failed for chip (3, 1)
-[TSU] <try_activate> read failed for chip (3, 2)
-[TSU] <try_write> chip (3, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (3, 2)
-[TSU] <try_activate> erase failed for chip (3, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (3, 3)
-[TSU] <try_activate> compute failed for chip (3, 3)
-[TSU] <try_activate> search failed for chip (3, 3)
-[TSU] <try_activate> static write failed for chip (3, 3)
-[TSU] <try_activate> read failed for chip (4, 0)
-[TSU] <try_write> chip (4, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 0)
-[TSU] <try_activate> erase failed for chip (4, 0)
-[TSU] <try_activate> read failed for chip (4, 1)
-[TSU] <try_write> chip (4, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 1)
-[TSU] <try_activate> erase failed for chip (4, 1)
-[TSU] <try_activate> read failed for chip (4, 2)
-[TSU] <try_write> chip (4, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (4, 2)
-[TSU] <try_activate> erase failed for chip (4, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (4, 3)
-[TSU] <try_activate> compute failed for chip (4, 3)
-[TSU] <try_activate> search failed for chip (4, 3)
-[TSU] <try_activate> static write failed for chip (4, 3)
-[TSU] <try_activate> read failed for chip (5, 0)
-[TSU] <try_write> chip (5, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 0)
-[TSU] <try_activate> erase failed for chip (5, 0)
-[TSU] <try_activate> read failed for chip (5, 1)
-[TSU] <try_write> chip (5, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 1)
-[TSU] <try_activate> erase failed for chip (5, 1)
-[TSU] <try_activate> read failed for chip (5, 2)
-[TSU] <try_write> chip (5, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (5, 2)
-[TSU] <try_activate> erase failed for chip (5, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (5, 3)
-[TSU] <try_activate> compute failed for chip (5, 3)
-[TSU] <try_activate> search failed for chip (5, 3)
-[TSU] <try_activate> static write failed for chip (5, 3)
-[TSU] <try_activate> read failed for chip (6, 0)
-[TSU] <try_write> chip (6, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 0)
-[TSU] <try_activate> erase failed for chip (6, 0)
-[TSU] <try_activate> read failed for chip (6, 1)
-[TSU] <try_write> chip (6, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 1)
-[TSU] <try_activate> erase failed for chip (6, 1)
-[TSU] <try_activate> read failed for chip (6, 2)
-[TSU] <try_write> chip (6, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (6, 2)
-[TSU] <try_activate> erase failed for chip (6, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (6, 3)
-[TSU] <try_activate> compute failed for chip (6, 3)
-[TSU] <try_activate> search failed for chip (6, 3)
-[TSU] <try_activate> static write failed for chip (6, 3)
-[TSU] <try_activate> read failed for chip (7, 0)
-[TSU] <try_write> chip (7, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 0)
-[TSU] <try_activate> erase failed for chip (7, 0)
-[TSU] <try_activate> read failed for chip (7, 1)
-[TSU] <try_write> chip (7, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 1)
-[TSU] <try_activate> erase failed for chip (7, 1)
-[TSU] <try_activate> read failed for chip (7, 2)
-[TSU] <try_write> chip (7, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (7, 2)
-[TSU] <try_activate> erase failed for chip (7, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (7, 3)
-[TSU] <try_activate> compute failed for chip (7, 3)
-[TSU] <try_activate> search failed for chip (7, 3)
-[TSU] <try_activate> static write failed for chip (7, 3)
-[TSU] <_on_channel_idle> handling channel 0 idle
-[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips
-[TSU] <try_activate> read failed for chip (0, 1)
-[TSU] <try_write> chip (0, 1) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 1)
-[TSU] <try_activate> erase failed for chip (0, 1)
-[TSU] <try_activate> read failed for chip (0, 2)
-[TSU] <try_write> chip (0, 2) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 2)
-[TSU] <try_activate> erase failed for chip (0, 2)
-[TSU] <try_activate> SEARCH/COMPUTE-dedicated chip (0, 3)
-[TSU] <try_activate> compute failed for chip (0, 3)
-[TSU] <try_activate> search failed for chip (0, 3)
-[TSU] <try_activate> static write failed for chip (0, 3)
-[TSU] <try_activate> read failed for chip (0, 0)
-[TSU] <try_write> chip (0, 0) status: ChipStatus.IDLE
-[TSU] <try_activate> write failed for chip (0, 0)
-[TSU] <try_activate> erase failed for chip (0, 0)
---------------------------------------------------------
-module <PCIe_link> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    835600
-  param:   {'target': <flash_sim.Host.Host object at 0x000001DD4378E0C0>}
-  ignored: False
---------------------------------------------------------
---------------------------------------------------------
-module <Host> is executing event:
-SimEvent:
-  type:    EventType.DELIVER
-  target:  PCIe_link(id=2049901901344)
-  time:    835600
-  param:   {'target': <flash_sim.Host.Host object at 0x000001DD4378E0C0>, 'message': PCIe_message(type=<MessageType.REQ_COMP: 'REQ_COMP'>, payload={'req': <Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=PageData(valid_bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], data=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], lpa=64, mvpn=None, function=<PageType.USER: 'USER'>), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=50, finish_time=None, status=None,>, 'status': 'completed'})}
-  ignored: False
---------------------------------------------------------
+[Block Manager] <get_write_frontier> plane_address: <FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=-1, page=-1,>, block 9, page: 7
+[Block Manager] plane <FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=-1, page=-1,> free_block_num 63, free_page_num 505, valid_page_num 3, invalid_page_num 4
+[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x0000017A6844BBC0>}
 
-[Host] Received REQ_COMP:<Request type=RequestType.READ, sq_id=1, transaction_list=[<type=TransactionType.USER_READ, lpa=64, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=4096, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=PageData(valid_bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], data=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], lpa=64, mvpn=None, function=<PageType.USER: 'USER'>), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=4096, size=1, issue_time=50, finish_time=835600, status=completed,>
+[Engine] Time = 200, Register_event: type=EventType.DELIVER, scheduled_time=300, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x0000017A6844BBC0>}
 
+[Engine] Time = 300, Register_event: type=EventType.PHY_WRITE_CMD_TRANSFERRED, scheduled_time=5400, target=PHY, param={'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=2, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=9, page=7,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=128, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+
+[Engine] Time = 5400, Register_event: type=EventType.PHY_CHIP_WRITE_COMPLETE, scheduled_time=755400, target=PHY, param={'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_WRITE, lpa=2, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=9, page=7,>, Transaction source_req=Request(type=RequestType.WRITE, lha_start=128, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[11, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+
+[Engine] Time = 755400, Register_event: type=EventType.DELIVER, scheduled_time=755500, target=PCIe_link, param={'target': <flash_sim.Host.Host object at 0x0000017A67CAD430>}
+
+[Block Manager] <_mark_valid> plane_bke updated! <FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=9, page=7,>, free_block_num 63, free_page_num 504, valid_page_num 4, invalid_page_num 4
+[GC] <trigger_gc> for plane: <FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=-1, page=-1,>
+[GC] <_gc> migrating 4 valid pages from block 9 to block 0
+Error: [GC] cannot resolve LPA for physical page <FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=9, page=2,> !! Problem: preconditioning阶段没有给pagedata赋值
+address_mapping_unit.gtd: {}
+
+--- Traceback (most recent call last) ---
+Traceback (most recent call last):
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\main.py", line 128, in <module>
+    sim_engine.Start_simulation(INPUT_JSON)
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\engine.py", line 106, in Start_simulation
+    self.Run()
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\engine.py", line 59, in Run
+    self.Execute_event()
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\engine.py", line 55, in Execute_event
+    event.target.execute(event)
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\PHY.py", line 332, in execute
+    self._handle_array_execution_finished(chip_id, die_id, "write", transactions)
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\PHY.py", line 451, in _handle_array_execution_finished
+    self._broadcast_transaction_serviced(tr)
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\PHY.py", line 185, in _broadcast_transaction_serviced
+    cb(tr)
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\FTL.py", line 204, in _on_transaction_serviced
+    self.gc_wl_manager.check_gc()
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\FTL.py", line 1381, in check_gc
+    self._trigger_gc(FlashAddress(channel=channel, chip=chip, die=die, plane=plane, sub_plane=-1, page=-1))
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\FTL.py", line 1402, in _trigger_gc
+    self._gc(addr, max_invalid_page_count_block, min_wl_level_block)
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\FTL.py", line 1455, in _gc
+    lpa = self._lpa_for_physical_page(src)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\FTL.py", line 1432, in _lpa_for_physical_page
+    raise ValueError(f"[GC] cannot resolve LPA for physical page {src}")
+ValueError: [GC] cannot resolve LPA for physical page <FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=9, page=2,>
 Simulation completed.
-Simulation time: 835600
-Event queue (0 events):
-  (empty)
-{64: cmt_entry(address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=0, page=0,>, dirty=True)}
+Simulation time: 755400
+Event queue (1 events):
+
+========== Event [1/1] (time=755500) ==========
+SimEvent:
+  type:    EventType.DELIVER
+  target:  PCIe_link(id=1625334551408)
+  time:    755500
+  param:   {'target': <flash_sim.Host.Host object at 0x0000017A67CAD430>}
+  ignored: False
+
+{2: cmt_entry(address=<FlashAddress channel=0, chip=0, die=0, plane=0, sub_plane=9, page=7,>, dirty=True)}
 {}
 {}
