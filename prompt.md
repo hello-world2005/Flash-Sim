@@ -1,10 +1,3 @@
-# PageData修改
-目前代码中各个部分对PageData的字段使用没有统一，请帮我按照如下方式规定PageData的字段含义，并检查代码做必要的修改：
-1. function字段：该字段定义不变，分为MAPPING和USER两种
-2. lpa/mvpn：若function==USER,则将lpa赋值成这个page对应的lpa，mvpn赋值为INVALID_MVPN；反之则将mvpn赋值为对应的mvpn，将lpa赋值为INVALID_LPA。INVALID_*可以新写一个常量来标识
-3. valid_bitmap：若function==USER,则为长SECTOR_PER_PAGE的一个0, 1数组，valid的sector对应位置为1，其它位置为0；若function==MAPPING, 则为长LPA_NO_PER_MAPPING_PAGE的一个数组，lpa valid的位置为1，其它位置为0
-4. data：若function==USER,则为长SECTOR_PER_PAGE的一个数组，valid的sector对应位置为存储的数据，其它位置为INVALID_DATA；若function==MAPPING, 则为长LPA_NO_PER_MAPPING_PAGE的一个数组，lpa valid的位置为存储的对应lpa的ppa，其它位置为INVALID_PPA
-目前可能需要修改的地方有：
-1. mapping_write_tr生成时附带的数据
-2. tr.response字段的相关处理。response字段的类型为PageData，请在Transaction类中修改对应的函数，完成对PageData使用的统一
-如果有其它我没想到的需要修改的地方，请一并修改并告诉我
+# 添加Data Cache
+帮我完成一个由HIL管理的Data Cache，要求实现如下功能：
+1. 用cache line进行管理，每个cache line中可以存储`cache_line_size`的数据

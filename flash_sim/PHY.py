@@ -101,8 +101,8 @@ class PageType(Enum):
 class PageData:
     valid_bitmap: list[int] = field(default_factory=list)
     data: list[int] = field(default_factory=list)
-    lpa: Optional[int] = None
-    mvpn: Optional[int] = None
+    lpa: int = INVALID_LPA
+    mvpn: int = INVALID_MVPN
     function: Optional[PageType] = None
     
 
@@ -530,17 +530,33 @@ class PHY():
         page_id = tr.address.page
         pagedata = self._storage[channel_id][chip_id][die_id][plane_id][sub_plane_id][page_id]
         pagedata.function = page_type
-        pagedata.data = tr.payload
-        pagedata.lpa = tr.lpa if tr.lpa != -1 else None
-        pagedata.mvpn = tr.mvpn if tr.mvpn != -1 else None
-        pagedata.valid_bitmap = tr.bitmap
+        if page_type == PageType.USER:
+            pagedata.lpa = tr.lpa
+            pagedata.mvpn = INVALID_MVPN
+            pagedata.valid_bitmap = [0] * SECTOR_PER_PAGE
+            pagedata.data = [INVALID_DATA] * SECTOR_PER_PAGE
+            for i in range(SECTOR_PER_PAGE):
+                if i < len(tr.bitmap) and tr.bitmap[i] == 1:
+                    pagedata.valid_bitmap[i] = 1
+                    if i < len(tr.payload):
+                        pagedata.data[i] = tr.payload[i]
+        else:
+            pagedata.lpa = INVALID_LPA
+            pagedata.mvpn = tr.mvpn
+            pagedata.valid_bitmap = [0] * LPA_NO_PER_MAPPING_PAGE
+            pagedata.data = [INVALID_PPA] * LPA_NO_PER_MAPPING_PAGE
+            for i in range(LPA_NO_PER_MAPPING_PAGE):
+                if i < len(tr.bitmap) and tr.bitmap[i] == 1:
+                    pagedata.valid_bitmap[i] = 1
+                    if i < len(tr.payload):
+                        pagedata.data[i] = tr.payload[i]
         return
 
     
     def _read_from_storage(self, tr: Transaction) -> PageData:
         pagedata = self._storage[tr.address.channel][tr.address.chip][tr.address.die][tr.address.plane][tr.address.sub_plane][tr.address.page]
         if pagedata.function == PageType.MAPPING:
-            if pagedata.mvpn is None:
+            if pagedata.mvpn == INVALID_MVPN or pagedata.lpa != INVALID_LPA:
                 raise ValueError(f"[PHY] <_read_from_storage> accessing invalid mapping page!")
             valid = True
             for i in range(LPA_NO_PER_MAPPING_PAGE):
@@ -550,11 +566,11 @@ class PHY():
             if not valid and tr.type not in [TransactionType.GC_READ]:
                 raise ValueError(f"[PHY] <_read_from_storage> accessing invalid lpa in mapping page!")
         elif pagedata.function == PageType.USER:
-            if pagedata.lpa is None:
+            if pagedata.lpa == INVALID_LPA or pagedata.mvpn != INVALID_MVPN:
                 raise ValueError(f"[PHY] <_read_from_storage> accessing invalid user page!")
             valid = True
             for i in range(SECTOR_PER_PAGE):
-                if tr.type not in [TransactionType.GC_READ] and tr.bitmap[i] == 1 and pagedata.data[i] is None:
+                if tr.type not in [TransactionType.GC_READ] and tr.bitmap[i] == 1 and pagedata.data[i] == INVALID_DATA:
                     valid = False
                     break
             if not valid:

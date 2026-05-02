@@ -125,10 +125,14 @@ LPA_NO_PER_MAPPING_PAGE = LPA_NO_PER_SECTOR * SECTOR_PER_PAGE # 256
 NUM_OF_QUEUES = 8
 VIRTUAL_DATA_ADDRESS = 0xFFFFFFFFFFFFFFFF
 GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD = 3
+INVALID_LPA = -1
+INVALID_MVPN = -1
+INVALID_DATA = -1
+INVALID_PPA = -1
 
-debug_info = print
-# def debug_info(*args, **kwargs):
-#     pass
+# debug_info = print
+def debug_info(*args, **kwargs):
+    pass
 
 # ── Flash timing constants (nanoseconds) ────────────────────────────────────
 PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
@@ -167,8 +171,8 @@ class ChipStatus(Enum):
 class Transaction:
     source_req: Optional[Request]
     type: TransactionType
-    lpa: int = -1 # register lpa if type is not TransactionType.MAPPING_..., 
-    mvpn: int = -1 # register mvpn if type is TransactionType.MAPPING_...
+    lpa: int = INVALID_LPA # register lpa if type is not TransactionType.MAPPING_..., 
+    mvpn: int = INVALID_MVPN # register mvpn if type is TransactionType.MAPPING_...
     address: FlashAddress = field(default_factory=lambda: FlashAddress(channel=-1, chip=-1, die=-1, plane=-1, sub_plane=-1, page=-1))
     bitmap: list[int] = field(default_factory=list) # register lpa bitmap if type is TransactionType.MAPPING_..., else sector bitmap
     rely_on_transactions: list['Transaction'] = field(default_factory=list)
@@ -184,26 +188,51 @@ class Transaction:
 
     def get_response_from_transaction(self, tr: 'Transaction'):
         if self.type == TransactionType.MAPPING_WRITE and tr.type == TransactionType.MAPPING_READ:
+            if tr.response is None:
+                raise ValueError("[Transaction] <get_response_from_transaction> mapping read response is empty")
             for i in range(LPA_NO_PER_MAPPING_PAGE):
                 self.bitmap[i] = self.bitmap[i] or tr.bitmap[i]
-                self.payload[i] = tr.payload[i] if self.payload[i] is None else self.payload[i]
+                if self.payload[i] == INVALID_PPA:
+                    self.payload[i] = tr.response.data[i]
         elif self.type in [TransactionType.USER_READ, TransactionType.USER_WRITE] and tr.type == TransactionType.MAPPING_READ:
+            if tr.response is None:
+                raise ValueError("[Transaction] <get_response_from_transaction> mapping read response is empty")
             idx = self.lpa % LPA_NO_PER_MAPPING_PAGE
-            if tr.bitmap[idx] == 1 and tr.response.data[idx] is not None:
-                self.address = tr.response.data[idx]
+            ppa = tr.response.data[idx]
+            if tr.bitmap[idx] == 1 and tr.response.valid_bitmap[idx] == 1 and ppa != INVALID_PPA:
+                page_id = ppa % PAGE_PER_BLOCK
+                ppa //= PAGE_PER_BLOCK
+                sub_plane_id = ppa % BLOCK_PER_PLANE
+                ppa //= BLOCK_PER_PLANE
+                plane_id = ppa % PLANE_PER_DIE
+                ppa //= PLANE_PER_DIE
+                die_id = ppa % DIE_PER_CHIP
+                ppa //= DIE_PER_CHIP
+                chip_id = ppa % CHIP_PER_CHANNEL
+                channel_id = ppa // CHIP_PER_CHANNEL
+                self.address = FlashAddress(
+                    channel=channel_id,
+                    chip=chip_id,
+                    die=die_id,
+                    plane=plane_id,
+                    sub_plane=sub_plane_id,
+                    page=page_id,
+                )
             else:
                 raise ValueError(f"[Transaction] <get_response_from_transaction> accessing invalid lpa in mapping page!")
         elif self.type == TransactionType.USER_WRITE and tr.type == TransactionType.USER_READ_FOR_WRITE:
             for i in range(SECTOR_PER_PAGE):
                 self.bitmap[i] = self.bitmap[i] or tr.bitmap[i]
-                self.payload[i] = tr.payload[i] if self.payload[i] is None else self.payload[i]
+                if self.payload[i] == INVALID_DATA:
+                    self.payload[i] = tr.payload[i]
         elif self.type == TransactionType.GC_WRITE and tr.type == TransactionType.GC_READ:
             pd = tr.response
             if pd is not None:
                 for i in range(SECTOR_PER_PAGE):
                     self.bitmap[i] = self.bitmap[i] or tr.bitmap[i]
                     if hasattr(pd, "data") and pd.data:
-                        self.payload[i] = pd.data[i] if self.payload[i] is None else self.payload[i]
+                        if self.payload[i] == INVALID_DATA:
+                            self.payload[i] = pd.data[i]
         
         return
 

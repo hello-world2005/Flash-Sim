@@ -344,7 +344,7 @@ class Block_Manager:
         for channel_id in range(self.channel_no):
             for chip_id in range(self.chip_no_per_channel):
                 if self._is_static_chip(chip_id):
-                    print(f"[Block Manager] Skipping preconditioning for static chip {chip_id}")
+                    debug_info(f"[Block Manager] Skipping preconditioning for static chip {chip_id}")
                     continue
                 for die_id in range(self.die_no_per_chip):
                     for plane_id in range(self.plane_no_per_die):
@@ -368,13 +368,14 @@ class Block_Manager:
             if phy is not None:
                 pd = phy._storage[mapping_addr.channel][mapping_addr.chip][mapping_addr.die][mapping_addr.plane][mapping_addr.sub_plane][mapping_addr.page]
                 pd.function = PageType.MAPPING
+                pd.lpa = INVALID_LPA
                 pd.mvpn = mvpn
                 pd.valid_bitmap = [0] * LPA_NO_PER_MAPPING_PAGE
-                pd.data = [None] * LPA_NO_PER_MAPPING_PAGE
+                pd.data = [INVALID_PPA] * LPA_NO_PER_MAPPING_PAGE
                 for lpa, ppa in lpa_ppa_list:
                     idx = lpa % LPA_NO_PER_MAPPING_PAGE
                     pd.valid_bitmap[idx] = 1
-                    pd.data[idx] = ppa
+                    pd.data[idx] = utils.translate_address_to_ppa(ppa)
             # 写入gtd
             amu.gtd[mvpn] = GTDEntry(address=mapping_addr)
 
@@ -456,9 +457,19 @@ class Block_Manager:
                 lpa = item['lpa']
                 if phy is not None:
                     pd = phy._storage[channel_id][chip_id][die_id][plane_id][block_id][page_idx]
+                    raw_valid_bitmap = item.get('valid_bitmap', [1] * SECTOR_PER_PAGE)
+                    raw_data = item.get('data', [])
+                    valid_bitmap = [0] * SECTOR_PER_PAGE
+                    payload = [INVALID_DATA] * SECTOR_PER_PAGE
+                    for i in range(min(SECTOR_PER_PAGE, len(raw_valid_bitmap))):
+                        valid_bitmap[i] = 1 if raw_valid_bitmap[i] else 0
+                    for i in range(min(SECTOR_PER_PAGE, len(raw_data))):
+                        if valid_bitmap[i] == 1:
+                            payload[i] = raw_data[i]
                     pd.lpa = lpa
-                    pd.valid_bitmap = item.get('valid_bitmap', [])
-                    pd.data = item.get('data', [])
+                    pd.mvpn = INVALID_MVPN
+                    pd.valid_bitmap = valid_bitmap
+                    pd.data = payload
                     pd.function = PageType.USER
                 if user_lpa_to_ppa is not None:
                     addr = FlashAddress(
@@ -488,9 +499,19 @@ class Block_Manager:
                 lpa = item['lpa']
                 if phy is not None:
                     pd = phy._storage[channel_id][chip_id][die_id][plane_id][write_frontier_block_id][page_idx]
+                    raw_valid_bitmap = item.get('valid_bitmap', [1] * SECTOR_PER_PAGE)
+                    raw_data = item.get('data', [])
+                    valid_bitmap = [0] * SECTOR_PER_PAGE
+                    payload = [INVALID_DATA] * SECTOR_PER_PAGE
+                    for i in range(min(SECTOR_PER_PAGE, len(raw_valid_bitmap))):
+                        valid_bitmap[i] = 1 if raw_valid_bitmap[i] else 0
+                    for i in range(min(SECTOR_PER_PAGE, len(raw_data))):
+                        if valid_bitmap[i] == 1:
+                            payload[i] = raw_data[i]
                     pd.lpa = lpa
-                    pd.valid_bitmap = item.get('valid_bitmap', [])
-                    pd.data = item.get('data', [])
+                    pd.mvpn = INVALID_MVPN
+                    pd.valid_bitmap = valid_bitmap
+                    pd.data = payload
                     pd.function = PageType.USER
                 if user_lpa_to_ppa is not None:
                     addr = FlashAddress(
@@ -742,13 +763,13 @@ class TSU:
             elif chip_status in (ChipStatus.WRITE, ChipStatus.GC_WRITE):
                 if not chip_bke.EnableWriteSuspend or chip_bke.HasSuspendedCommands:
                     return False
-                if chip_bke.Expected_Finish_time - CURRENT_TIME() < REASONABLE_TIME_SUSPEND_WRITE_FOR_READ:
+                if chip_bke.Expected_Finish_Time - CURRENT_TIME() < REASONABLE_TIME_SUSPEND_WRITE_FOR_READ:
                     return False
                 suspension_required = True
             elif chip_status == ChipStatus.ERASE:
                 if not chip_bke.EnableEraseSuspend or chip_bke.HasSuspendedCommands:
                     return False
-                if chip_bke.Expected_Finish_time - CURRENT_TIME() < REASONABLE_TIME_SUSPEND_ERASE_FOR_READ:
+                if chip_bke.Expected_Finish_Time - CURRENT_TIME() < REASONABLE_TIME_SUSPEND_ERASE_FOR_READ:
                     return False
                 suspension_required = True
             else:
@@ -787,7 +808,7 @@ class TSU:
             elif chip_status == ChipStatus.ERASE:
                 if not chip_bke.EnableEraseSuspend or chip_bke.HasSuspendedCommands:
                     return False
-                if chip_bke.Expected_Finish_time - CURRENT_TIME() < REASONABLE_TIME_SUSPEND_ERASE_FOR_WRITE:
+                if chip_bke.Expected_Finish_Time - CURRENT_TIME() < REASONABLE_TIME_SUSPEND_ERASE_FOR_WRITE:
                     return False
                 suspension_required = True
             else:
@@ -1225,32 +1246,39 @@ class Address_Mapping_Unit:
         if tr.type == TransactionType.MAPPING_READ:
             debug_info(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
             self.tsu.Prepare_trans_submission()
+            if tr.response is None:
+                raise ValueError("[AMU] <_handle_mapping_response> empty mapping read response")
             # get arriving lpa in the finished mapping read transaction
             arriving_lpa = []
             for i in range(len(tr.bitmap)):
                 if tr.bitmap[i] == 0:
                     continue
-                lpa = i + tr.lpa * LPA_NO_PER_MAPPING_PAGE
+                lpa = i + tr.mvpn * LPA_NO_PER_MAPPING_PAGE
                 arriving_lpa.append(lpa) 
             debug_info(f"[AMU] <_handle_mapping_response> arriving_lpa: {arriving_lpa}, response: {tr.response}")
-            # check if the arriving lpa number matches the response number
-            if len(arriving_lpa) != len(tr.response):
-                raise ValueError(f"Arriving lpa number mismatch, arriving_lpa: {arriving_lpa}, response: {tr.response}")
             # submit the waiting transactions for the arriving lpa, and update the cmt meanwhile
-            for i in range(len(arriving_lpa)):
-                lpa = arriving_lpa[i]
-                ppa = tr.response[i]
-                # add entry in cmt
-                domain = self.domains[tr.source_req.sq_id]
-                if not domain.cmt.is_cached(lpa):
-                    domain.cmt.add_entry(lpa, utils.translate_ppa_to_address(ppa), dirty=False)
+            for lpa in arriving_lpa:
+                idx = lpa % LPA_NO_PER_MAPPING_PAGE
+                if tr.response.valid_bitmap[idx] == 0:
+                    raise ValueError(f"[AMU] <_handle_mapping_response> invalid lpa in mapping response, lpa={lpa}")
+                ppa = tr.response.data[idx]
+                if ppa == INVALID_PPA:
+                    raise ValueError(f"[AMU] <_handle_mapping_response> invalid ppa in mapping response, lpa={lpa}")
+                address = utils.translate_ppa_to_address(ppa)
+                # add entry in cmt for host read path only
+                if tr.source_req is not None and tr.source_req.sq_id is not None:
+                    domain = self.domains[tr.source_req.sq_id]
+                    if not domain.cmt.is_cached(lpa):
+                        domain.cmt.add_entry(lpa, address, dirty=False)
                 waiting_trs = self.waiting_for_mapping_trans[lpa]
                 debug_info(f"[AMU] <_handle_mapping_response> number of waiting trs: {len(waiting_trs)}")
                 for waiting_tr in waiting_trs:
-                    address = utils.translate_ppa_to_address(ppa)
                     waiting_tr.address = address
                     domain = self.domains[waiting_tr.source_req.sq_id]
-                    domain.cmt.write(lpa, address, dirty=False)
+                    if not domain.cmt.is_cached(lpa):
+                        domain.cmt.add_entry(lpa, address, dirty=False)
+                    else:
+                        domain.cmt.update_entry(lpa, address, dirty=False)
                     self.tsu.Submit_trans(waiting_tr)
                 self.waiting_for_mapping_trans[lpa].clear()
             self.tsu.Schedule()
@@ -1346,7 +1374,7 @@ class Address_Mapping_Unit:
         debug_info(f"[AMU] <generate_mapping_write_transaction> writing back cache for mvpn: {mvpn}")
         self.tsu.Prepare_trans_submission()
         bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
-        data = [None for _ in range(LPA_NO_PER_MAPPING_PAGE)]
+        data = [INVALID_PPA for _ in range(LPA_NO_PER_MAPPING_PAGE)]
         lpa_to_eject = []
         for lpa, entry in cache.items():
             if lpa // LPA_NO_PER_MAPPING_PAGE != mvpn: # write back clear entry in the meantime
@@ -1406,7 +1434,13 @@ class Address_Mapping_Unit:
     def generate_mapping_read_transaction(self, trigger_tr: Transaction, mvpn) -> Transaction:
         mapping_page_address = self.gtd[mvpn].address
         access_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
-        access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE] = 1
+        if trigger_tr.lpa != INVALID_LPA:
+            access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE] = 1
+        else:
+            # For mapping write merge, read old entries that are not overwritten in this write.
+            for i in range(min(LPA_NO_PER_MAPPING_PAGE, len(trigger_tr.bitmap))):
+                if trigger_tr.bitmap[i] == 0:
+                    access_bitmap[i] = 1
         read_tr = Transaction(
             source_req=trigger_tr.source_req,
             type=TransactionType.MAPPING_READ,
@@ -1573,7 +1607,7 @@ class GC_WL_Manager:
         phy = self.tsu.phy
         if phy is not None:
             pd = phy._storage[src.channel][src.chip][src.die][src.plane][src.sub_plane][src.page]
-            if pd.lpa is not None:
+            if pd.lpa != INVALID_LPA:
                 return pd.lpa
         ppa = utils.translate_address_to_ppa(src)
         amu = self.address_mapping_unit
@@ -1622,7 +1656,7 @@ class GC_WL_Manager:
                 lpa=lpa,
                 address=dst,
                 bitmap=[1] * SECTOR_PER_PAGE,
-                payload=[None] * SECTOR_PER_PAGE,
+                payload=[INVALID_DATA] * SECTOR_PER_PAGE,
                 gc_old_address=src,
             )
             gc_read.required_by_transactions.append(gc_write)

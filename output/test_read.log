@@ -1,0 +1,85 @@
+Initializing simulation engine...
+Initializing Host...
+Host initialization complete.
+Initializing HIL...
+HIL initialization complete.
+Initializing FTL...
+Initializing Address Mapping Unit...
+[AMU] Mapping layout: total_random_access_pages=196608, mapping_page_count=768, mapping_region=[195840, 196608)
+Initializing Block Manager...
+Initializing block keeping book...
+Block Manager initialization complete.
+Initializing TSU...
+TSU initialization complete.
+FTL initialization complete.
+Initializing PHY...
+PHY initialization complete.
+Engine initialization complete.
+Module construction complete.
+
+
+Validating Host construction...
+Host construction validation complete.
+Validating Device construction...
+Validating TSU construction...
+Validating Block Manager construction...
+Block Manager construction validation complete.
+TSU construction validation complete.
+HIL construction validation complete.
+Device construction validation complete.
+Construction validation complete.
+
+================================================================================
+[Block Manager] Starting preconditioning phase (data-driven)...
+[Block Manager] Loading precondition data from: E:\Files\Li_Meng\HBF\Flash-Sim\pre_data\precondition_data.json
+================================================================================
+[Block Manager] Preconditioning phase completed.
+================================================================================
+
+[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=50, target=Host, param={'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=106688, size=1, issue_time=None, finish_time=None, status=None,>}
+
+Event queue initialization complete.
+
+
+Event queue (1 events):
+
+========== Event [1/1] (time=50) ==========
+SimEvent:
+  type:    EventType.REQ_INIT
+  target:  Host(id=2841356957216)
+  time:    50
+  param:   {'req': <Request type=RequestType.READ, sq_id=None, transaction_list=[], lha_start=106688, size=1, issue_time=None, finish_time=None, status=None,>}
+  ignored: False
+
+--------------------------------------------------------
+
+Starting simulation...
+
+--------------------------------------------------------
+
+[Engine] Time = 50, Register_event: type=EventType.DELIVER, scheduled_time=150, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x000002958E1A6300>}
+
+[Engine] Time = 150, Register_event: type=EventType.PHY_READ_CMD_TRANSFERRED, scheduled_time=250, target=PHY, param={'chip_id': (7, 2), 'die_id': 3, 'transactions': [<type=TransactionType.MAPPING_READ, lpa=-1, mvpn=6, address=<FlashAddress channel=7, chip=2, die=3, plane=2, sub_plane=32, page=6,>, Transaction source_req=Request(type=RequestType.READ, lha_start=106688, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+
+[Engine] Time = 250, Register_event: type=EventType.PHY_CHIP_READ_COMPLETE, scheduled_time=75250, target=PHY, param={'chip_id': (7, 2), 'die_id': 3, 'transactions': [<type=TransactionType.MAPPING_READ, lpa=-1, mvpn=6, address=<FlashAddress channel=7, chip=2, die=3, plane=2, sub_plane=32, page=6,>, Transaction source_req=Request(type=RequestType.READ, lha_start=106688, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+
+[Engine] Time = 75250, Register_event: type=EventType.PHY_READ_DATA_TRANSFERRED, scheduled_time=80250, target=PHY, param={'chip_id': (7, 2), 'die_id': 3, 'transactions': [<type=TransactionType.MAPPING_READ, lpa=-1, mvpn=6, address=<FlashAddress channel=7, chip=2, die=3, plane=2, sub_plane=32, page=6,>, Transaction source_req=Request(type=RequestType.READ, lha_start=106688, size=1), bitmap=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=1 transaction(s), completed=False, exec_event=None>]}
+
+[Engine] Time = 80250, Register_event: type=EventType.PHY_READ_CMD_TRANSFERRED, scheduled_time=80350, target=PHY, param={'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=1667, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=3, sub_plane=41, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=106688, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+
+[Engine] Time = 80350, Register_event: type=EventType.PHY_CHIP_READ_COMPLETE, scheduled_time=155350, target=PHY, param={'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=1667, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=3, sub_plane=41, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=106688, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+
+[Engine] Time = 155350, Register_event: type=EventType.PHY_READ_DATA_TRANSFERRED, scheduled_time=160350, target=PHY, param={'chip_id': (0, 0), 'die_id': 0, 'transactions': [<type=TransactionType.USER_READ, lpa=1667, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=3, sub_plane=41, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=106688, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=None, rely_on_transactions=[], required_by_transactions=[], completed=False, exec_event=None>]}
+
+[Engine] Time = 160350, Register_event: type=EventType.DELIVER, scheduled_time=160450, target=PCIe_link, param={'target': <flash_sim.Host.Host object at 0x000002958E127620>}
+
+
+[Host] Received REQ_COMP:<Request type=RequestType.READ, sq_id=0, transaction_list=[<type=TransactionType.USER_READ, lpa=1667, mvpn=-1, address=<FlashAddress channel=0, chip=0, die=0, plane=3, sub_plane=41, page=0,>, Transaction source_req=Request(type=RequestType.READ, lha_start=106688, size=1), bitmap=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], payload=[], response=PageData(valid_bitmap=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], data=[6479, 37826, 22983, 51010, 43815, 25136, 27453, 27689, 23023, 15141, 48627, 11752, 63377, 37790, 22221, 42967, 40712, 32050, 20783, 27882, 3825, 24731, 44761, 38340, 50512, 14212, 17512, 2474, 63741, 5070, 62816, 65518, 30084, 52697, 45321, 51865, 57888, 50524, 54618, 34608, 37762, 64258, 32266, 52449, 14462, 35785, 59765, 58469, 1587, 43793, 41336, 57374, 42803, 63410, 10385, 37063, 24625, 59603, 21279, 64603, 63087, 36009, 8673, 43036], lpa=1667, mvpn=-1, function=<PageType.USER: 'USER'>), rely_on_transactions=[], required_by_transactions=[], completed=True, exec_event=None>], lha_start=106688, size=1, issue_time=50, finish_time=160450, status=completed,>
+
+Simulation completed.
+Simulation time: 160450
+Event queue (0 events):
+  (empty)
+address_mapping_unit.gtd: {6: <flash_sim.common.GTDEntry object at 0x000002959006E540>, 11: <flash_sim.common.GTDEntry object at 0x000002959006E5A0>, 83: <flash_sim.common.GTDEntry object at 0x000002959006E600>, 87: <flash_sim.common.GTDEntry object at 0x000002959006E660>, 156: <flash_sim.common.GTDEntry object at 0x000002959006E6C0>, 167: <flash_sim.common.GTDEntry object at 0x000002959006E720>, 168: <flash_sim.common.GTDEntry object at 0x000002959006E780>, 185: <flash_sim.common.GTDEntry object at 0x000002959006E7E0>, 193: <flash_sim.common.GTDEntry object at 0x000002959006E840>, 202: <flash_sim.common.GTDEntry object at 0x000002959006E8A0>, 219: <flash_sim.common.GTDEntry object at 0x000002959006E900>, 223: <flash_sim.common.GTDEntry object at 0x000002959006E960>, 266: <flash_sim.common.GTDEntry object at 0x000002959006E9C0>, 275: <flash_sim.common.GTDEntry object at 0x000002959006EA20>, 288: <flash_sim.common.GTDEntry object at 0x000002959006EA80>, 324: <flash_sim.common.GTDEntry object at 0x000002959006EAE0>, 328: <flash_sim.common.GTDEntry object at 0x000002959006EB40>, 347: <flash_sim.common.GTDEntry object at 0x000002959006EBA0>, 392: <flash_sim.common.GTDEntry object at 0x000002959006EC00>, 409: <flash_sim.common.GTDEntry object at 0x000002959006EC60>, 411: <flash_sim.common.GTDEntry object at 0x000002959006ECC0>, 412: <flash_sim.common.GTDEntry object at 0x000002959006ED20>, 424: <flash_sim.common.GTDEntry object at 0x000002959006ED80>, 435: <flash_sim.common.GTDEntry object at 0x000002959006EDE0>, 443: <flash_sim.common.GTDEntry object at 0x000002959006EE40>, 467: <flash_sim.common.GTDEntry object at 0x000002959006EED0>, 471: <flash_sim.common.GTDEntry object at 0x000002959006EF60>, 517: <flash_sim.common.GTDEntry object at 0x000002959006EFC0>, 519: <flash_sim.common.GTDEntry object at 0x000002959006F020>, 550: <flash_sim.common.GTDEntry object at 0x000002959006F080>, 556: <flash_sim.common.GTDEntry object at 0x000002959006F0E0>, 559: <flash_sim.common.GTDEntry object at 0x00000295941C2930>, 589: <flash_sim.common.GTDEntry object at 0x00000295941C2990>, 591: <flash_sim.common.GTDEntry object at 0x00000295941C29F0>, 600: <flash_sim.common.GTDEntry object at 0x00000295941C2A50>, 607: <flash_sim.common.GTDEntry object at 0x00000295941C2AB0>, 678: <flash_sim.common.GTDEntry object at 0x00000295941C2B10>, 705: <flash_sim.common.GTDEntry object at 0x00000295941C2B70>}
+address_mapping_unit.cmt.cache: {105363: cmt_entry(address=<FlashAddress channel=3, chip=0, die=3, plane=1, sub_plane=23, page=0,>, dirty=False), 1667: cmt_entry(address=<FlashAddress channel=0, chip=0, die=0, plane=3, sub_plane=41, page=0,>, dirty=False)}
+address_mapping_unit.gmt: {}

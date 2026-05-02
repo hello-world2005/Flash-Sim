@@ -171,7 +171,7 @@ class HIL:
         debug_info(f"[HIL] <_tile_data> req: {req}, data: {data}")
         cntr = 0
         for tr in req.transaction_list:
-            payload = [None] * SECTOR_PER_PAGE
+            payload = [INVALID_DATA] * SECTOR_PER_PAGE
             for i in range(SECTOR_PER_PAGE):
                 if tr.bitmap[i] == 1:
                     payload[i] = data[cntr]
