@@ -176,7 +176,7 @@ class Block_Manager:
     
     def _set_barrier(self, tr: Transaction):
         debug_info(f"[Block Manager] <_set_barrier> setting barrier for tr: {repr(tr)}")
-        if tr.type in [TransactionType.USER_WRITE]:
+        if tr.type in [TransactionType.USER_WRITE, TransactionType.USER_STATIC_WRITE]:
             if tr.lpa not in self.lpa_protected_book:
                 self.lpa_protected_book[tr.lpa] = tr
         elif tr.type in [TransactionType.GC_WRITE]:
@@ -202,6 +202,8 @@ class Block_Manager:
             if tr.invalidate_target is not None:
                 self._mark_invalid(tr.invalidate_target)
             self.gc_wl_manager.check_gc()
+        elif tr.type == TransactionType.USER_STATIC_WRITE:
+            self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
         elif tr.type == TransactionType.GC_WRITE:
             self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
             self.gc_wl_manager.address_mapping_unit.apply_gc_write_complete(tr)

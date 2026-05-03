@@ -1,71 +1,50 @@
 # Version Update
 
 ## 本次目标
-根据 `prompt.md` 统一 `PageData` 字段语义，并对映射写入/读取链路做一致性修正。
+按 `prompt.md` 新增由 HIL 管理的 Data Cache（cache-line 机制），并接入 HIL/FTL/TSU 写入与读取路径。
 
 ## 修改内容
 
-### 1. 新增无效值常量（`flash_sim/common.py`）
-新增以下常量用于统一无效语义：
-- `INVALID_LPA = -1`
-- `INVALID_MVPN = -1`
-- `INVALID_DATA = -1`
-- `INVALID_PPA = -1`
+### 1) Data Cache 常量与约束（`flash_sim/common.py`）
+- 新增：
+  - `SECTOR_SIZE_BYTES = 64`
+  - `DATA_CACHE_LINE_SIZE = 64`
+  - `DATA_CACHE_CAP = 4096`
+- HIL 数据缓存初始化时强校验：`DATA_CACHE_CAP` 必须是 `cache_line_size` 的整数倍。
 
-并将 `Transaction` 默认字段统一为：
-- `lpa` 默认 `INVALID_LPA`
-- `mvpn` 默认 `INVALID_MVPN`
+### 2) HIL 新增 cache-line Data Cache（`flash_sim/HIL.py`）
+- 重构原 `Cache/Cache_Manager` 为 `Data_Cache + Cache_Manager`：
+  - 按 cache line（64B）存储；
+  - 以 sector 级 line address 管理 user write 数据；
+  - 支持 static write 缓存条目。
+- 写请求（`WRITE` / `STATIC_WRITE`）数据到达后：
+  - 若新地址写入超出容量，先触发 `write_flush`；
+  - 若地址已存在，直接覆盖更新缓存行；
+  - 数据先写入缓存，再立即完成主机请求（写回策略）。
+- `write_flush`：
+  - 通过 `FTL.address_mapping_unit.translate_and_submit(...)` 生成并提交 flush 事务到 TSU；
+  - 将缓存中的 user/static 写条目全部下刷；
+  - 刷新后清空全部 cache lines 与 pending 条目。
+- 读请求（`READ`）优先查 Data Cache：
+  - 命中则直接完成对应 transaction；
+  - 未命中 transaction 保留并继续走 FTL。
 
-### 2. 统一 `Transaction.get_response_from_transaction`（`flash_sim/common.py`）
-- `MAPPING_WRITE <- MAPPING_READ`：从 `tr.response.data` 合并映射数据，不再依赖 `None`。
-- `USER_READ/USER_WRITE <- MAPPING_READ`：
-  - 使用 `response.valid_bitmap` + `response.data` 校验目标 lpa 是否有效；
-  - 读取到的 ppa 通过本地解码转换为 `FlashAddress`。
-- `USER_WRITE <- USER_READ_FOR_WRITE` 与 `GC_WRITE <- GC_READ`：改为基于 `INVALID_DATA` 判定未填充槽位。
+### 3) HIL 请求流程调整（`flash_sim/HIL.py`）
+- `WRITE_REQ/STATIC_WRITE_REQ`：先分段并取数据，不再在数据未到达时直接提交 FTL。
+- `WRITE_DATA/STATIC_WRITE_DATA`：写入 Data Cache 并直接返回 REQ_COMP。
+- `READ_REQ`：缓存命中时直接完成请求；miss 才走 FTL。
+- `_tile_data` 增强 static write 数据填充逻辑。
 
-### 3. 统一 PHY 落盘/读盘语义（`flash_sim/PHY.py`）
-`PageData` 字段语义统一如下：
-- `function == USER`：
-  - `lpa = tr.lpa`
-  - `mvpn = INVALID_MVPN`
-  - `valid_bitmap` 长度 `SECTOR_PER_PAGE`
-  - `data` 长度 `SECTOR_PER_PAGE`，无效槽位为 `INVALID_DATA`
-- `function == MAPPING`：
-  - `mvpn = tr.mvpn`
-  - `lpa = INVALID_LPA`
-  - `valid_bitmap` 长度 `LPA_NO_PER_MAPPING_PAGE`
-  - `data` 长度 `LPA_NO_PER_MAPPING_PAGE`，无效槽位为 `INVALID_PPA`
+### 4) 静态写 flush 兼容性修正（`flash_sim/FTL.py`）
+- `Block_Manager._set_barrier` 新增对 `USER_STATIC_WRITE` 的 barrier 支持。
+- `Block_Manager._on_transaction_serviced` 新增对 `USER_STATIC_WRITE` barrier 释放。
 
-并在 `_read_from_storage` 中按上述规则做合法性校验。
+### 5) 新增测试（`tests/test_data_cache.py`）
+- 覆盖点：
+  - cache 容量与 cache line 对齐校验；
+  - 写入后读命中返回缓存数据；
+  - 缓存满触发 flush 并继续缓存新写入；
+  - static write 可通过 flush 提交到 AMU。
 
-### 4. preconditioning 写入统一（`flash_sim/FTL.py`）
-- USER page 预置写入：
-  - 补齐/规范 `valid_bitmap` 为固定长度 `SECTOR_PER_PAGE`
-  - `data` 固定长度，invalid 槽位填 `INVALID_DATA`
-  - 写入 `mvpn = INVALID_MVPN`
-- MAPPING page 预置写入：
-  - `lpa = INVALID_LPA`
-  - `data` 存储 ppa（通过 `translate_address_to_ppa`）
-  - invalid 槽位填 `INVALID_PPA`
-
-### 5. mapping read/write 链路修正（`flash_sim/FTL.py`）
-- `generate_mapping_write_transaction`：映射 payload 默认值改为 `INVALID_PPA`。
-- `generate_mapping_read_transaction`：
-  - 普通读请求按 `trigger_tr.lpa` 读取单个映射槽位；
-  - mapping write 合并场景（`lpa == INVALID_LPA`）按位图读取旧映射页中未覆盖槽位。
-- `_handle_mapping_response`：
-  - 使用 `tr.mvpn` 还原 lpa（修复原先按 `tr.lpa` 计算的问题）；
-  - 通过 `response.valid_bitmap` + `response.data` 判定有效性；
-  - 对 `source_req is None`（mapping write 内部读）场景做安全处理，避免错误访问 domain。
-
-### 6. 其它一致性修正
-- `flash_sim/HIL.py`：`_tile_data` 初始化 payload 从 `None` 改为 `INVALID_DATA`。
-- `flash_sim/FTL.py`：GC 路径 `GC_WRITE` 初始 payload 改为 `INVALID_DATA`。
-- `flash_sim/FTL.py`：`_lpa_for_physical_page` 判定由 `pd.lpa is not None` 改为 `pd.lpa != INVALID_LPA`。
-
-## 验证结果
-- 运行主流程：`python main.py`（在 `flash_sim` 目录）
-- 结果：仿真正常结束，日志出现 `Simulation completed.`，无新增运行时异常。
-
-## 说明
-- 当前环境缺少 `pytest`，未执行 `tests/test_preconditioning.py` 自动化回归。
+## 验证说明
+- 计划执行现有测试，但当前命令环境缺少 `pwsh`，无法通过 CLI 运行测试命令。

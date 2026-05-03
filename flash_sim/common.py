@@ -129,6 +129,9 @@ INVALID_LPA = -1
 INVALID_MVPN = -1
 INVALID_DATA = -1
 INVALID_PPA = -1
+SECTOR_SIZE_BYTES = 64
+DATA_CACHE_LINE_SIZE = 64
+DATA_CACHE_CAP = 4096
 
 # debug_info = print
 def debug_info(*args, **kwargs):
