@@ -1,0 +1,26 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+
+context: |
+  Project: 3D NAND flash simulator for performance and reliability analysis.
+  Target: A event-driven simulator that models the behavior of 3D NAND flash
+  Existing design note: docs/init-simulator-overview.md describes the current architecture and module partitioning.
+  We use conventional commits
+
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+rules:
+  proposal:
+    - Always include a "Non-goals" section
+    - explicitly state which modules and functions are in scope for the proposal, and which are out of scope.
+    - propose at least one test case target at the main difference between the current design and the proposed design.
+  design:
+    - Include a "Design Rationale" section that explains the reasoning behind key design decisions.
+  tasks:
+    - Keep implementation and verification tasks separate.
+    - explicitly state which modules and functions are to be added, deleted or modified by the task.
