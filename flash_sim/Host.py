@@ -135,7 +135,12 @@ class Host:
             self.submit_req(req)
         elif event.type == EventType.DELIVER:
             message = event.param["message"]
-            if message.type in [MessageType.WRITE_DATA_REQ, MessageType.SEARCH_DATA_REQ, MessageType.COMPUTE_DATA_REQ]:
+            if message.type in [
+                MessageType.WRITE_DATA_REQ,
+                MessageType.SEARCH_DATA_REQ,
+                MessageType.COMPUTE_DATA_REQ,
+                MessageType.STATIC_WRITE_DATA_REQ,
+            ]:
                 self.send_data(message)
             elif message.type in [MessageType.WRITE_DATA_RECEIVED, MessageType.READ_REQ_RECEIVED, MessageType.SEARCH_DATA_RECEIVED, MessageType.COMPUTE_DATA_RECEIVED]:
                 self.remove_from_sq(message.payload["sq_id"])
@@ -247,7 +252,15 @@ class Host:
         req = message.payload["req"]
         data = self.memory.get_req_data(req)
         new_message = PCIe_message(
-            type=MessageType.WRITE_DATA if req.type == RequestType.WRITE else MessageType.SEARCH_DATA if req.type == RequestType.SEARCH else MessageType.COMPUTE_DATA,
+            type=(
+                MessageType.WRITE_DATA
+                if req.type == RequestType.WRITE
+                else MessageType.SEARCH_DATA
+                if req.type == RequestType.SEARCH
+                else MessageType.COMPUTE_DATA
+                if req.type == RequestType.COMPUTE
+                else MessageType.STATIC_WRITE_DATA
+            ),
             payload={"req": req, "data": data}
         )
         self.pcie_link.send(new_message, self.pcie_link.device)

@@ -1,37 +1,4 @@
-# Host Device Request Flow Specification
-
-## Purpose
-
-Define the baseline request path between Host, PCIe, HIL, and the controller-side cache, including request queueing, delivery, segmentation, data fetch, and completion semantics.
-
-## Requirements
-
-### Requirement: Host 维护轻量级提交与完成队列元数据
-
-`Host` SHALL 在进程内维护 `sq_heads`、`sq_tails`、`cq_heads`、`cq_tails`、`sq_entries` 和 `IO_Flow` 等轻量级数据结构，用于请求分配、并发流占用和完成状态跟踪，而不是模拟完整的 host-memory-backed NVMe 队列 DMA 机制。
-
-#### Scenario: 请求进入 Host
-
-- **WHEN** `Host` 收到一个 `REQ_INIT` 事件并接收新的 `Request`
-- **THEN** `Host` MUST 选择一个未满的 SQ，将请求写入本地队列结构，更新对应队列尾指针，并在可用时把该 SQ 绑定到一个 `IO_Flow`
-
-### Requirement: Host 在提交队列不可用时延后请求
-
-当前模型 SHALL 使用 `waiting_req` 作为退避队列，当所有 SQ 都已满时，请求不会立即丢弃，而是等待后续流释放后再提交。
-
-#### Scenario: 所有 SQ 均不可用
-
-- **WHEN** `Host` 收到新请求但找不到可用的 SQ
-- **THEN** `Host` MUST 将请求放入 `waiting_req`，并在后续移除已完成请求时尝试重新提交
-
-### Requirement: PCIe 链路按方向串行化消息并注册未来投递事件
-
-`PCIe_link` SHALL 分别维护 Host 到 Device 和 Device 到 Host 的消息队列；每个方向同一时刻仅推进队首消息，并用固定链路延迟把消息投递建模为未来 `DELIVER` 事件。
-
-#### Scenario: Host 向 Device 发送消息
-
-- **WHEN** `Host` 通过 `PCIe_link.send(...)` 发送一条面向 `Device` 的消息
-- **THEN** 链路 MUST 将消息压入 `host_to_device_queue`，并在当前仿真时间之后固定延迟的位置注册一个 `DELIVER` 事件
+## MODIFIED Requirements
 
 ### Requirement: HIL 必须按请求类型切分事务并处理读缓存
 

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from ipaddress import AddressValueError
+from collections import defaultdict
+from math import ceil
 from queue import Queue
 
 from flash_sim import utils
-from .common import *
-from .FTL import FTL, Transaction
+
 from . import pcie_link as PCIe_link
-from math import ceil
-from typing import Optional
-from collections import defaultdict
+from .FTL import FTL, Transaction
+from .common import *
 
 
 class HIL:
@@ -18,13 +17,12 @@ class HIL:
         self.name = name
         self.host = host
         self.device = device
-        # 使用 host.pcie_link 以便 Engine 注入后生效
         num_queues = getattr(host, "num_of_queues", 8)
         self.input_streams = [Queue() for _ in range(num_queues)]
         self.cache_manager = Cache_Manager(self)
-        self.ftl : FTL
+        self.ftl: FTL
         print("HIL initialization complete.")
-    
+
     def Validate_construction(self):
         if self._construction_valid:
             return
@@ -39,120 +37,142 @@ class HIL:
 
     @property
     def pcie_link(self):
-        """延迟获取 pcie_link，确保 Engine 注入后才使用。"""
         return self.host.pcie_link
 
     def execute(self, event):
         from .common import log_execute_event
+
         log_execute_event(self.__class__.__name__, event)
         assert event.type == EventType.DELIVER
         message = event.param["message"]
         self.receive_pcie_message(message)
 
     def segment(self, req):
-        """根据 req 的 lha_start 和 size 范围拆成 transaction_list。"""
-        # only segment once
+        """Segment a request into transaction_list only once."""
         if req.transaction_list:
             return
-        # search, compute and static write operation should do address translation while segmenting
         if req.type in (RequestType.SEARCH, RequestType.COMPUTE, RequestType.STATIC_WRITE):
             size = req.size
             for i in range(size):
                 sub_plane_id = req.lha_start + i
                 address = self.ftl.get_static_address(sub_plane_id)
-                lpa  = utils.translate_lha_to_lpa(sub_plane_id)
-                tr_type = TransactionType.USER_SEARCH if req.type == RequestType.SEARCH else TransactionType.USER_COMPUTE if req.type == RequestType.COMPUTE else TransactionType.USER_STATIC_WRITE if req.type == RequestType.STATIC_WRITE else None
-                tr = Transaction(source_req=req, type=tr_type, address=address, lpa=lpa, data_ready=True if req.type == RequestType.SEARCH else False)
+                lpa = utils.translate_lha_to_lpa(sub_plane_id)
+                tr_type = (
+                    TransactionType.USER_SEARCH
+                    if req.type == RequestType.SEARCH
+                    else TransactionType.USER_COMPUTE
+                    if req.type == RequestType.COMPUTE
+                    else TransactionType.USER_STATIC_WRITE
+                )
+                tr = Transaction(
+                    source_req=req,
+                    type=tr_type,
+                    address=address,
+                    lpa=lpa,
+                    data_ready=req.type == RequestType.SEARCH,
+                )
                 req.transaction_list.append(tr)
             return
 
-        elif req.type in (RequestType.READ, RequestType.WRITE):
-            start_lha = req.lha_start
-            lha_count = req.size
-
-            start_lpa = start_lha // SECTOR_PER_PAGE
-            head_margin_sectors  = start_lha % SECTOR_PER_PAGE
-            tail_margin_sectors = (SECTOR_PER_PAGE - (lha_count + head_margin_sectors)%SECTOR_PER_PAGE) % SECTOR_PER_PAGE
-
-            lpa_count = max(1, ceil((lha_count + head_margin_sectors) / SECTOR_PER_PAGE))
-            if lpa_count == 1: # only access one page
-                bitmap = [0] * head_margin_sectors + [1] * lha_count + [0] * tail_margin_sectors
-                tr_type = None
-                if req.type == RequestType.READ:
-                    tr_type = TransactionType.USER_READ
-                elif req.type == RequestType.WRITE:
-                    tr_type = TransactionType.USER_WRITE
-                else:
-                    raise ValueError(f"Invalid request type: {req.type}")
-                tr = Transaction(source_req=req, lpa=start_lpa, bitmap=bitmap, type=tr_type, data_ready=True if req.type == RequestType.READ else False)
-                req.transaction_list.append(tr)
-                return
-            # access multiple pages
-            for i in range(lpa_count):
-                lpa = start_lpa + i
-                if i == 0:
-                    bitmap = [1] * head_margin_sectors + [0] * (SECTOR_PER_PAGE - head_margin_sectors)
-                elif i == lpa_count - 1:
-                    bitmap = [1] * (lha_count + head_margin_sectors - tail_margin_sectors) + [0] * tail_margin_sectors
-                else:
-                    bitmap = [1] * SECTOR_PER_PAGE
-                tr_type = None
-                if req.type == RequestType.READ:
-                    tr_type = TransactionType.USER_READ
-                elif req.type == RequestType.WRITE:
-                    tr_type = TransactionType.USER_WRITE
-                else:
-                    raise ValueError(f"Invalid request type: {req.type}")
-                tr = Transaction(source_req=req, lpa=lpa, bitmap=bitmap, type=tr_type, data_ready=True if req.type == RequestType.READ else False)
-                req.transaction_list.append(tr)
-        else:
+        if req.type not in (RequestType.READ, RequestType.WRITE):
             raise ValueError("Unexpected req type!")
 
-        
-    def _on_transaction_serviced(self, tr): # handle trnasaction serviced signal from PHY
-        # get source req of tr
+        start_lha = req.lha_start
+        lha_count = req.size
+
+        start_lpa = start_lha // SECTOR_PER_PAGE
+        head_margin_sectors = start_lha % SECTOR_PER_PAGE
+        tail_margin_sectors = (SECTOR_PER_PAGE - (lha_count + head_margin_sectors) % SECTOR_PER_PAGE) % SECTOR_PER_PAGE
+
+        lpa_count = max(1, ceil((lha_count + head_margin_sectors) / SECTOR_PER_PAGE))
+        if lpa_count == 1:
+            bitmap = [0] * head_margin_sectors + [1] * lha_count + [0] * tail_margin_sectors
+            tr_type = TransactionType.USER_READ if req.type == RequestType.READ else TransactionType.USER_WRITE
+            tr = Transaction(
+                source_req=req,
+                lpa=start_lpa,
+                bitmap=bitmap,
+                type=tr_type,
+                data_ready=req.type == RequestType.READ,
+            )
+            req.transaction_list.append(tr)
+            return
+
+        for i in range(lpa_count):
+            lpa = start_lpa + i
+            if i == 0:
+                bitmap = [0] * head_margin_sectors + [1] * (SECTOR_PER_PAGE - head_margin_sectors)
+            elif i == lpa_count - 1:
+                bitmap = [1] * (SECTOR_PER_PAGE - tail_margin_sectors) + [0] * tail_margin_sectors
+            else:
+                bitmap = [1] * SECTOR_PER_PAGE
+            tr_type = TransactionType.USER_READ if req.type == RequestType.READ else TransactionType.USER_WRITE
+            tr = Transaction(
+                source_req=req,
+                lpa=lpa,
+                bitmap=bitmap,
+                type=tr_type,
+                data_ready=req.type == RequestType.READ,
+            )
+            req.transaction_list.append(tr)
+
+    def _on_transaction_serviced(self, tr):
         debug_info(f"[HIL] _on_transaction_serviced: tr: {repr(tr)}")
-        source_req = tr.source_req
         tr.completed = True
+        self.cache_manager.on_transaction_serviced(tr)
+        source_req = tr.source_req
         if source_req is None:
             return
         if source_req.is_serviced():
             req_brief = f"Request(type={source_req.type}, lha_start={source_req.lha_start}, size={source_req.size})"
             debug_info(f"[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: {req_brief}")
-            # 目前仅考虑把所有信息全部塞进CQ_Entry里，因此所有的req类型操作是一样的，都是发个CQ_Entry给Host
             payload = {"req": source_req, "status": "completed"}
             self.host.queue_ptrs.cq_tails[source_req.sq_id] += 1
             message = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
             self.pcie_link.send(message, self.host)
         else:
-            debug_info(f"[HIL] _on_transaction_serviced: source_req is not serviced yet")
-
-
+            debug_info("[HIL] _on_transaction_serviced: source_req is not serviced yet")
 
     def fetch_data(self, req):
-        """向 host 请求 WRITE/SEARCH/COMPUTE 所需数据"""
-        message = PCIe_link.PCIe_message(
-            type=MessageType.WRITE_DATA_REQ if req.type == RequestType.WRITE else MessageType.SEARCH_DATA_REQ if req.type == RequestType.SEARCH else MessageType.COMPUTE_DATA_REQ,
-            payload={"req": req}
-        )
+        message_type = {
+            RequestType.WRITE: MessageType.WRITE_DATA_REQ,
+            RequestType.SEARCH: MessageType.SEARCH_DATA_REQ,
+            RequestType.COMPUTE: MessageType.COMPUTE_DATA_REQ,
+            RequestType.STATIC_WRITE: MessageType.STATIC_WRITE_DATA_REQ,
+        }.get(req.type)
+        if message_type is None:
+            raise ValueError(f"Unexpected data-fetch req type: {req.type}")
+        message = PCIe_link.PCIe_message(type=message_type, payload={"req": req})
         self.pcie_link.send(message, self.host)
 
     def receive_pcie_message(self, message):
         if message.type == MessageType.READ_REQ:
             req = message.payload["req"]
-            self.segment(req) # 将req拆分成transaction_list
+            self.segment(req)
             self.cache_manager.query_cache(req)
             if req.is_serviced():
                 self._complete_request(req)
                 return
             self.ftl.handle_new_req(req)
-        elif message.type in (MessageType.WRITE_REQ, MessageType.SEARCH_REQ, MessageType.COMPUTE_REQ, MessageType.STATIC_WRITE_REQ):
+        elif message.type in (
+            MessageType.WRITE_REQ,
+            MessageType.SEARCH_REQ,
+            MessageType.COMPUTE_REQ,
+            MessageType.STATIC_WRITE_REQ,
+        ):
             req = message.payload["req"]
             self.segment(req)
+            if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
+                self.cache_manager.register_write_request(req)
             self.fetch_data(req)
             if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
                 self.ftl.handle_new_req(req)
-        elif message.type in (MessageType.WRITE_DATA, MessageType.SEARCH_DATA, MessageType.COMPUTE_DATA, MessageType.STATIC_WRITE_DATA):
+        elif message.type in (
+            MessageType.WRITE_DATA,
+            MessageType.SEARCH_DATA,
+            MessageType.COMPUTE_DATA,
+            MessageType.STATIC_WRITE_DATA,
+        ):
             req = message.payload["req"]
             data = message.payload["data"]
             debug_info(f"[HIL] received data for req: {req}")
@@ -183,6 +203,7 @@ class HIL:
                 tr.bitmap = [1]
                 tr.payload = [value]
             return
+
         cntr = 0
         for tr in req.transaction_list:
             payload = [INVALID_DATA] * SECTOR_PER_PAGE
@@ -191,6 +212,7 @@ class HIL:
                     payload[i] = data[cntr]
                     cntr += 1
             tr.payload = payload
+
 
 class Data_Cache:
     def __init__(self, cache_line_size: int = DATA_CACHE_LINE_SIZE, capacity: int = DATA_CACHE_CAP):
@@ -201,27 +223,108 @@ class Data_Cache:
         self.cache_line_size = cache_line_size
         self.capacity = capacity
         self._max_lines = capacity // cache_line_size
-        self.lines: dict[int, int] = {}
+        self.user_entries: dict[int, dict] = {}
+        self.static_entries: dict[int, dict] = {}
+
+    @property
+    def lines(self) -> dict[int, int]:
+        lines: dict[int, int] = {}
+        for lpa, entry in self.user_entries.items():
+            ready_bitmap = entry["ready_bitmap"]
+            payload = entry["payload"]
+            for sector_idx in range(SECTOR_PER_PAGE):
+                if ready_bitmap[sector_idx] == 1:
+                    lines[lpa * SECTOR_PER_PAGE + sector_idx] = payload[sector_idx]
+        for line_addr, entry in self.static_entries.items():
+            if entry["ready"]:
+                value = entry["payload"][0] if entry["payload"] else INVALID_DATA
+                lines[line_addr] = value
+        return lines
 
     def free_lines(self) -> int:
         return self._max_lines - len(self.lines)
 
     def clear(self):
-        self.lines.clear()
+        self.user_entries.clear()
+        self.static_entries.clear()
 
 
 class Cache_Manager:
     def __init__(self, hil: HIL):
         self.hil = hil
         self.cache = Data_Cache()
-        self.pending_user_pages: dict[int, dict] = {}
-        self.pending_static_pages: dict[int, dict] = {}
 
-    def _line_addr_of_user(self, tr: Transaction, sector_idx: int) -> int:
-        return tr.lpa * SECTOR_PER_PAGE + sector_idx
+    @property
+    def pending_user_pages(self):
+        return self.cache.user_entries
+
+    @property
+    def pending_static_pages(self):
+        return self.cache.static_entries
 
     def _line_addr_of_static(self, tr: Transaction) -> int:
         return tr.lpa
+
+    def _new_user_entry(self, sq_id: int) -> dict:
+        return {
+            "sq_id": sq_id,
+            "bitmap": [0] * SECTOR_PER_PAGE,
+            "ready_bitmap": [0] * SECTOR_PER_PAGE,
+            "payload": [INVALID_DATA] * SECTOR_PER_PAGE,
+        }
+
+    def _new_static_entry(self, sq_id: int, tr: Transaction) -> dict:
+        return {
+            "sq_id": sq_id,
+            "lpa": tr.lpa,
+            "address": tr.address,
+            "bitmap": [1],
+            "ready": False,
+            "payload": [INVALID_DATA],
+        }
+
+    def _user_entry_covers_transaction(self, entry: dict, tr: Transaction) -> bool:
+        for i in range(SECTOR_PER_PAGE):
+            if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
+                continue
+            if entry["bitmap"][i] == 0:
+                return False
+        return True
+
+    def _user_entry_is_fully_ready(self, entry: dict) -> bool:
+        for i in range(SECTOR_PER_PAGE):
+            if entry["bitmap"][i] == 1 and entry["ready_bitmap"][i] == 0:
+                return False
+        return True
+
+    def _count_new_ready_lines(self, req: Request) -> int:
+        if req.type == RequestType.WRITE:
+            new_ready_lines = 0
+            for tr in req.transaction_list:
+                entry = self.cache.user_entries.get(tr.lpa, self._new_user_entry(req.sq_id if req.sq_id is not None else 0))
+                for i in range(SECTOR_PER_PAGE):
+                    if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
+                        continue
+                    if entry["ready_bitmap"][i] == 0:
+                        new_ready_lines += 1
+            return new_ready_lines
+
+        if req.type == RequestType.STATIC_WRITE:
+            new_ready_lines = 0
+            for tr in req.transaction_list:
+                line_addr = self._line_addr_of_static(tr)
+                entry = self.cache.static_entries.get(line_addr)
+                if entry is None or not entry["ready"]:
+                    new_ready_lines += 1
+            return new_ready_lines
+
+        return 0
+
+    def register_write_request(self, req: Request):
+        if req.type == RequestType.WRITE:
+            self._register_user_write(req)
+        elif req.type == RequestType.STATIC_WRITE:
+            self._register_static_write(req)
 
     def query_cache(self, req: Request):
         misses = []
@@ -229,105 +332,111 @@ class Cache_Manager:
             if tr.type != TransactionType.USER_READ:
                 misses.append(tr)
                 continue
+            entry = self.cache.user_entries.get(tr.lpa)
+            if entry is None or not self._user_entry_covers_transaction(entry, tr):
+                misses.append(tr)
+                continue
             payload = [INVALID_DATA] * SECTOR_PER_PAGE
-            hit = True
             for i in range(SECTOR_PER_PAGE):
                 if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
                     continue
-                line_addr = self._line_addr_of_user(tr, i)
-                if line_addr not in self.cache.lines:
-                    hit = False
-                    break
-                payload[i] = self.cache.lines[line_addr]
-            if hit:
-                tr.payload = payload
-                tr.completed = True
-            else:
-                misses.append(tr)
+                if entry["ready_bitmap"][i] == 1:
+                    payload[i] = entry["payload"][i]
+            tr.payload = payload
+            tr.completed = True
         req.transaction_list = misses
-
-    def _count_new_cache_lines(self, req: Request) -> int:
-        new_line_addrs = set()
-        if req.type == RequestType.WRITE:
-            for tr in req.transaction_list:
-                for i in range(SECTOR_PER_PAGE):
-                    if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
-                        continue
-                    line_addr = self._line_addr_of_user(tr, i)
-                    if line_addr not in self.cache.lines:
-                        new_line_addrs.add(line_addr)
-        elif req.type == RequestType.STATIC_WRITE:
-            for tr in req.transaction_list:
-                line_addr = self._line_addr_of_static(tr)
-                if line_addr not in self.cache.lines:
-                    new_line_addrs.add(line_addr)
-        return len(new_line_addrs)
 
     def cache_write(self, req: Request):
         if req.type not in (RequestType.WRITE, RequestType.STATIC_WRITE):
             return
-        new_lines = self._count_new_cache_lines(req)
+        self.register_write_request(req)
+        new_lines = self._count_new_ready_lines(req)
         if new_lines > self.cache.free_lines():
             self.write_flush()
         if new_lines > self.cache.free_lines():
             raise ValueError("Incoming write data exceeds DATA_CACHE_CAP")
         if req.type == RequestType.WRITE:
-            self._cache_user_write(req)
+            self._hydrate_user_write(req)
         else:
-            self._cache_static_write(req)
+            self._hydrate_static_write(req)
 
-    def _cache_user_write(self, req: Request):
+    def _register_user_write(self, req: Request):
         sq_id = req.sq_id if req.sq_id is not None else 0
         for tr in req.transaction_list:
-            cached_page = self.pending_user_pages.setdefault(
-                tr.lpa,
-                {
-                    "sq_id": sq_id,
-                    "bitmap": [0] * SECTOR_PER_PAGE,
-                    "payload": [INVALID_DATA] * SECTOR_PER_PAGE,
-                },
-            )
-            cached_page["sq_id"] = sq_id
+            entry = self.cache.user_entries.setdefault(tr.lpa, self._new_user_entry(sq_id))
+            entry["sq_id"] = sq_id
+            for i in range(SECTOR_PER_PAGE):
+                if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
+                    continue
+                entry["bitmap"][i] = 1
+                entry["ready_bitmap"][i] = 0
+                entry["payload"][i] = INVALID_DATA
+
+    def _hydrate_user_write(self, req: Request):
+        sq_id = req.sq_id if req.sq_id is not None else 0
+        for tr in req.transaction_list:
+            entry = self.cache.user_entries.setdefault(tr.lpa, self._new_user_entry(sq_id))
+            entry["sq_id"] = sq_id
             for i in range(SECTOR_PER_PAGE):
                 if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
                     continue
                 if i >= len(tr.payload):
                     continue
-                line_addr = self._line_addr_of_user(tr, i)
-                self.cache.lines[line_addr] = tr.payload[i]
-                cached_page["bitmap"][i] = 1
-                cached_page["payload"][i] = tr.payload[i]
+                entry["bitmap"][i] = 1
+                entry["ready_bitmap"][i] = 1
+                entry["payload"][i] = tr.payload[i]
 
-    def _cache_static_write(self, req: Request):
+    def _register_static_write(self, req: Request):
         sq_id = req.sq_id if req.sq_id is not None else 0
         for tr in req.transaction_list:
             line_addr = self._line_addr_of_static(tr)
-            value = tr.payload[0] if tr.payload else INVALID_DATA
-            self.cache.lines[line_addr] = value
-            self.pending_static_pages[line_addr] = {
-                "sq_id": sq_id,
-                "lpa": tr.lpa,
-                "address": tr.address,
-                "bitmap": [1],
-                "payload": [value],
-            }
+            self.cache.static_entries[line_addr] = self._new_static_entry(sq_id, tr)
+
+    def _hydrate_static_write(self, req: Request):
+        sq_id = req.sq_id if req.sq_id is not None else 0
+        for tr in req.transaction_list:
+            line_addr = self._line_addr_of_static(tr)
+            entry = self.cache.static_entries.setdefault(line_addr, self._new_static_entry(sq_id, tr))
+            entry["sq_id"] = sq_id
+            entry["lpa"] = tr.lpa
+            entry["address"] = tr.address
+            entry["ready"] = True
+            entry["payload"] = [tr.payload[0] if tr.payload else INVALID_DATA]
 
     def write_flush(self):
-        if not self.pending_user_pages and not self.pending_static_pages:
+        flushable_user_pages = {
+            lpa: entry
+            for lpa, entry in self.cache.user_entries.items()
+            if self._user_entry_is_fully_ready(entry)
+        }
+        flushable_static_pages = {
+            line_addr: entry
+            for line_addr, entry in self.cache.static_entries.items()
+            if entry["ready"]
+        }
+        if not flushable_user_pages and not flushable_static_pages:
             return
+
         amu = self.hil.ftl.address_mapping_unit
+        tsu = self.hil.ftl.tsu
+
         user_flush_reqs: dict[int, list[Transaction]] = defaultdict(list)
-        for lpa, cached_page in self.pending_user_pages.items():
-            user_flush_reqs[cached_page["sq_id"]].append(
+        flushed_user_count = 0
+        for lpa, entry in flushable_user_pages.items():
+            user_flush_reqs[entry["sq_id"]].append(
                 Transaction(
                     source_req=None,
                     type=TransactionType.USER_WRITE,
                     lpa=lpa,
-                    bitmap=list(cached_page["bitmap"]),
-                    payload=list(cached_page["payload"]),
+                    bitmap=list(entry["bitmap"]),
+                    payload=list(entry["payload"]),
                     data_ready=True,
+                    cache_flush_generated=True,
                 )
             )
+            flushed_user_count += 1
+        if flushed_user_count > 0:
+            tsu.start_cache_pressure_drain(flushed_user_count)
         for sq_id, transaction_list in user_flush_reqs.items():
             amu.translate_and_submit(
                 Request(
@@ -336,17 +445,19 @@ class Cache_Manager:
                     transaction_list=transaction_list,
                 )
             )
+        for lpa in flushable_user_pages:
+            self.cache.user_entries.pop(lpa, None)
 
         static_flush_reqs: dict[int, list[Transaction]] = defaultdict(list)
-        for cached_page in self.pending_static_pages.values():
-            static_flush_reqs[cached_page["sq_id"]].append(
+        for entry in flushable_static_pages.values():
+            static_flush_reqs[entry["sq_id"]].append(
                 Transaction(
                     source_req=None,
                     type=TransactionType.USER_STATIC_WRITE,
-                    lpa=cached_page["lpa"],
-                    address=cached_page["address"],
-                    bitmap=list(cached_page["bitmap"]),
-                    payload=list(cached_page["payload"]),
+                    lpa=entry["lpa"],
+                    address=entry["address"],
+                    bitmap=list(entry["bitmap"]),
+                    payload=list(entry["payload"]),
                     data_ready=True,
                 )
             )
@@ -358,7 +469,9 @@ class Cache_Manager:
                     transaction_list=transaction_list,
                 )
             )
+        for line_addr in flushable_static_pages:
+            self.cache.static_entries.pop(line_addr, None)
 
-        self.pending_user_pages.clear()
-        self.pending_static_pages.clear()
-        self.cache.clear()
+    def on_transaction_serviced(self, tr: Transaction):
+        if tr.type == TransactionType.USER_WRITE and tr.cache_flush_generated:
+            self.hil.ftl.tsu.finish_cache_pressure_write()

@@ -188,6 +188,7 @@ class Transaction:
     # GC: source physical page before migrate (for mapping / BKE invalidation)
     gc_old_address: Optional[FlashAddress] = field(default=None)
     invalidate_target: Optional[FlashAddress] = field(default=None)
+    cache_flush_generated: bool = False
 
     def get_response_from_transaction(self, tr: 'Transaction'):
         if self.type == TransactionType.MAPPING_WRITE and tr.type == TransactionType.MAPPING_READ:

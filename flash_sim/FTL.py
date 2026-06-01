@@ -571,6 +571,8 @@ class TSU:
         self.chip_no_per_channel = CHIP_PER_CHANNEL
         self.round_robin_turn = [0] * self.channel_no
         self.phy : PHY
+        self.cache_pressure_drain_mode = False
+        self._pending_cache_pressure_writes = 0
         # Register channel/chip idle callbacks so PHY can trigger re-scheduling
         # self.phy.connect_channel_idle_signal(self._on_channel_idle)
         # self.phy.connect_chip_idle_signal(self._on_chip_idle)
@@ -607,6 +609,25 @@ class TSU:
         channel = trans.address.channel
         chip    = trans.address.chip
         self.queues[channel][chip][trans.type].append(trans)
+
+    def start_cache_pressure_drain(self, write_count: int):
+        if write_count <= 0:
+            return
+        self.cache_pressure_drain_mode = True
+        self._pending_cache_pressure_writes += write_count
+        debug_info(
+            f"[TSU] <start_cache_pressure_drain> pending={self._pending_cache_pressure_writes}"
+        )
+
+    def finish_cache_pressure_write(self):
+        if self._pending_cache_pressure_writes > 0:
+            self._pending_cache_pressure_writes -= 1
+        if self._pending_cache_pressure_writes == 0:
+            self.cache_pressure_drain_mode = False
+        debug_info(
+            f"[TSU] <finish_cache_pressure_write> pending={self._pending_cache_pressure_writes}, "
+            f"drain_mode={self.cache_pressure_drain_mode}"
+        )
 
     def _transaction_blocked_by_barrier(self, tr: Transaction) -> bool:
         """Barrier 在下发 PHY 前检查：LPA/MVPN 与 GC erase_target 块上的 program 写。"""
@@ -728,16 +749,28 @@ class TSU:
             else:
                 debug_info(f"[TSU] <try_activate> static write failed for chip {chip_id}")
             return dispatched
-        if not dispatched and self.try_read(chip_id):
-            debug_info(f"[TSU] <try_activate> read dispatched for chip {chip_id}")
-            dispatched = True
+        if self.cache_pressure_drain_mode:
+            if not dispatched and self.try_write(chip_id):
+                debug_info(f"[TSU] <try_activate> drain-mode write dispatched for chip {chip_id}")
+                dispatched = True
+            else:
+                debug_info(f"[TSU] <try_activate> drain-mode write failed for chip {chip_id}")
+            if not dispatched and self.try_read(chip_id):
+                debug_info(f"[TSU] <try_activate> drain-mode read dispatched for chip {chip_id}")
+                dispatched = True
+            else:
+                debug_info(f"[TSU] <try_activate> drain-mode read failed for chip {chip_id}")
         else:
-            debug_info(f"[TSU] <try_activate> read failed for chip {chip_id}")
-        if not dispatched and self.try_write(chip_id):
-            debug_info(f"[TSU] <try_activate> write dispatched for chip {chip_id}")
-            dispatched = True
-        else:
-            debug_info(f"[TSU] <try_activate> write failed for chip {chip_id}")
+            if not dispatched and self.try_read(chip_id):
+                debug_info(f"[TSU] <try_activate> read dispatched for chip {chip_id}")
+                dispatched = True
+            else:
+                debug_info(f"[TSU] <try_activate> read failed for chip {chip_id}")
+            if not dispatched and self.try_write(chip_id):
+                debug_info(f"[TSU] <try_activate> write dispatched for chip {chip_id}")
+                dispatched = True
+            else:
+                debug_info(f"[TSU] <try_activate> write failed for chip {chip_id}")
         if not dispatched and self.try_erase(chip_id):
             debug_info(f"[TSU] <try_activate> erase dispatched for chip {chip_id}")
             dispatched = True
