@@ -6,9 +6,9 @@ import time
 from typing import Any, List, Optional
 from enum import Enum
 try:
-    from .config import TimingConfig, FlashGeometry
+    from .config import TimingConfig, make_event_runtime_geometry
 except ImportError:
-    from config import TimingConfig, FlashGeometry
+    from config import TimingConfig, make_event_runtime_geometry
 
 class EventType(Enum):
     # ----- 事件类型常量 -----
@@ -105,7 +105,7 @@ SQ_ENTRY_SIZE = 128
 CMT_TYPE = "shared"
 
 # 硬件配置
-geometry = FlashGeometry()
+geometry = make_event_runtime_geometry()
 CHANNEL_NO = geometry.channel_no
 CHIP_PER_CHANNEL = geometry.chip_per_channel
 DIE_PER_CHIP = geometry.dies

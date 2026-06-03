@@ -5,6 +5,7 @@ from dataclasses import field
 from typing import Any
 import random
 from .common import *
+from .config import make_event_runtime_geometry
 from .PHY import PHY, PageType
 from . import utils
 
@@ -315,9 +316,8 @@ class Block_Manager:
         if amu is None:
             raise RuntimeError("[Block Manager] preconditioning: AMU (address_mapping_unit) is required!")
 
-        # 读取 geometry
-        from .config import FlashGeometry
-        geometry = FlashGeometry()
+        # Keep preconditioning aligned with the event-driven runtime layout.
+        geometry = make_event_runtime_geometry()
         valid_invalid_ratio = geometry.valid_invalid_ratio
         cmt_capacity = CMT_SIZE
         cmt_ratio = getattr(geometry, "preconditioning_cmt_ratio", 0.5)
@@ -1228,7 +1228,7 @@ class Address_Mapping_Unit:
     def __init__(self):
         print("Initializing Address Mapping Unit...")
         self._construction_valid: bool = False
-        self.flash_geometry = FlashGeometry()
+        self.flash_geometry = make_event_runtime_geometry()
         self.domains = [Address_Mapping_Domain() for _ in range(NUM_OF_QUEUES)]
         self.waiting_for_mapping_trans: dict[int, list[Transaction]] = defaultdict(list)
         self.tsu: TSU

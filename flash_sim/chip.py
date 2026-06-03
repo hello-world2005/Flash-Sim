@@ -19,7 +19,8 @@ class FlashChip:
         """Initialize flash chip with configuration.
 
         Args:
-            config: Flash configuration. Uses defaults if not provided.
+            config: Flash configuration. Uses the documented public defaults
+                if not provided.
         """
         self._construction_valid: bool = False
         self.config = config or FlashConfig()

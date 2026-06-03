@@ -23,7 +23,7 @@ _pkg_dir = os.path.dirname(os.path.abspath(__file__))
 _root_dir = os.path.dirname(_pkg_dir)
 sys.path.insert(0, _root_dir)
 
-from flash_sim.config import FlashGeometry
+from flash_sim.config import make_event_runtime_geometry
 from flash_sim.common import (
     CHANNEL_NO,
     CHIP_PER_CHANNEL,
@@ -63,7 +63,7 @@ def compute_safe_num_data(max_lpa: int) -> int:
     单个 plane 的 block 数：BLOCK_PER_PLANE
     可用于 full block 的数量上限：BLOCK_PER_PLANE - GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD - 1
     """
-    geometry = FlashGeometry()
+    geometry = make_event_runtime_geometry()
     valid_per_full_block = max(1, int(PAGE_PER_BLOCK * geometry.valid_invalid_ratio))
     max_full_blocks_per_plane = BLOCK_PER_PLANE - GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD - 1
     # 全局 plane 数
@@ -141,7 +141,7 @@ def main():
     max_lpa = compute_max_lpa()
     print(f"  Max valid LPA       = {max_lpa - 1}  (total {max_lpa} LPAs)")
     print(f"  GC free threshold   = {GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD}")
-    print(f"  valid_invalid_ratio = {FlashGeometry().valid_invalid_ratio}")
+    print(f"  valid_invalid_ratio = {make_event_runtime_geometry().valid_invalid_ratio}")
     print()
     print(f"[generate_precondition_data] Generating {num_data} entries -> {output_path}")
 

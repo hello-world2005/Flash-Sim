@@ -243,13 +243,8 @@ def cmd_run_engine(args) -> int:
     engine = Engine()
     recorder.attach(engine)
 
-    pre_trace = args.pre_trace
-    if pre_trace is None:
-        default_pre = Path(args.trace).resolve().parent.parent / "precondition" / "pre_trace.json"
-        pre_trace = str(default_pre) if default_pre.exists() else ""
-
     try:
-        engine.Start_simulation(args.trace, pre_trace)
+        engine.Start_simulation(args.trace, pre_trace=args.pre_trace)
     except Exception as e:
         print(f"Engine simulation failed: {e}", file=sys.stderr)
         return 1
@@ -421,7 +416,7 @@ def cmd_run(args) -> int:
 
     # Load trace
     try:
-        trace = parse_trace(Path(args.trace))
+        trace = parse_trace(Path(args.trace), mode="standalone")
         if args.verbose:
             print(f"Loaded {len(trace)} commands", file=sys.stderr)
     except (ParseError, ValidationError) as e:

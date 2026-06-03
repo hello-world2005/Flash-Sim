@@ -63,7 +63,7 @@ class Engine:
     
     def Initialize_event_queue(self, trace_path: str):
         """从 trace 文件解析请求，通过 Register_event 将每个 req 作为 event.param 压入 event_queue。"""
-        commands = parse_trace(trace_path)
+        commands = parse_trace(trace_path, mode="engine")
         for cmd in commands:
             scheduled_time = cmd["time"]
             req = Request(
@@ -91,10 +91,11 @@ class Engine:
         self._construction_valid = True
         print("Construction validation complete.") 
 
-    def Start_simulation(self, trace_path):
+    def Start_simulation(self, trace_path, pre_trace=None):
         self.Validate_construction()
         # 在 validation 之后执行 preconditioning 阶段
         self.device.ftl.block_manager.preconditioning(
+            data_path=pre_trace,
             phy=self.device.ftl.tsu.phy,
             amu=self.device.ftl.address_mapping_unit,
         )

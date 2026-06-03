@@ -5,6 +5,50 @@ from typing import Optional, NamedTuple, Dict, Set, List
 from enum import Enum
 
 
+DEFAULT_CHANNEL_NO = 8
+DEFAULT_CHIP_PER_CHANNEL = 4
+DEFAULT_DIES = 1
+DEFAULT_PLANES_PER_DIE = 2
+DEFAULT_BLOCKS_PER_PLANE = 1024
+DEFAULT_LAYERS_PER_BLOCK = 128
+DEFAULT_SL_PER_BLOCK = 2
+DEFAULT_SSL_PER_SL = 4
+DEFAULT_SUB_BLOCKS_PER_BLOCK = DEFAULT_SL_PER_BLOCK * DEFAULT_SSL_PER_SL
+DEFAULT_SECTOR_PER_PAGE = 16
+DEFAULT_COMPUTE_MAX_PARALLEL_SL = 256
+DEFAULT_SEARCH_MAX_PARALLEL_WL = 256
+DEFAULT_STATIC_CHIP_PER_CHANNEL = 1
+
+EVENT_RUNTIME_DIES = 4
+EVENT_RUNTIME_PLANES_PER_DIE = 4
+EVENT_RUNTIME_BLOCKS_PER_PLANE = 64
+EVENT_RUNTIME_LAYERS_PER_BLOCK = 1
+EVENT_RUNTIME_SL_PER_BLOCK = 2
+EVENT_RUNTIME_SSL_PER_SL = 4
+EVENT_RUNTIME_SUB_BLOCKS_PER_BLOCK = EVENT_RUNTIME_SL_PER_BLOCK * EVENT_RUNTIME_SSL_PER_SL
+
+
+def make_event_runtime_geometry(**overrides) -> "FlashGeometry":
+    """Build the compact geometry used by the legacy event-driven runtime."""
+    geometry_kwargs = {
+        "channel_no": DEFAULT_CHANNEL_NO,
+        "chip_per_channel": DEFAULT_CHIP_PER_CHANNEL,
+        "dies": EVENT_RUNTIME_DIES,
+        "planes_per_die": EVENT_RUNTIME_PLANES_PER_DIE,
+        "blocks_per_plane": EVENT_RUNTIME_BLOCKS_PER_PLANE,
+        "layers_per_block": EVENT_RUNTIME_LAYERS_PER_BLOCK,
+        "sl_per_block": EVENT_RUNTIME_SL_PER_BLOCK,
+        "ssl_per_sl": EVENT_RUNTIME_SSL_PER_SL,
+        "sub_blocks_per_block": EVENT_RUNTIME_SUB_BLOCKS_PER_BLOCK,
+        "sector_per_page": DEFAULT_SECTOR_PER_PAGE,
+        "compute_max_parallel_sl": DEFAULT_COMPUTE_MAX_PARALLEL_SL,
+        "search_max_parallel_wl": DEFAULT_SEARCH_MAX_PARALLEL_WL,
+        "static_chip_per_channel": DEFAULT_STATIC_CHIP_PER_CHANNEL,
+    }
+    geometry_kwargs.update(overrides)
+    return FlashGeometry(**geometry_kwargs)
+
+
 class FlashTechnology(Enum):
     """NAND Flash memory technology type.
 
@@ -108,24 +152,25 @@ class FlashGeometry:
     (equivalently: sub_blocks_per_block = sl_per_block * ssl_per_sl)
     Each sub-block contains exactly 1 page per layer.
 
-    Default values match common.py hardware config (256-layer 3D NAND).
+    Default values match the documented public simulator baseline.
+    The legacy event-driven runtime uses make_event_runtime_geometry().
     """
-    # ----- 通道与芯片 -----
-    channel_no: int = 8
-    chip_per_channel: int = 4
-    dies: int = 4                      # die_per_chip
-    planes_per_die: int = 4
-    blocks_per_plane: int = 64         # use a small number for debugging
-    # ----- Block 内层次 -----
-    layers_per_block: int = 1        # Number of layers (WL), set as 1 for debugging; can be increased for more realistic 3D NAND
-    sl_per_block: int = 2              # Sub-block level per block
-    ssl_per_sl: int = 4                # Sub-sub-block per SL
-    sub_blocks_per_block: int = 8      # = sl_per_block * ssl_per_sl
-    sector_per_page: int = 16
-    # ----- 计算/搜索并行与 Bank -----
-    compute_max_parallel_sl: int = 256
-    search_max_parallel_wl: int = 256
-    static_chip_per_channel: int = 1
+    # ----- Channel / chip hierarchy -----
+    channel_no: int = DEFAULT_CHANNEL_NO
+    chip_per_channel: int = DEFAULT_CHIP_PER_CHANNEL
+    dies: int = DEFAULT_DIES
+    planes_per_die: int = DEFAULT_PLANES_PER_DIE
+    blocks_per_plane: int = DEFAULT_BLOCKS_PER_PLANE
+    # ----- Block-local 3D NAND structure -----
+    layers_per_block: int = DEFAULT_LAYERS_PER_BLOCK
+    sl_per_block: int = DEFAULT_SL_PER_BLOCK
+    ssl_per_sl: int = DEFAULT_SSL_PER_SL
+    sub_blocks_per_block: int = DEFAULT_SUB_BLOCKS_PER_BLOCK
+    sector_per_page: int = DEFAULT_SECTOR_PER_PAGE
+    # ----- Search / compute parallelism -----
+    compute_max_parallel_sl: int = DEFAULT_COMPUTE_MAX_PARALLEL_SL
+    search_max_parallel_wl: int = DEFAULT_SEARCH_MAX_PARALLEL_WL
+    static_chip_per_channel: int = DEFAULT_STATIC_CHIP_PER_CHANNEL
     
     # ----- Preconditioning 参数 -----
     valid_invalid_ratio: float = 0.5  # 已写满 block 中 valid_page 与 invalid_page 的比例（0.0 ~ 1.0）
@@ -522,11 +567,27 @@ class FlashConfig:
         )
 
         geometry = FlashGeometry(
-            layers_per_block=geometry_dict.get("layers_per_block", 128),
-            sub_blocks_per_block=geometry_dict.get("sub_blocks_per_block", 8),
-            blocks_per_plane=geometry_dict.get("blocks_per_plane", 1024),
-            planes_per_die=geometry_dict.get("planes_per_die", 2),
-            dies=geometry_dict.get("dies", 1),
+            channel_no=geometry_dict.get("channel_no", DEFAULT_CHANNEL_NO),
+            chip_per_channel=geometry_dict.get("chip_per_channel", DEFAULT_CHIP_PER_CHANNEL),
+            layers_per_block=geometry_dict.get("layers_per_block", DEFAULT_LAYERS_PER_BLOCK),
+            sl_per_block=geometry_dict.get("sl_per_block", DEFAULT_SL_PER_BLOCK),
+            ssl_per_sl=geometry_dict.get("ssl_per_sl", DEFAULT_SSL_PER_SL),
+            sub_blocks_per_block=geometry_dict.get(
+                "sub_blocks_per_block", DEFAULT_SUB_BLOCKS_PER_BLOCK
+            ),
+            blocks_per_plane=geometry_dict.get("blocks_per_plane", DEFAULT_BLOCKS_PER_PLANE),
+            planes_per_die=geometry_dict.get("planes_per_die", DEFAULT_PLANES_PER_DIE),
+            dies=geometry_dict.get("dies", DEFAULT_DIES),
+            sector_per_page=geometry_dict.get("sector_per_page", DEFAULT_SECTOR_PER_PAGE),
+            compute_max_parallel_sl=geometry_dict.get(
+                "compute_max_parallel_sl", DEFAULT_COMPUTE_MAX_PARALLEL_SL
+            ),
+            search_max_parallel_wl=geometry_dict.get(
+                "search_max_parallel_wl", DEFAULT_SEARCH_MAX_PARALLEL_WL
+            ),
+            static_chip_per_channel=geometry_dict.get(
+                "static_chip_per_channel", DEFAULT_STATIC_CHIP_PER_CHANNEL
+            ),
         )
 
         return cls(timing=timing, parallel=parallel, geometry=geometry)
@@ -549,11 +610,19 @@ class FlashConfig:
                 "max_parallel_blocks": self.parallel.max_parallel_blocks,
             },
             "geometry": {
+                "channel_no": self.geometry.channel_no,
+                "chip_per_channel": self.geometry.chip_per_channel,
                 "layers_per_block": self.geometry.layers_per_block,
+                "sl_per_block": self.geometry.sl_per_block,
+                "ssl_per_sl": self.geometry.ssl_per_sl,
                 "sub_blocks_per_block": self.geometry.sub_blocks_per_block,
                 "blocks_per_plane": self.geometry.blocks_per_plane,
                 "planes_per_die": self.geometry.planes_per_die,
                 "dies": self.geometry.dies,
+                "sector_per_page": self.geometry.sector_per_page,
+                "compute_max_parallel_sl": self.geometry.compute_max_parallel_sl,
+                "search_max_parallel_wl": self.geometry.search_max_parallel_wl,
+                "static_chip_per_channel": self.geometry.static_chip_per_channel,
             },
         }
 

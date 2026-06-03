@@ -41,6 +41,21 @@ class TestParseTrace:
         assert commands[0]["lba"] == 0
         assert commands[0]["wl_count"] == 8
 
+    def test_standalone_non_zero_address_preserved(self):
+        """Standalone traces preserve non-zero logical addresses."""
+        trace = '[{"type": "write", "lba": 1033, "data": 7}]'
+        commands = parse_trace(trace, mode="standalone")
+        assert commands[0]["lba"] == 1033
+        assert commands[0]["data"] == 7
+
+    def test_engine_trace_preserves_request_fields(self):
+        """Engine traces keep time/start_lha/size payload intact."""
+        trace = '[{"type": "read", "time": 5, "start_lha": 33, "size": 2}]'
+        commands = parse_trace(trace)
+        assert commands[0]["time"] == 5
+        assert commands[0]["start_lha"] == 33
+        assert commands[0]["size"] == 2
+
     def test_invalid_json_raises_parse_error(self):
         """Invalid JSON syntax raises ParseError."""
         with pytest.raises(ParseError, match="Invalid JSON"):
@@ -89,13 +104,22 @@ class TestParseTrace:
         with pytest.raises(ParseError, match="not found"):
             parse_trace(Path("/nonexistent/trace.json"))
 
+    def test_mixed_schema_trace_raises_error(self):
+        """Auto mode rejects traces that mix standalone and engine schemas."""
+        trace = [
+            {"type": "read", "lba": 1},
+            {"type": "read", "time": 0, "start_lha": 1, "size": 1},
+        ]
+        with pytest.raises(ValidationError, match="mixes standalone and engine command schemas"):
+            parse_trace(trace)
+
 
 class TestValidateCommand:
     """Tests for validate_command function."""
 
     def test_valid_read_command(self):
         """Valid read command passes validation."""
-        validate_command({"type": "read", "address": 0})
+        assert validate_command({"type": "read", "address": 0}) == "standalone"
 
     def test_valid_write_command(self):
         """Valid write command passes validation."""
@@ -111,7 +135,14 @@ class TestValidateCommand:
 
     def test_valid_compute_command(self):
         """Valid compute command passes validation."""
-        validate_command({"type": "compute", "lba": 0, "block_count": 2})
+        assert validate_command({"type": "compute", "lba": 0, "block_count": 2}) == "standalone"
+
+    def test_engine_command_resolves_engine_mode(self):
+        """Engine-style commands resolve to engine mode."""
+        mode = validate_command(
+            {"type": "write", "time": 0, "start_lha": 8, "size": 1}
+        )
+        assert mode == "engine"
 
     def test_non_dict_raises_error(self):
         """Non-dictionary command raises ValidationError."""
@@ -122,6 +153,14 @@ class TestValidateCommand:
         """Missing type field raises ValidationError."""
         with pytest.raises(ValidationError, match="Missing required 'type' field"):
             validate_command({"address": 0})
+
+    def test_standalone_mode_rejects_engine_command(self):
+        """Standalone validation rejects engine-only request fields."""
+        with pytest.raises(ValidationError, match="Engine-style traces use"):
+            validate_command(
+                {"type": "read", "time": 0, "start_lha": 1, "size": 1},
+                mode="standalone",
+            )
 
 
 class TestFormatResults:

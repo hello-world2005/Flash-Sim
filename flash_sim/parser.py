@@ -15,37 +15,99 @@ class ValidationError(Exception):
     pass
 
 
-# Command schema using LBA-based addressing
-# Each command operates on LBA which maps to physical addresses via FTL
-COMMAND_SCHEMA = {
+# Standalone simulator schema used by FlashSimulator / `flash-sim run`.
+STANDALONE_COMMAND_SCHEMA = {
     "read": {
-        "required": ["time", "start_lha", "size"],
-        "optional": ["bitmap"],  # address for backward compat
+        "required": [],
+        "optional": ["lba", "address"],
     },
     "write": {
-        "required": ["time", "start_lha", "size"],
-        "optional": ["invalidate", "bitmap"],  # user_erase oper is realized by invalidate, which will invalidate related page while write nothing
+        "required": [],
+        "optional": ["lba", "address", "data"],
     },
-    "static_write": {
-        "required": ["time", "start_lha", "size"],
-        "optional": ["invalidate"],  # user_erase oper is realized by invalidate, which will invalidate related page while write nothing
+    "erase": {
+        "required": [],
+        "optional": ["lba", "address", "block_address"],
     },
     "search": {
-        "required": ["time", "start_lha", "size"], # lha and size are in granularity of sub-plane
-        "optional": ["bitmap", "wl_bitmap"],
+        "required": ["wl_count"],
+        "optional": ["lba", "address"],
     },
     "compute": {
-        "required": ["time", "start_lha", "size"], # lha and size are in granularity of sub-plane
-        "optional": ["bitmap", "wl_bitmap"],
+        "required": ["block_count"],
+        "optional": ["lba", "address", "layer"],
     },
 }
 
+# Event-driven engine schema used by Engine / `flash-sim run-engine`.
+ENGINE_COMMAND_SCHEMA = {
+    "read": {
+        "required": ["time", "start_lha", "size"],
+        "optional": ["bitmap", "stream_id"],
+    },
+    "write": {
+        "required": ["time", "start_lha", "size"],
+        "optional": ["invalidate", "bitmap", "stream_id"],
+    },
+    "static_write": {
+        "required": ["time", "start_lha", "size"],
+        "optional": ["invalidate", "stream_id"],
+    },
+    "search": {
+        "required": ["time", "start_lha", "size"],
+        "optional": ["bitmap", "wl_bitmap", "stream_id", "data_address", "data_size"],
+    },
+    "compute": {
+        "required": ["time", "start_lha", "size"],
+        "optional": ["bitmap", "wl_bitmap", "stream_id", "data_address", "data_size"],
+    },
+}
 
-def validate_command(cmd: Dict[str, Any]) -> None:
+ENGINE_FIELDS = {"time", "start_lha", "size"}
+STANDALONE_HINT_FIELDS = {"lba", "address", "block_address", "wl_count", "block_count", "layer"}
+
+
+def _looks_like_engine_command(cmd: Dict[str, Any]) -> bool:
+    return any(field in cmd for field in ENGINE_FIELDS)
+
+
+def _looks_like_standalone_command(cmd: Dict[str, Any]) -> bool:
+    return any(field in cmd for field in STANDALONE_HINT_FIELDS)
+
+
+def _resolve_mode(cmd: Dict[str, Any], mode: str) -> str:
+    if mode not in {"auto", "standalone", "engine"}:
+        raise ValidationError(f"Unknown trace mode: {mode}")
+
+    if mode == "standalone":
+        if _looks_like_engine_command(cmd):
+            raise ValidationError(
+                "Engine-style traces use 'time', 'start_lha', and 'size'; run them via the event-driven engine path"
+            )
+        return "standalone"
+
+    if mode == "engine":
+        if not _looks_like_engine_command(cmd):
+            raise ValidationError(
+                "Engine trace commands must provide 'time', 'start_lha', and 'size'"
+            )
+        if _looks_like_standalone_command(cmd):
+            raise ValidationError("Command mixes standalone and engine trace fields")
+        return "engine"
+
+    if _looks_like_engine_command(cmd):
+        if _looks_like_standalone_command(cmd):
+            raise ValidationError("Command mixes standalone and engine trace fields")
+        return "engine"
+    return "standalone"
+
+
+def validate_command(cmd: Dict[str, Any], mode: str = "auto") -> str:
     """Validate a single command against the schema.
 
     Args:
         cmd: Command dictionary to validate.
+        mode: One of `auto`, `standalone`, or `engine`.
 
     Raises:
         ValidationError: If the command is invalid.
@@ -56,17 +118,26 @@ def validate_command(cmd: Dict[str, Any]) -> None:
     if "type" not in cmd:
         raise ValidationError("Missing required 'type' field")
 
+    resolved_mode = _resolve_mode(cmd, mode)
+    command_schema = (
+        ENGINE_COMMAND_SCHEMA if resolved_mode == "engine" else STANDALONE_COMMAND_SCHEMA
+    )
+
     cmd_type = cmd["type"]
-    if cmd_type not in COMMAND_SCHEMA:
+    if cmd_type not in command_schema:
         raise ValidationError(f"Unknown command type: {cmd_type}")
 
-    schema = COMMAND_SCHEMA[cmd_type]
+    schema = command_schema[cmd_type]
     for field in schema["required"]:
         if field not in cmd:
             raise ValidationError(f"Missing required field '{field}' for {cmd_type} command")
+    return resolved_mode
 
 
-def parse_trace(source: Union[str, Path, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+def parse_trace(
+    source: Union[str, Path, List[Dict[str, Any]]],
+    mode: str = "auto",
+) -> List[Dict[str, Any]]:
     """Parse a command trace from various sources.
 
     Args:
@@ -74,6 +145,7 @@ def parse_trace(source: Union[str, Path, List[Dict[str, Any]]]) -> List[Dict[str
             - A JSON string
             - A Path to a JSON file
             - A list of command dictionaries (passed through)
+        mode: One of `auto`, `standalone`, or `engine`.
 
     Returns:
         List of command dictionaries.
@@ -102,11 +174,15 @@ def parse_trace(source: Union[str, Path, List[Dict[str, Any]]]) -> List[Dict[str
         raise ParseError(f"Invalid source type: {type(source).__name__}")
 
     # Validate all commands
+    resolved_modes = set()
     for i, cmd in enumerate(commands):
         try:
-            validate_command(cmd)
+            resolved_modes.add(validate_command(cmd, mode=mode))
         except ValidationError as e:
             raise ValidationError(f"Invalid command at index {i}: {e}")
+
+    if mode == "auto" and len(resolved_modes) > 1:
+        raise ValidationError("Trace mixes standalone and engine command schemas")
 
     return commands
 
