@@ -63,6 +63,16 @@ class MessageType(Enum):
     REQ_COMP = "REQ_COMP"
 
 
+REQUEST_STATUS_SUCCESS = "SUCCESS"
+REQUEST_STATUS_ERROR = "ERROR"
+
+
+class RequestFailure(Exception):
+    """Request-scoped error that should complete a host request as ERROR."""
+
+    pass
+
+
 # ???
 MAPPING = "MAPPING"
 
@@ -133,6 +143,13 @@ SECTOR_SIZE_BYTES = 64
 DATA_CACHE_LINE_SIZE = 64
 DATA_CACHE_CAP = 4096
 
+# PCIe timing config
+# Units:
+# - PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS: bytes transferred per nanosecond
+# - PCIE_PACKET_OVERHEAD_BYTES: fixed per-message packaging overhead in bytes
+PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS = 4
+PCIE_PACKET_OVERHEAD_BYTES = 400
+
 # debug_info = print
 def debug_info(*args, **kwargs):
     pass
@@ -185,6 +202,8 @@ class Transaction:
     exec_event: Optional[SimEvent] = None
     payload: list[int] = field(default_factory=list) # register data if type is TransactionType.USER_..., else payload for mapping write
     response: Optional['PageData'] = None # register response data when necessary
+    failed: bool = False
+    error_message: Optional[str] = None
     # GC: source physical page before migrate (for mapping / BKE invalidation)
     gc_old_address: Optional[FlashAddress] = field(default=None)
     invalidate_target: Optional[FlashAddress] = field(default=None)
@@ -199,6 +218,8 @@ class Transaction:
                 if self.payload[i] == INVALID_PPA:
                     self.payload[i] = tr.response.data[i]
         elif self.type in [TransactionType.USER_READ, TransactionType.USER_WRITE] and tr.type == TransactionType.MAPPING_READ:
+            if tr.failed:
+                raise RequestFailure(tr.error_message or "mapping read failed")
             if tr.response is None:
                 raise ValueError("[Transaction] <get_response_from_transaction> mapping read response is empty")
             idx = self.lpa % LPA_NO_PER_MAPPING_PAGE
@@ -258,6 +279,8 @@ class Transaction:
             f"bitmap={repr(self.bitmap)},",
             f"payload={repr(self.payload)},",
             f"response={repr(self.response)},",
+            f"failed={self.failed},",
+            f"error_message={repr(self.error_message)},",
             f"rely_on_transactions={repr(self.rely_on_transactions)},",
             f"required_by_transactions={required_by_transactions_brief},",
             f"completed={self.completed},",
@@ -291,6 +314,8 @@ class Request:
     issue_time: Optional[int] = None
     finish_time: Optional[int] = None
     status: Optional[str] = None
+    error_message: Optional[str] = None
+    completion_sent: bool = False
     invalidate: Optional[bool] = False
 
     def is_serviced(self) -> bool:
@@ -315,6 +340,8 @@ class Request:
             f"issue_time={self.issue_time},",
             f"finish_time={self.finish_time},",
             f"status={self.status},",
+            f"error_message={repr(self.error_message)},",
+            f"completion_sent={self.completion_sent},",
         ]
         return "<" + " ".join(items) + ">"
 

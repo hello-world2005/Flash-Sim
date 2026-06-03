@@ -1275,30 +1275,57 @@ class Address_Mapping_Unit:
             raise ValueError(f"Invalid CMT type: {CMT_TYPE}")
         for domain in self.domains:
             domain.cmt.address_mapping_unit = self
+
+    def _mark_waiting_reads_failed(self, lpas: list[int], error_message: str) -> None:
+        for lpa in lpas:
+            waiting_trs = self.waiting_for_mapping_trans[lpa]
+            for waiting_tr in waiting_trs:
+                waiting_tr.completed = True
+                waiting_tr.failed = True
+                waiting_tr.error_message = error_message
+                waiting_tr.rely_on_transactions = [
+                    dep for dep in waiting_tr.rely_on_transactions if dep.type != TransactionType.MAPPING_READ
+                ]
+            waiting_trs.clear()
     
     def _handle_mapping_response(self, tr: Transaction):
         # handle response for tr waiting mapping info
         if tr.type == TransactionType.MAPPING_READ:
             debug_info(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
             self.tsu.Prepare_trans_submission()
-            if tr.response is None:
-                raise ValueError("[AMU] <_handle_mapping_response> empty mapping read response")
             # get arriving lpa in the finished mapping read transaction
             arriving_lpa = []
             for i in range(len(tr.bitmap)):
                 if tr.bitmap[i] == 0:
                     continue
                 lpa = i + tr.mvpn * LPA_NO_PER_MAPPING_PAGE
-                arriving_lpa.append(lpa) 
+                arriving_lpa.append(lpa)
+            if tr.failed:
+                self._mark_waiting_reads_failed(
+                    arriving_lpa,
+                    tr.error_message or "mapping read failed",
+                )
+                debug_info("[AMU] <_handle_mapping_response> failed mapping read cleaned up")
+                return
+            if tr.response is None:
+                raise ValueError("[AMU] <_handle_mapping_response> empty mapping read response")
             debug_info(f"[AMU] <_handle_mapping_response> arriving_lpa: {arriving_lpa}, response: {tr.response}")
             # submit the waiting transactions for the arriving lpa, and update the cmt meanwhile
             for lpa in arriving_lpa:
                 idx = lpa % LPA_NO_PER_MAPPING_PAGE
                 if tr.response.valid_bitmap[idx] == 0:
-                    raise ValueError(f"[AMU] <_handle_mapping_response> invalid lpa in mapping response, lpa={lpa}")
+                    self._mark_waiting_reads_failed(
+                        [lpa],
+                        f"Read request accessing invalid lpa in mapping page, lpa={lpa}",
+                    )
+                    continue
                 ppa = tr.response.data[idx]
                 if ppa == INVALID_PPA:
-                    raise ValueError(f"[AMU] <_handle_mapping_response> invalid ppa in mapping response, lpa={lpa}")
+                    self._mark_waiting_reads_failed(
+                        [lpa],
+                        f"Read request accessing invalid ppa in mapping page, lpa={lpa}",
+                    )
+                    continue
                 address = utils.translate_ppa_to_address(ppa)
                 # add entry in cmt for host read path only
                 if tr.source_req is not None and tr.source_req.sq_id is not None:
@@ -1308,6 +1335,12 @@ class Address_Mapping_Unit:
                 waiting_trs = self.waiting_for_mapping_trans[lpa]
                 debug_info(f"[AMU] <_handle_mapping_response> number of waiting trs: {len(waiting_trs)}")
                 for waiting_tr in waiting_trs:
+                    if (
+                        waiting_tr.source_req is not None
+                        and waiting_tr.source_req.completion_sent
+                        and waiting_tr.source_req.status == REQUEST_STATUS_ERROR
+                    ):
+                        continue
                     waiting_tr.address = address
                     domain = self.domains[waiting_tr.source_req.sq_id]
                     if not domain.cmt.is_cached(lpa):
@@ -1344,28 +1377,37 @@ class Address_Mapping_Unit:
         domain = self.domains[req.sq_id]
         self.tsu.Prepare_trans_submission()
         if req.type == RequestType.READ:
+            to_submit: list[Transaction] = []
+            mapping_waits: list[tuple[int, Transaction, Transaction]] = []
             for tr in req.transaction_list:
                 if domain.query_cmt(tr):
                     debug_info(f"[AMU] <translate_and_submit> Cache hit for tr: {repr(tr)}")
-                    self.tsu.Submit_trans(tr)
+                    to_submit.append(tr)
                 else:
                     debug_info(f"[AMU] <translate_and_submit> Cache miss for tr: {repr(tr)}")
-                    self.waiting_for_mapping_trans[tr.lpa].append(tr)
                     mvpn = tr.lpa // LPA_NO_PER_MAPPING_PAGE
                     if mvpn not in self.gtd:
-                        raise ValueError("Read request accessing non-existing mapping page")
+                        raise RequestFailure("Read request accessing non-existing mapping page")
                     entry = self.gtd[mvpn]
                     phy = self.tsu.phy
                     _addr = entry.address
                     _pd = phy._storage[_addr.channel][_addr.chip][_addr.die][_addr.plane][_addr.sub_plane][_addr.page]
-                    if _pd.valid_bitmap[tr.lpa % LPA_NO_PER_MAPPING_PAGE] == 0:
+                    idx = tr.lpa % LPA_NO_PER_MAPPING_PAGE
+                    if _pd.valid_bitmap[idx] == 0:
                         debug_info(f"[AMU] <translate_and_submit> lpa: {tr.lpa}, mvpn: {mvpn}, entry: {entry}")
-                        raise ValueError("Read request accessing invalid lpa in mapping page")
+                        raise RequestFailure("Read request accessing invalid lpa in mapping page")
+                    if idx < len(_pd.data) and _pd.data[idx] == INVALID_PPA:
+                        raise RequestFailure("Read request accessing invalid ppa in mapping page")
                     debug_info(f"[AMU] <translate_and_submit> Read mapping page")
                     read_tr = self.generate_mapping_read_transaction(tr, mvpn)
                     tr.rely_on_transactions.append(read_tr)
                     read_tr.required_by_transactions.append(tr)
-                    self.tsu.Submit_trans(read_tr)
+                    mapping_waits.append((tr.lpa, tr, read_tr))
+            for tr in to_submit:
+                self.tsu.Submit_trans(tr)
+            for lpa, waiting_tr, read_tr in mapping_waits:
+                self.waiting_for_mapping_trans[lpa].append(waiting_tr)
+                self.tsu.Submit_trans(read_tr)
         elif req.type == RequestType.WRITE:
             """process write requests
             for each tr in the write request, we need to:

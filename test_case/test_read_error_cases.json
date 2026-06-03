@@ -1,0 +1,4 @@
+[
+  { "type": "read", "time": 0, "start_lha": 0, "size": 1 },
+  { "type": "read", "time": 100, "start_lha": 106688, "size": 1 }
+]

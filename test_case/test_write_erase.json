@@ -3,13 +3,13 @@
         "type":  "write",
         "time":  0,
         "start_lha":  4096,
-        "size":  128
+        "size":  1
     },
     {
         "type":  "write",
         "time":  0,
         "start_lha":  4096,
-        "size":  128,
+        "size":  1,
         "invalidate":  1
     }
 ]

@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 from collections import deque
+from math import ceil
 from typing import TYPE_CHECKING, Any
 
-from .common import EventType, Register_event
 from dataclasses import dataclass
-from .common import MessageType, Request
+from .common import (
+    EventType,
+    MessageType,
+    PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS,
+    PCIE_PACKET_OVERHEAD_BYTES,
+    SECTOR_SIZE_BYTES,
+)
 
 if TYPE_CHECKING:
     from .engine import Engine
@@ -60,7 +66,27 @@ class PCIe_link:
                 self.Register_sim_event(EventType.DELIVER, self, {"target": self.host}, estimated_finish_time)
 
     def estimate_latency(self, message):
-        return 100
+        transfer_bytes = self._estimate_transfer_bytes(message)
+        bandwidth = PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
+        if bandwidth <= 0:
+            raise ValueError("PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS must be positive")
+        return ceil(transfer_bytes / bandwidth)
+
+    def _estimate_transfer_bytes(self, message) -> int:
+        payload = getattr(message, "payload", None)
+        user_data_bytes = 0
+        if isinstance(payload, dict) and "data" in payload:
+            user_data_bytes = self._estimate_user_data_bytes(payload["data"])
+        return user_data_bytes + PCIE_PACKET_OVERHEAD_BYTES
+
+    def _estimate_user_data_bytes(self, data) -> int:
+        if data is None:
+            return 0
+        if isinstance(data, (bytes, bytearray, memoryview)):
+            return len(data)
+        if not hasattr(data, "__len__"):
+            raise TypeError(f"Unsupported PCIe payload data type: {type(data).__name__}")
+        return len(data) * SECTOR_SIZE_BYTES
 
     def Register_sim_event(self, event_type, target, param, scheduled_time):
         self.engine.Register_event(event_type, target, param, scheduled_time)

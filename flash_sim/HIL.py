@@ -39,6 +39,83 @@ class HIL:
     def pcie_link(self):
         return self.host.pcie_link
 
+    def _static_region_end_exclusive(self) -> int:
+        return STATIC_BASE_LHA + (
+            CHANNEL_NO
+            * STATIC_CHIP_PER_CHANNEL
+            * DIE_PER_CHIP
+            * PLANE_PER_DIE
+            * BLOCK_PER_PLANE
+            * SL_PER_BLOCK
+            * SSL_PER_SL
+        )
+
+    def _range_is_static(self, start_lha: int, size: int) -> bool:
+        end_lha = start_lha + size
+        return STATIC_BASE_LHA <= start_lha and end_lha <= self._static_region_end_exclusive()
+
+    def _range_is_random_access(self, start_lha: int, size: int) -> bool:
+        end_lha = start_lha + size
+        return 0 <= start_lha and end_lha <= STATIC_BASE_LHA
+
+    def _request_brief(self, req: Request) -> str:
+        return (
+            f"type={req.type.value} sq_id={req.sq_id} "
+            f"lha_start={req.lha_start} size={req.size}"
+        )
+
+    def _validate_request_domain(self, req: Request):
+        if req.type == RequestType.WRITE:
+            if not self._range_is_random_access(req.lha_start, req.size):
+                raise RequestFailure(
+                    "WRITE request must stay in random-access area; use STATIC_WRITE for static-area writes"
+                )
+            return
+
+        if req.type in (RequestType.SEARCH, RequestType.COMPUTE, RequestType.STATIC_WRITE):
+            if not self._range_is_static(req.lha_start, req.size):
+                raise RequestFailure(
+                    f"{req.type.value} request must stay in static area"
+                )
+
+    def _finalize_request(self, req: Request, status: str, error_message: str | None = None):
+        if req.completion_sent:
+            return
+
+        req.status = status
+        req.error_message = error_message
+        req.completion_sent = True
+
+        if status == REQUEST_STATUS_ERROR:
+            for tr in req.transaction_list:
+                if tr.completed:
+                    if tr.error_message is None:
+                        tr.error_message = error_message
+                    if not tr.failed:
+                        tr.failed = True
+                    continue
+                tr.completed = True
+                tr.failed = True
+                tr.error_message = error_message
+
+        print(
+            f"[HIL] REQ_COMP {self._request_brief(req)} "
+            f"status={status} error_message={error_message!r}"
+        )
+        payload = {
+            "req": req,
+            "status": status,
+            "error_message": error_message,
+        }
+        comp_msg = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
+        self.pcie_link.send(comp_msg, self.host)
+
+    def _complete_request(self, req: Request):
+        self._finalize_request(req, REQUEST_STATUS_SUCCESS, None)
+
+    def _fail_request(self, req: Request, error_message: str):
+        self._finalize_request(req, REQUEST_STATUS_ERROR, error_message)
+
     def execute(self, event):
         from .common import log_execute_event
 
@@ -123,15 +200,19 @@ class HIL:
         source_req = tr.source_req
         if source_req is None:
             return
+        if source_req.completion_sent:
+            debug_info("[HIL] _on_transaction_serviced: source_req already completed")
+            return
+        if tr.failed:
+            self._fail_request(source_req, tr.error_message or "request transaction failed")
+            return
         if source_req.is_serviced():
-            req_brief = f"Request(type={source_req.type}, lha_start={source_req.lha_start}, size={source_req.size})"
-            debug_info(f"[HIL] _on_transaction_serviced: source_req is serviced, sending REQ_COMP to Host: {req_brief}")
-            payload = {"req": source_req, "status": "completed"}
-            self.host.queue_ptrs.cq_tails[source_req.sq_id] += 1
-            message = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
-            self.pcie_link.send(message, self.host)
-        else:
-            debug_info("[HIL] _on_transaction_serviced: source_req is not serviced yet")
+            debug_info(
+                "[HIL] _on_transaction_serviced: source_req is serviced, sending success REQ_COMP"
+            )
+            self._complete_request(source_req)
+            return
+        debug_info("[HIL] _on_transaction_serviced: source_req is not serviced yet")
 
     def fetch_data(self, req):
         message_type = {
@@ -146,54 +227,54 @@ class HIL:
         self.pcie_link.send(message, self.host)
 
     def receive_pcie_message(self, message):
-        if message.type == MessageType.READ_REQ:
-            req = message.payload["req"]
-            self.segment(req)
-            self.cache_manager.query_cache(req)
-            if req.is_serviced():
-                self._complete_request(req)
-                return
-            self.ftl.handle_new_req(req)
-        elif message.type in (
-            MessageType.WRITE_REQ,
-            MessageType.SEARCH_REQ,
-            MessageType.COMPUTE_REQ,
-            MessageType.STATIC_WRITE_REQ,
-        ):
-            req = message.payload["req"]
-            self.segment(req)
-            if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
-                self.cache_manager.register_write_request(req)
-            self.fetch_data(req)
-            if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
+        req = message.payload.get("req") if hasattr(message, "payload") else None
+        try:
+            if message.type == MessageType.READ_REQ:
+                req = message.payload["req"]
+                self.segment(req)
+                self.cache_manager.query_cache(req)
+                if req.is_serviced():
+                    self._complete_request(req)
+                    return
                 self.ftl.handle_new_req(req)
-        elif message.type in (
-            MessageType.WRITE_DATA,
-            MessageType.SEARCH_DATA,
-            MessageType.COMPUTE_DATA,
-            MessageType.STATIC_WRITE_DATA,
-        ):
-            req = message.payload["req"]
-            data = message.payload["data"]
-            debug_info(f"[HIL] received data for req: {req}")
-            self._tile_data(req, data)
-            for tr in req.transaction_list:
-                tr.data_ready = True
-            if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
-                self.cache_manager.cache_write(req)
-                self._complete_request(req)
+            elif message.type in (
+                MessageType.WRITE_REQ,
+                MessageType.SEARCH_REQ,
+                MessageType.COMPUTE_REQ,
+                MessageType.STATIC_WRITE_REQ,
+            ):
+                req = message.payload["req"]
+                self._validate_request_domain(req)
+                self.segment(req)
+                if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
+                    self.cache_manager.register_write_request(req)
+                self.fetch_data(req)
+                if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
+                    self.ftl.handle_new_req(req)
+            elif message.type in (
+                MessageType.WRITE_DATA,
+                MessageType.SEARCH_DATA,
+                MessageType.COMPUTE_DATA,
+                MessageType.STATIC_WRITE_DATA,
+            ):
+                req = message.payload["req"]
+                data = message.payload["data"]
+                debug_info(f"[HIL] received data for req: {req}")
+                self._tile_data(req, data)
+                for tr in req.transaction_list:
+                    tr.data_ready = True
+                if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
+                    self.cache_manager.cache_write(req)
+                    self._complete_request(req)
+                else:
+                    self.ftl.tsu.Prepare_trans_submission()
+                    self.ftl.tsu.Schedule()
             else:
-                self.ftl.tsu.Prepare_trans_submission()
-                self.ftl.tsu.Schedule()
-        else:
-            raise ValueError(f"Unexpected message type for HIL: {message.type}")
-
-    def _complete_request(self, req: Request):
-        payload = {"req": req, "status": "completed"}
-        if req.sq_id is not None:
-            self.host.queue_ptrs.cq_tails[req.sq_id] += 1
-        comp_msg = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
-        self.pcie_link.send(comp_msg, self.host)
+                raise ValueError(f"Unexpected message type for HIL: {message.type}")
+        except RequestFailure as exc:
+            if req is None:
+                raise
+            self._fail_request(req, str(exc))
 
     def _tile_data(self, req, data):
         debug_info(f"[HIL] <_tile_data> req: {req}, data: {data}")

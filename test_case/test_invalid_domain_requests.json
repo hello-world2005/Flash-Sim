@@ -1,0 +1,5 @@
+[
+  { "type": "search", "time": 0, "start_lha": 0, "size": 1 },
+  { "type": "compute", "time": 100, "start_lha": 128, "size": 1 },
+  { "type": "write", "time": 200, "start_lha": 12582912, "size": 1 }
+]

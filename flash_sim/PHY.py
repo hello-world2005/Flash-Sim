@@ -351,7 +351,21 @@ class PHY():
             # Data DMA'd from chip to controller; complete all waiting read transactions.
             for tr in transactions:
                 tr.completed = True
-                tr.response = self._read_from_storage(tr)
+                try:
+                    tr.response = self._read_from_storage(tr)
+                except RequestFailure as exc:
+                    tr.failed = True
+                    tr.error_message = str(exc)
+                    tr.response = None
+                    debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED failed tr: {tr}")
+                    for required_by_tr in tr.required_by_transactions:
+                        if tr in required_by_tr.rely_on_transactions:
+                            required_by_tr.rely_on_transactions.remove(tr)
+                        if required_by_tr.error_message is None:
+                            required_by_tr.error_message = tr.error_message
+                        required_by_tr.failed = True
+                    self._broadcast_transaction_serviced(tr)
+                    continue
                 debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, tr: {tr}")
                 for required_by_tr in tr.required_by_transactions:
                     required_by_tr.rely_on_transactions.remove(tr)
@@ -557,6 +571,8 @@ class PHY():
         pagedata = self._storage[tr.address.channel][tr.address.chip][tr.address.die][tr.address.plane][tr.address.sub_plane][tr.address.page]
         if pagedata.function == PageType.MAPPING:
             if pagedata.mvpn == INVALID_MVPN or pagedata.lpa != INVALID_LPA:
+                if tr.source_req is not None and tr.type == TransactionType.MAPPING_READ:
+                    raise RequestFailure("[PHY] <_read_from_storage> accessing invalid mapping page!")
                 raise ValueError(f"[PHY] <_read_from_storage> accessing invalid mapping page!")
             valid = True
             for i in range(LPA_NO_PER_MAPPING_PAGE):
@@ -564,9 +580,18 @@ class PHY():
                     valid = False
                     break
             if not valid and tr.type not in [TransactionType.GC_READ]:
+                if tr.source_req is not None and tr.type == TransactionType.MAPPING_READ:
+                    raise RequestFailure("[PHY] <_read_from_storage> accessing invalid lpa in mapping page!")
                 raise ValueError(f"[PHY] <_read_from_storage> accessing invalid lpa in mapping page!")
+            for i in range(LPA_NO_PER_MAPPING_PAGE):
+                if tr.bitmap[i] == 1 and pagedata.data[i] == INVALID_PPA:
+                    if tr.source_req is not None and tr.type == TransactionType.MAPPING_READ:
+                        raise RequestFailure("[PHY] <_read_from_storage> accessing invalid ppa in mapping page!")
+                    raise ValueError(f"[PHY] <_read_from_storage> accessing invalid ppa in mapping page!")
         elif pagedata.function == PageType.USER:
             if pagedata.lpa == INVALID_LPA or pagedata.mvpn != INVALID_MVPN:
+                if tr.source_req is not None and tr.type == TransactionType.USER_READ:
+                    raise RequestFailure("[PHY] <_read_from_storage> accessing invalid user page!")
                 raise ValueError(f"[PHY] <_read_from_storage> accessing invalid user page!")
             valid = True
             for i in range(SECTOR_PER_PAGE):
@@ -574,6 +599,8 @@ class PHY():
                     valid = False
                     break
             if not valid:
+                if tr.source_req is not None and tr.type == TransactionType.USER_READ:
+                    raise RequestFailure("[PHY] <_read_from_storage> accessing invalid sector in user page!")
                 raise ValueError(f"[PHY] <_read_from_storage> accessing invalid sector in user page!")
         return pagedata
 

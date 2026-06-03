@@ -36,7 +36,7 @@ Construction validation complete.
 [Block Manager] Preconditioning phase completed.
 ================================================================================
 
-[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=0, target=Host, param={'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=0, size=130, issue_time=None, finish_time=None, status=None,>}
+[Engine] Time = 0, Register_event: type=EventType.REQ_INIT, scheduled_time=0, target=Host, param={'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=0, size=130, issue_time=None, finish_time=None, status=None, error_message=None, completion_sent=False,>}
 
 Event queue initialization complete.
 
@@ -46,9 +46,9 @@ Event queue (1 events):
 ========== Event [1/1] (time=0) ==========
 SimEvent:
   type:    EventType.REQ_INIT
-  target:  Host(id=2930313778320)
+  target:  Host(id=2845390984816)
   time:    0
-  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=0, size=130, issue_time=None, finish_time=None, status=None,>}
+  param:   {'req': <Request type=RequestType.WRITE, sq_id=None, transaction_list=[], lha_start=0, size=130, issue_time=None, finish_time=None, status=None, error_message=None, completion_sent=False,>}
   ignored: False
 
 --------------------------------------------------------
@@ -57,11 +57,11 @@ Starting simulation...
 
 --------------------------------------------------------
 
-[Engine] Time = 0, Register_event: type=EventType.DELIVER, scheduled_time=100, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x000002AA46217F80>}
+[Engine] Time = 0, Register_event: type=EventType.DELIVER, scheduled_time=100, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x000002967F20B320>}
 
-[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200, target=PCIe_link, param={'target': <flash_sim.Host.Host object at 0x000002AA444FD490>}
+[Engine] Time = 100, Register_event: type=EventType.DELIVER, scheduled_time=200, target=PCIe_link, param={'target': <flash_sim.Host.Host object at 0x000002967E84D670>}
 
-[Engine] Time = 200, Register_event: type=EventType.DELIVER, scheduled_time=300, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x000002AA46217F80>}
+[Engine] Time = 200, Register_event: type=EventType.DELIVER, scheduled_time=2380, target=PCIe_link, param={'target': <flash_sim.HIL.HIL object at 0x000002967F20B320>}
 
 Error: Incoming write data exceeds DATA_CACHE_CAP
 Traceback (most recent call last):
@@ -73,19 +73,19 @@ Traceback (most recent call last):
     self.Execute_event()
   File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\engine.py", line 55, in Execute_event
     event.target.execute(event)
-  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\pcie_link.py", line 81, in execute
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\pcie_link.py", line 107, in execute
     target.execute(event)
-  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\HIL.py", line 48, in execute
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\HIL.py", line 125, in execute
     self.receive_pcie_message(message)
-  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\HIL.py", line 183, in receive_pcie_message
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\HIL.py", line 267, in receive_pcie_message
     self.cache_manager.cache_write(req)
-  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\HIL.py", line 357, in cache_write
+  File "E:\Files\Li_Meng\HBF\Flash-Sim\flash_sim\HIL.py", line 438, in cache_write
     raise ValueError("Incoming write data exceeds DATA_CACHE_CAP")
 ValueError: Incoming write data exceeds DATA_CACHE_CAP
 Simulation completed.
-Simulation time: 300
+Simulation time: 2380
 Event queue (0 events):
   (empty)
-address_mapping_unit.gtd: {6: <flash_sim.common.GTDEntry object at 0x000002AA4743E900>, 11: <flash_sim.common.GTDEntry object at 0x000002AA4743E960>, 83: <flash_sim.common.GTDEntry object at 0x000002AA4743E9C0>, 87: <flash_sim.common.GTDEntry object at 0x000002AA4743EA20>, 156: <flash_sim.common.GTDEntry object at 0x000002AA4743EA80>, 167: <flash_sim.common.GTDEntry object at 0x000002AA4743EAE0>, 168: <flash_sim.common.GTDEntry object at 0x000002AA4743EB40>, 185: <flash_sim.common.GTDEntry object at 0x000002AA4743EBA0>, 193: <flash_sim.common.GTDEntry object at 0x000002AA4743EC00>, 202: <flash_sim.common.GTDEntry object at 0x000002AA4743EC60>, 219: <flash_sim.common.GTDEntry object at 0x000002AA4743ECC0>, 223: <flash_sim.common.GTDEntry object at 0x000002AA4743ED20>, 266: <flash_sim.common.GTDEntry object at 0x000002AA4743ED80>, 275: <flash_sim.common.GTDEntry object at 0x000002AA4743EDE0>, 288: <flash_sim.common.GTDEntry object at 0x000002AA4743EE40>, 324: <flash_sim.common.GTDEntry object at 0x000002AA4743EEA0>, 328: <flash_sim.common.GTDEntry object at 0x000002AA4743EF00>, 347: <flash_sim.common.GTDEntry object at 0x000002AA4743EF60>, 392: <flash_sim.common.GTDEntry object at 0x000002AA4743EFC0>, 409: <flash_sim.common.GTDEntry object at 0x000002AA4743F020>, 411: <flash_sim.common.GTDEntry object at 0x000002AA4743F080>, 412: <flash_sim.common.GTDEntry object at 0x000002AA4743F0E0>, 424: <flash_sim.common.GTDEntry object at 0x000002AA4743F140>, 435: <flash_sim.common.GTDEntry object at 0x000002AA4743F1A0>, 443: <flash_sim.common.GTDEntry object at 0x000002AA4743F200>, 467: <flash_sim.common.GTDEntry object at 0x000002AA4743F290>, 471: <flash_sim.common.GTDEntry object at 0x000002AA4743F320>, 517: <flash_sim.common.GTDEntry object at 0x000002AA4743F380>, 519: <flash_sim.common.GTDEntry object at 0x000002AA4743F3E0>, 550: <flash_sim.common.GTDEntry object at 0x000002AA4743F440>, 556: <flash_sim.common.GTDEntry object at 0x000002AA4743F4A0>, 559: <flash_sim.common.GTDEntry object at 0x000002AA4B58EC60>, 589: <flash_sim.common.GTDEntry object at 0x000002AA4B58ECC0>, 591: <flash_sim.common.GTDEntry object at 0x000002AA4B58ED20>, 600: <flash_sim.common.GTDEntry object at 0x000002AA4B58ED80>, 607: <flash_sim.common.GTDEntry object at 0x000002AA4B58EDE0>, 678: <flash_sim.common.GTDEntry object at 0x000002AA4B58EE40>, 705: <flash_sim.common.GTDEntry object at 0x000002AA4B58EEA0>}
-address_mapping_unit.cmt.cache: {151301: cmt_entry(address=<FlashAddress channel=4, chip=2, die=1, plane=3, sub_plane=0, page=1,>, dirty=False)}
+address_mapping_unit.gtd: {6: <flash_sim.common.GTDEntry object at 0x00000296018BE9F0>, 11: <flash_sim.common.GTDEntry object at 0x00000296018BEA50>, 83: <flash_sim.common.GTDEntry object at 0x00000296018BEAB0>, 87: <flash_sim.common.GTDEntry object at 0x00000296018BEB10>, 156: <flash_sim.common.GTDEntry object at 0x00000296018BEB70>, 167: <flash_sim.common.GTDEntry object at 0x00000296018BEBD0>, 168: <flash_sim.common.GTDEntry object at 0x00000296018BEC30>, 185: <flash_sim.common.GTDEntry object at 0x00000296018BEC90>, 193: <flash_sim.common.GTDEntry object at 0x00000296018BECF0>, 202: <flash_sim.common.GTDEntry object at 0x00000296018BED50>, 219: <flash_sim.common.GTDEntry object at 0x00000296018BEDB0>, 223: <flash_sim.common.GTDEntry object at 0x00000296018BEE10>, 266: <flash_sim.common.GTDEntry object at 0x00000296018BEE70>, 275: <flash_sim.common.GTDEntry object at 0x00000296018BEED0>, 288: <flash_sim.common.GTDEntry object at 0x00000296018BEF30>, 324: <flash_sim.common.GTDEntry object at 0x00000296018BEF90>, 328: <flash_sim.common.GTDEntry object at 0x00000296018BEFF0>, 347: <flash_sim.common.GTDEntry object at 0x00000296018BF050>, 392: <flash_sim.common.GTDEntry object at 0x00000296018BF0B0>, 409: <flash_sim.common.GTDEntry object at 0x00000296018BF110>, 411: <flash_sim.common.GTDEntry object at 0x00000296018BF170>, 412: <flash_sim.common.GTDEntry object at 0x00000296018BF1D0>, 424: <flash_sim.common.GTDEntry object at 0x00000296018BF230>, 435: <flash_sim.common.GTDEntry object at 0x00000296018BF290>, 443: <flash_sim.common.GTDEntry object at 0x00000296018BF2F0>, 467: <flash_sim.common.GTDEntry object at 0x00000296018BF380>, 471: <flash_sim.common.GTDEntry object at 0x00000296018BF410>, 517: <flash_sim.common.GTDEntry object at 0x00000296018BF470>, 519: <flash_sim.common.GTDEntry object at 0x00000296018BF4D0>, 550: <flash_sim.common.GTDEntry object at 0x00000296018BF530>, 556: <flash_sim.common.GTDEntry object at 0x00000296018BF590>, 559: <flash_sim.common.GTDEntry object at 0x0000029605A0EDE0>, 589: <flash_sim.common.GTDEntry object at 0x0000029605A0EE40>, 591: <flash_sim.common.GTDEntry object at 0x0000029605A0EEA0>, 600: <flash_sim.common.GTDEntry object at 0x0000029605A0EF00>, 607: <flash_sim.common.GTDEntry object at 0x0000029605A0EF60>, 678: <flash_sim.common.GTDEntry object at 0x0000029605A0EFC0>, 705: <flash_sim.common.GTDEntry object at 0x0000029605A0F020>}
+address_mapping_unit.cmt.cache: {105363: cmt_entry(address=<FlashAddress channel=3, chip=0, die=3, plane=1, sub_plane=58, page=1,>, dirty=False)}
 address_mapping_unit.gmt: {}
