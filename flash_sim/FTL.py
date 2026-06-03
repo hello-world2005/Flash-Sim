@@ -80,6 +80,8 @@ class PlaneBKE:
         self.invalid_page_count = 0
         # GC：当前 plane 上正在擦除的目标 block（与 _gc 的 erase_target 一致）；GC_ERASE 完成后清除
         self.gc_erase_barrier_block_id: int | None = None
+        # GC/WL：当前 maintenance 流程保护中的 block 集合（source / destination / erase target）
+        self.gc_wl_barrier_blocks: set[int] = set()
 
 
 
@@ -109,7 +111,7 @@ class Block_Manager:
         self._construction_valid = False
         self.lpa_protected_book = dict[int, Transaction]()
         self.mvpn_protected_book = dict[int, Transaction]()
-        self.gc_wl_manager: GC_WL_Manager
+        self.gc_wl_unit: GC_WL_Unit
         print("Initializing block keeping book...")
         # 结构为：channel -> chip -> die -> plane -> [blockBKE, ...]，与 address 前 5 维一致
         self.block_keeping_book = [
@@ -134,26 +136,39 @@ class Block_Manager:
         plane_bke = self.block_keeping_book[channel_id][chip_id][die_id][plane_id]
         block_id = plane_bke.write_frontier_block
         bke = plane_bke.block_entries[block_id]
+        if bke.write_frontier >= PAGE_PER_BLOCK:
+            block_id = self.select_wl_aware_free_block(plane_address)
+            if block_id < 0:
+                raise ValueError(
+                    f"[Block Manager] <get_write_frontier> plane {plane_id} has no eligible free blocks"
+                )
+            plane_bke.write_frontier_block = block_id
+            bke = plane_bke.block_entries[block_id]
         page_id = bke.write_frontier
         print(f"[Block Manager] <get_write_frontier> plane_address: {plane_address}, block {block_id}, page: {page_id}")
+        if page_id == 0:
+            plane_bke.free_block_pool.discard(block_id)
         bke.write_frontier += 1
-        if bke.write_frontier == PAGE_PER_BLOCK:
-            bke.write_frontier = 0
-            plane_bke.write_frontier_block += 1
-            if plane_bke.write_frontier_block == BLOCK_PER_PLANE:
-                raise ValueError(f"[Block Manager] <get_write_frontier> plane {plane_id} is full, write frontier block overflow")
+        if bke.write_frontier > PAGE_PER_BLOCK:
+            raise ValueError(
+                f"[Block Manager] <get_write_frontier> plane {plane_id} block {block_id} overflow"
+            )
         # write frontier 前移时立即更新 free page count；free/valid page count 在写事务完成时更新
         address = FlashAddress(channel=channel_id, chip=chip_id, die=die_id, plane=plane_id, sub_plane=block_id, page=page_id)
         print(f"[Block Manager] plane {plane_address} free_block_num {len(plane_bke.free_block_pool)}, free_page_num {plane_bke.free_page_count}, valid_page_num {plane_bke.valid_page_count}, invalid_page_num {plane_bke.invalid_page_count}")
         return address
 
-    def allocate_gc_write_page(self, plane_address: FlashAddress, block_id: int) -> FlashAddress:
+    def allocate_gc_write_page(self, plane_address: FlashAddress, block_id: int | None = None) -> FlashAddress:
         """Allocate a page within a specific block (for GC migration target)."""
         channel_id = plane_address.channel
         chip_id = plane_address.chip
         die_id = plane_address.die
         plane_id = plane_address.plane
         plane_bke = self.block_keeping_book[channel_id][chip_id][die_id][plane_id]
+        if block_id is None:
+            block_id = self.select_wl_aware_free_block(plane_address)
+        if block_id < 0:
+            raise ValueError("[Block_Manager] allocate_gc_write_page: no eligible destination block")
         bke = plane_bke.block_entries[block_id]
         if bke.write_frontier >= PAGE_PER_BLOCK:
             raise ValueError(f"[Block_Manager] allocate_gc_write_page: block {block_id} is full")
@@ -174,6 +189,25 @@ class Block_Manager:
             sub_plane=block_id,
             page=page_id,
         )
+
+    def select_wl_aware_free_block(
+        self,
+        plane_address: FlashAddress,
+        *,
+        prefer_highest_wl: bool = False,
+        exclude_blocks: set[int] | None = None,
+    ) -> int:
+        if getattr(self, "gc_wl_unit", None) is not None:
+            return self.gc_wl_unit.select_wl_aware_free_block(
+                plane_address,
+                prefer_highest_wl=prefer_highest_wl,
+                exclude_blocks=exclude_blocks,
+            )
+
+        plane_bke = self.get_plane_bke(plane_address)
+        exclude_blocks = exclude_blocks or set()
+        candidates = sorted(plane_bke.free_block_pool - exclude_blocks)
+        return candidates[0] if candidates else -1
     
     def _set_barrier(self, tr: Transaction):
         debug_info(f"[Block Manager] <_set_barrier> setting barrier for tr: {repr(tr)}")
@@ -202,12 +236,12 @@ class Block_Manager:
             self._mark_valid(tr.address)
             if tr.invalidate_target is not None:
                 self._mark_invalid(tr.invalidate_target)
-            self.gc_wl_manager.check_gc()
+            self.gc_wl_unit.check_gc()
         elif tr.type == TransactionType.USER_STATIC_WRITE:
             self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
         elif tr.type == TransactionType.GC_WRITE:
             self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
-            self.gc_wl_manager.address_mapping_unit.apply_gc_write_complete(tr)
+            self.gc_wl_unit.address_mapping_unit.apply_gc_write_complete(tr)
         elif tr.type == TransactionType.MAPPING_WRITE:
             self.mvpn_protected_book.pop(tr.mvpn) if tr.mvpn in self.mvpn_protected_book else None
         elif tr.type == TransactionType.GC_ERASE:
@@ -231,12 +265,13 @@ class Block_Manager:
         bke = self.block_keeping_book[addr.channel][addr.chip][addr.die][addr.plane][addr.sub_plane]
         return bke.page_protected[addr.page]
     
-    def _mark_valid(self, addr: FlashAddress):
+    def _mark_valid(self, addr: FlashAddress, *, reserved: bool = False):
         debug_info(f"[Block Manager] <_mark_valid> {addr}")
         bke = self.get_block_bke(addr)
         plane_bke = self.get_plane_bke(addr)
-        bke.free_page_count -= 1                # free page count is subtracted immediately when issue an write transaction
-        plane_bke.free_page_count -= 1
+        if not reserved:
+            bke.free_page_count -= 1
+            plane_bke.free_page_count -= 1
         if bke.free_page_count == 0:
             plane_bke.free_block_pool.discard(addr.sub_plane)
         bke.valid_pages.add(addr.page)          # update valid_pages when write transaction completed
@@ -273,10 +308,12 @@ class Block_Manager:
         plane_bke.free_page_count += PAGE_PER_BLOCK
         plane_bke.free_block_pool.add(addr.sub_plane)
         plane_bke.gc_erase_barrier_block_id = None
-        phy = self.gc_wl_manager.tsu.phy
+        plane_bke.gc_wl_barrier_blocks.clear()
+        phy = self.gc_wl_unit.tsu.phy
         if phy is not None:
             phy.clear_block_pages(addr)
         print(f"[Block Manager] <finalize_gc_erase> plane {addr.plane} block {addr.sub_plane} erased, free_block_num {len(plane_bke.free_block_pool)}, free_page_num {plane_bke.free_page_count}, valid_page_num {plane_bke.valid_page_count}, invalid_page_num {plane_bke.invalid_page_count}")
+        self.gc_wl_unit.on_erase_complete(addr)
 
     def preconditioning(self, data_path: str = None, phy=None, amu=None) -> None:
         """
@@ -302,15 +339,15 @@ class Block_Manager:
         with open(data_path, 'r') as f:
             precondition_data = json.load(f)
 
-        # 获取 PHY 和 AMU 引用（由调用方传入或从 gc_wl_manager 取）
+        # 获取 PHY 和 AMU 引用（由调用方传入或从 gc_wl_unit 取）
         if phy is None:
             try:
-                phy = self.gc_wl_manager.tsu.phy
+                phy = self.gc_wl_unit.tsu.phy
             except AttributeError:
                 phy = None
         if amu is None:
             try:
-                amu = self.gc_wl_manager.address_mapping_unit
+                amu = self.gc_wl_unit.address_mapping_unit
             except AttributeError:
                 amu = None
         if amu is None:
@@ -645,7 +682,6 @@ class TSU:
         if tr.type in (
             TransactionType.USER_WRITE,
             TransactionType.MAPPING_WRITE,
-            TransactionType.GC_WRITE,
             TransactionType.USER_STATIC_WRITE,
         ):
             addr = tr.address
@@ -653,6 +689,8 @@ class TSU:
                 plane_bke = bm.get_plane_bke(addr)
                 bid = plane_bke.gc_erase_barrier_block_id
                 if bid is not None and addr.sub_plane == bid:
+                    return True
+                if addr.sub_plane in plane_bke.gc_wl_barrier_blocks:
                     return True
         return False
 
@@ -1623,17 +1661,120 @@ class Address_Mapping_Unit:
             ent.dirty = True
         elif lpa in self.gmt:
             self.gmt[lpa].address = new_addr
-        bm._mark_valid(new_addr)
+        bm._mark_valid(new_addr, reserved=True)
 
-class GC_WL_Manager:
+class GC_WL_Unit:
     def __init__(self):
         self._construction_valid: bool = False
         self.block_manager: Block_Manager
         self.tsu: TSU
         self.address_mapping_unit: Address_Mapping_Unit
+        self.static_wl_wear_gap_threshold: int = 2
     
     def Validate_construction(self):
-        pass
+        if self._construction_valid:
+            return
+        assert self.block_manager is not None, "GC_WL_Unit block_manager is not set"
+        assert self.tsu is not None, "GC_WL_Unit tsu is not set"
+        assert self.address_mapping_unit is not None, "GC_WL_Unit address_mapping_unit is not set"
+        self._construction_valid = True
+
+    def select_wl_aware_free_block(
+        self,
+        plane_address: FlashAddress,
+        *,
+        prefer_highest_wl: bool = False,
+        exclude_blocks: set[int] | None = None,
+    ) -> int:
+        plane_bke = self.block_manager.get_plane_bke(plane_address)
+        exclude = set(exclude_blocks or ())
+        exclude |= plane_bke.gc_wl_barrier_blocks
+        candidates: list[int] = []
+        for bid in sorted(plane_bke.free_block_pool):
+            if bid in exclude:
+                continue
+            bke = plane_bke.block_entries[bid]
+            if bke.valid_page_count != 0 or bke.invalid_page_count != 0:
+                continue
+            if bke.write_frontier != 0 or bke.free_page_count != PAGE_PER_BLOCK:
+                continue
+            candidates.append(bid)
+        if not candidates:
+            return -1
+        if prefer_highest_wl:
+            return min(candidates, key=lambda bid: (-plane_bke.block_entries[bid].wl_level, bid))
+        return min(candidates, key=lambda bid: (plane_bke.block_entries[bid].wl_level, bid))
+
+    def _block_has_inflight_user_program(self, plane_address: FlashAddress, block_id: int) -> bool:
+        for tr in self.block_manager.lpa_protected_book.values():
+            if tr.type not in (TransactionType.USER_WRITE, TransactionType.USER_STATIC_WRITE):
+                continue
+            addr = tr.address
+            if (
+                addr.channel == plane_address.channel
+                and addr.chip == plane_address.chip
+                and addr.die == plane_address.die
+                and addr.plane == plane_address.plane
+                and addr.sub_plane == block_id
+            ):
+                return True
+        return False
+
+    def _is_safe_maintenance_block(self, plane_address: FlashAddress, block_id: int) -> bool:
+        plane_bke = self.block_manager.get_plane_bke(plane_address)
+        if block_id == plane_bke.write_frontier_block:
+            return False
+        if block_id == plane_bke.gc_erase_barrier_block_id:
+            return False
+        if block_id in plane_bke.gc_wl_barrier_blocks:
+            return False
+        if block_id in plane_bke.free_block_pool:
+            return False
+        if self._block_has_inflight_user_program(plane_address, block_id):
+            return False
+        return True
+
+    def _pick_gc_victim_block(self, plane_address: FlashAddress) -> int:
+        plane_bke = self.block_manager.get_plane_bke(plane_address)
+        best_block = -1
+        best_key = None
+        for bid in range(self.block_manager.block_no_per_plane):
+            if not self._is_safe_maintenance_block(plane_address, bid):
+                continue
+            bke = plane_bke.block_entries[bid]
+            if bke.invalid_page_count <= 0:
+                continue
+            key = (bke.invalid_page_count, -bke.wl_level, -bid)
+            if best_key is None or key > best_key:
+                best_key = key
+                best_block = bid
+        return best_block
+
+    def _pick_static_wl_source_block(self, plane_address: FlashAddress) -> int:
+        plane_bke = self.block_manager.get_plane_bke(plane_address)
+        best_block = -1
+        best_key = None
+        for bid in range(self.block_manager.block_no_per_plane):
+            if not self._is_safe_maintenance_block(plane_address, bid):
+                continue
+            bke = plane_bke.block_entries[bid]
+            if bke.valid_page_count <= 0:
+                continue
+            key = (bke.wl_level, bke.invalid_page_count, bid)
+            if best_key is None or key < best_key:
+                best_key = key
+                best_block = bid
+        return best_block
+
+    def _wear_skew_requires_static_wl(self, plane_address: FlashAddress) -> bool:
+        plane_bke = self.block_manager.get_plane_bke(plane_address)
+        wl_levels = [
+            plane_bke.block_entries[bid].wl_level
+            for bid in range(self.block_manager.block_no_per_plane)
+        ]
+        if not wl_levels:
+            return False
+        return max(wl_levels) - min(wl_levels) >= self.static_wl_wear_gap_threshold
 
     def check_gc(self):
         debug_info(f"[GC] <check_gc> checking gc")
@@ -1641,44 +1782,34 @@ class GC_WL_Manager:
             for chip in range(CHIP_PER_CHANNEL):
                 for die in range(DIE_PER_CHIP):
                     for plane in range(PLANE_PER_DIE):
-                        plane_bke = self.block_manager.get_plane_bke(FlashAddress(channel=channel, chip=chip, die=die, plane=plane, sub_plane=-1, page=-1))
+                        plane_addr = FlashAddress(
+                            channel=channel,
+                            chip=chip,
+                            die=die,
+                            plane=plane,
+                            sub_plane=-1,
+                            page=-1,
+                        )
+                        plane_bke = self.block_manager.get_plane_bke(plane_addr)
+                        if plane_bke.gc_wl_barrier_blocks:
+                            continue
                         if len(plane_bke.free_block_pool) <= GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD:
-                            self._trigger_gc(FlashAddress(channel=channel, chip=chip, die=die, plane=plane, sub_plane=-1, page=-1))
-        pass
+                            self._trigger_gc(plane_addr)
     
     def _trigger_gc(self, addr: FlashAddress):
         print(f"[GC] <trigger_gc> for plane: {addr}")
+        erase_target = self._pick_gc_victim_block(addr)
+        if erase_target < 0:
+            print("[GC] <trigger_gc> No safe block with invalid pages found, skipping GC")
+            return
         plane_bke = self.block_manager.get_plane_bke(addr)
-        max_invalid_page_count = 0
-        max_invalid_page_count_block = -1
-        min_wl_level = float('inf')
-        min_wl_level_block = -1
-        for block in range(BLOCK_PER_PLANE):
-            bke = plane_bke.block_entries[block]
-            if bke.invalid_page_count > max_invalid_page_count:
-                max_invalid_page_count = bke.invalid_page_count
-                max_invalid_page_count_block = block
-            if bke.wl_level < min_wl_level:
-                min_wl_level = bke.wl_level
-                min_wl_level_block = block
-        if max_invalid_page_count_block == -1:
-            print("[GC] <trigger_gc> No block with invalid page found! Erasing block_id 0")
-            max_invalid_page_count_block = 0
-        self._gc(addr, max_invalid_page_count_block, min_wl_level_block)
-
-    def _pick_alternate_dest_block(self, plane_bke: PlaneBKE, erase_target: int) -> int:
-        best_bid = -1
-        best_wl = float("inf")
-        for bid in range(BLOCK_PER_PLANE):
-            if bid == erase_target:
-                continue
-            bke = plane_bke.block_entries[bid]
-            if bke.wl_level < best_wl:
-                best_wl = bke.wl_level
-                best_bid = bid
-        if best_bid < 0:
-            return (erase_target + 1) % BLOCK_PER_PLANE
-        return best_bid
+        dest_block = -1
+        if plane_bke.block_entries[erase_target].valid_page_count > 0:
+            dest_block = self.select_wl_aware_free_block(addr, exclude_blocks={erase_target})
+            if dest_block < 0:
+                print("[GC] <trigger_gc> No eligible destination block found, skipping GC")
+                return
+        self._submit_relocation_chain(addr, erase_target, dest_block, "gc")
 
     def _lpa_for_physical_page(self, src: FlashAddress) -> int:
         phy = self.tsu.phy
@@ -1696,23 +1827,32 @@ class GC_WL_Manager:
                 return lpa
         raise ValueError(f"[GC] cannot resolve LPA for physical page {src}")
 
-    def _gc(self, addr: FlashAddress, erase_target: int, erase_write_frontier: int):
+    def _submit_relocation_chain(
+        self,
+        addr: FlashAddress,
+        erase_target: int,
+        dest_block: int,
+        reason: str,
+    ) -> bool:
         plane_bke = self.block_manager.get_plane_bke(addr)
         erase_target_block = plane_bke.block_entries[erase_target]
-        dest_block = erase_write_frontier
-        if dest_block == erase_target:
-            dest_block = self._pick_alternate_dest_block(plane_bke, erase_target)
-        dest_bke = plane_bke.block_entries[dest_block]
-        pages_to_move = list(erase_target_block.valid_pages)
+        dest_bke = plane_bke.block_entries[dest_block] if dest_block >= 0 else None
+        pages_to_move = sorted(erase_target_block.valid_pages)
         n_valid = len(pages_to_move)
+        if n_valid > 0 and dest_bke is None:
+            print(f"[GC/WL] <{reason}> no destination block available for relocation")
+            return False
         if n_valid > 0 and dest_bke.free_page_count < n_valid:
-            print(f"[GC] <_gc> dest block {dest_block} insufficient free pages: need {n_valid}, have {dest_bke.free_page_count}")
-            return
+            print(f"[GC/WL] <{reason}> dest block {dest_block} insufficient free pages: need {n_valid}, have {dest_bke.free_page_count}")
+            return False
         if n_valid > 0:
-            print(f"[GC] <_gc> migrating {n_valid} valid pages from block {erase_target} to block {dest_block}")
+            print(f"[GC/WL] <{reason}> migrating {n_valid} valid pages from block {erase_target} to block {dest_block}")
         ch, chip, die, pl = addr.channel, addr.chip, addr.die, addr.plane
         plane_addr = FlashAddress(channel=ch, chip=chip, die=die, plane=pl, sub_plane=-1, page=-1)
         plane_bke.gc_erase_barrier_block_id = erase_target
+        plane_bke.gc_wl_barrier_blocks = {erase_target}
+        if dest_block >= 0:
+            plane_bke.gc_wl_barrier_blocks.add(dest_block)
         self.tsu.Prepare_trans_submission()
         gc_writes: list[Transaction] = []
         for page_id in pages_to_move:
@@ -1755,6 +1895,40 @@ class GC_WL_Manager:
                 gc_erase.rely_on_transactions.append(gw)
         self.tsu.Submit_trans(gc_erase)
         self.tsu.Schedule()
+        return True
+
+    def _trigger_static_wl(self, addr: FlashAddress) -> bool:
+        source_block = self._pick_static_wl_source_block(addr)
+        if source_block < 0:
+            return False
+        plane_bke = self.block_manager.get_plane_bke(addr)
+        source_wl = plane_bke.block_entries[source_block].wl_level
+        dest_block = self.select_wl_aware_free_block(
+            addr,
+            prefer_highest_wl=True,
+            exclude_blocks={source_block},
+        )
+        if dest_block < 0:
+            return False
+        if plane_bke.block_entries[dest_block].wl_level <= source_wl:
+            return False
+        return self._submit_relocation_chain(addr, source_block, dest_block, "static-wl")
+
+    def on_erase_complete(self, addr: FlashAddress) -> None:
+        plane_addr = FlashAddress(
+            channel=addr.channel,
+            chip=addr.chip,
+            die=addr.die,
+            plane=addr.plane,
+            sub_plane=-1,
+            page=-1,
+        )
+        plane_bke = self.block_manager.get_plane_bke(plane_addr)
+        if plane_bke.gc_wl_barrier_blocks:
+            return
+        if not self._wear_skew_requires_static_wl(plane_addr):
+            return
+        self._trigger_static_wl(plane_addr)
 
 class FTL:
     def Validate_construction(self):
@@ -1762,12 +1936,12 @@ class FTL:
             return
         print("Validating FTL construction...")
         assert self.address_mapping_unit is not None, "FTL address_mapping_unit is not set"
-        assert self.gc_wl_manager is not None, "FTL gc_wl_manager is not set"
+        assert self.gc_wl_unit is not None, "FTL gc_wl_unit is not set"
         assert self.block_manager is not None, "FTL block_manager is not set"
         assert self.tsu is not None, "FTL tsu is not set"
         self._construction_valid = True
         self.address_mapping_unit.Validate_construction()
-        self.gc_wl_manager.Validate_construction()
+        self.gc_wl_unit.Validate_construction()
         self.block_manager.Validate_construction()
         self.tsu.Validate_construction()
         print("FTL construction validation complete.")
@@ -1776,14 +1950,14 @@ class FTL:
         print("Initializing FTL...")
         self._construction_valid: bool = False
         self.address_mapping_unit = Address_Mapping_Unit()
-        self.gc_wl_manager = GC_WL_Manager()
+        self.gc_wl_unit = GC_WL_Unit()
         self.block_manager = Block_Manager()
         self.tsu = TSU()
         self.tsu.block_manager = self.block_manager
-        self.block_manager.gc_wl_manager = self.gc_wl_manager
-        self.gc_wl_manager.block_manager = self.block_manager
-        self.gc_wl_manager.tsu = self.tsu
-        self.gc_wl_manager.address_mapping_unit = self.address_mapping_unit
+        self.block_manager.gc_wl_unit = self.gc_wl_unit
+        self.gc_wl_unit.block_manager = self.block_manager
+        self.gc_wl_unit.tsu = self.tsu
+        self.gc_wl_unit.address_mapping_unit = self.address_mapping_unit
         self.address_mapping_unit.block_manager = self.block_manager
         self.address_mapping_unit.tsu = self.tsu
         for domain in self.address_mapping_unit.domains:
@@ -1797,7 +1971,7 @@ class FTL:
         if self._construction_valid:
             return
         assert self.address_mapping_unit is not None, "FTL address_mapping_unit is not set"
-        assert self.gc_wl_manager is not None, "FTL gc_wl_manager is not set"
+        assert self.gc_wl_unit is not None, "FTL gc_wl_unit is not set"
         assert self.block_manager is not None, "FTL block_manager is not set"
         assert self.tsu is not None, "FTL tsu is not set"
         self.tsu.Validate_construction()

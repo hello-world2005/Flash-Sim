@@ -12,8 +12,8 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 _BASE = Path(__file__).resolve().parent
 _REPO_ROOT = _BASE.parent
-INPUT_JSON = str(_REPO_ROOT / "test_case" / "test_read_write.json")
-MERGED_LOG = str(_REPO_ROOT / "output" / "test_read_write.log")
+INPUT_JSON = str(_REPO_ROOT / "test_case" / "gc_test.json")
+MERGED_LOG = str(_REPO_ROOT / "output" / "gc_test.log")
 MERGED_LOG_MIRROR_CONSOLE = True
 
 
