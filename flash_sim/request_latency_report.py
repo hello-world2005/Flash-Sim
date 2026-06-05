@@ -48,6 +48,8 @@ CSV_COLUMN_NAMES = (
     "阵列执行时间-阵列操作时间",
     "PCIe返回状态耗时",
     "PCIe返回数据耗时",
+    "请求处理能耗(μJ)",
+    "持久化能耗(μJ)",
 )
 
 RESPONSE_DATA_MESSAGE_TYPES = {
@@ -139,6 +141,8 @@ class RequestLatencyState:
     persistence_completion_time: Optional[int] = None
     mapping_resolution_counts: dict[str, int] = field(default_factory=_empty_mapping_resolution_counts)
     data_cache_status: str = "not_checked"
+    energy_uj: float = 0.0          # per-request total energy (μJ), attributed via source_req
+    persistence_energy_uj: float = 0.0  # energy from cache-flush/GC writebacks attributed to this request
 
 
 class RequestLatencyRecorder:
@@ -399,6 +403,23 @@ class RequestLatencyRecorder:
             if rec.persistence_completion_time is None or timestamp > rec.persistence_completion_time:
                 rec.persistence_completion_time = timestamp
 
+    def add_energy(self, transactions: list[Transaction], energy_uj: float) -> None:
+        """将 PHY 操作的能耗归属到发起该事务的请求。
+
+        与 record_transaction_interval 使用相同的 _request_ids_from_transaction
+        归因逻辑: 有 source_req → 归到 host 请求, 有 report_origin_request_ids → persistence。
+        """
+        for tr in transactions:
+            request_ids, scope = self._request_ids_from_transaction(tr)
+            for req_id in request_ids:
+                rec = self.requests.get(req_id)
+                if rec is None:
+                    continue
+                if scope == "persistence":
+                    rec.persistence_energy_uj += energy_uj
+                else:
+                    rec.energy_uj += energy_uj
+
     def export(self) -> dict[str, Any]:
         requests_payload = []
         for rec in self._iter_sorted_requests():
@@ -436,6 +457,8 @@ class RequestLatencyRecorder:
                     "host_total_latency": total_latency,
                     "breakdown": host_breakdown,
                     "intervals": rec.intervals,
+                    "energy_uj": rec.energy_uj,
+                    "persistence_energy_uj": rec.persistence_energy_uj,
                     "data_cache_status": rec.data_cache_status,
                     "persistence_status": persistence_status,
                     "persistence_completion_time": rec.persistence_completion_time,
@@ -480,6 +503,8 @@ class RequestLatencyRecorder:
                     CSV_COLUMN_NAMES[9]: self._user_phy_array_time(rec),
                     CSV_COLUMN_NAMES[10]: self._pcie_status_return_time(rec),
                     CSV_COLUMN_NAMES[11]: self._pcie_data_return_time(rec),
+                    CSV_COLUMN_NAMES[12]: self._csv_energy_value(rec.energy_uj),
+                    CSV_COLUMN_NAMES[13]: self._csv_energy_value(rec.persistence_energy_uj),
                 }
             )
         return rows
@@ -841,3 +866,7 @@ class RequestLatencyRecorder:
         if value is None:
             return ""
         return value
+
+    @staticmethod
+    def _csv_energy_value(value: float) -> str:
+        return f"{value:.2f}"

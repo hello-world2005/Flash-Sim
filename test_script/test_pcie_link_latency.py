@@ -10,7 +10,7 @@ from flash_sim.common import (
     SECTOR_SIZE_BYTES,
     SimEvent,
 )
-from flash_sim.pcie_link import PCIe_link, PCIe_message
+from flash_sim.PCIe_link import PCIe_link, PCIe_message
 
 
 class _DummyEngine:

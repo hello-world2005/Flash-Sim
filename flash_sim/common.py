@@ -164,6 +164,30 @@ T_BERS            = TimingConfig.t_bers   # chip internal erase latency (tBERS)
 T_SEARCH          = TimingConfig.t_search_lsb    # chip internal search latency (tSEARCH)
 T_COMPUTE         = TimingConfig.t_compute_lsb   # chip internal compute latency (tCOMPUTE)
 
+# ── Flash power constants (mW) ───────────────────────────────────────────────
+# 参考: Micron NAND datasheet (2018+, 64Gb+ MLC/TLC, 1.8V VCC) 和
+#       NANDFlashSim (ACM TOS 2016) 的 per-stage 能耗模型
+#
+# Per-stage 模型:
+#   E_read  = P_ARRAY × tR + P_IF × PHY_DATA_OUT_TIME   (CLE/ALE 忽略)
+#   E_prog  = P_IF × PHY_DATA_IN_TIME + P_ARRAY × tPROG  (CLE + status check 忽略)
+#   E_erase = P_ARRAY × tBERS                              (CLE + status check 忽略)
+#
+# 不同 page_type 的 tR/tPROG 在 TimingConfig 中区分，energy 自动跟随:
+#   LSB: t_r=75μs,  t_prog=750μs
+#   CSB: t_r=100μs, t_prog=1000μs
+#   MSB: t_r=150μs, t_prog=1500μs
+#
+# 参考值 (1.8V):
+P_ARRAY = 45      # NAND cell array power (mW), 1.8V × 25mA
+P_IF    = 18      # Flash I/O interface power (mW), 1.8V × 10mA
+
+# CIM 功耗 (估算值, 待实验校准)
+# SEARCH: 多条WL同时激活 → 阵列电流高于普通读
+P_SEARCH_ARRAY = 54  # search array power (mW), +20% vs P_ARRAY
+# COMPUTE: 多block并行激活 → 阵列电流大幅增加
+P_COMPUTE_ARRAY = 72 # compute array power (mW), +60% vs P_ARRAY
+
 # ── Suspension thresholds (ns) ───────────────────────────────────────────────
 REASONABLE_TIME_SUSPEND_WRITE_FOR_READ  = 100_000
 REASONABLE_TIME_SUSPEND_ERASE_FOR_READ  = 1_000_000
@@ -472,6 +496,11 @@ def Register_event(event_type: str, target: Any, param: Any, scheduled_time: int
         return _event_scheduler(event_type, target, param, scheduled_time)
     else:
         raise ValueError("Event scheduler is not initialized")
+
+
+# ── Request latency recorder (由 Engine 注入) ─────────────────────────────────
+
+_request_latency_recorder: Any = None
 
 
 def SET_REQUEST_LATENCY_RECORDER(recorder: Any) -> None:

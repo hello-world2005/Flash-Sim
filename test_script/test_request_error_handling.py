@@ -20,7 +20,7 @@ from flash_sim.common import (
     Transaction,
     TransactionType,
 )
-from flash_sim.pcie_link import PCIe_message
+from flash_sim.PCIe_link import PCIe_message
 
 
 class _RecordingPCIeLink:

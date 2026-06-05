@@ -5,7 +5,7 @@ from queue import Queue
 
 from flash_sim import utils
 
-from . import pcie_link as PCIe_link
+from . import PCIe_link as PCIe_link
 from .FTL import FTL, Transaction
 from .common import *
 
