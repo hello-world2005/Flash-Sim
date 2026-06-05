@@ -404,11 +404,7 @@ class RequestLatencyRecorder:
                 rec.persistence_completion_time = timestamp
 
     def add_energy(self, transactions: list[Transaction], energy_uj: float) -> None:
-        """将 PHY 操作的能耗归属到发起该事务的请求。
-
-        与 record_transaction_interval 使用相同的 _request_ids_from_transaction
-        归因逻辑: 有 source_req → 归到 host 请求, 有 report_origin_request_ids → persistence。
-        """
+        """将 PHY 操作的能耗归属到发起该事务的请求。"""
         for tr in transactions:
             request_ids, scope = self._request_ids_from_transaction(tr)
             for req_id in request_ids:

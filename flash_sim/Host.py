@@ -51,18 +51,23 @@ class Host:
                 raise ValueError(f"{req.type} request has no data attached!")
 
     class Queue_ptrs:
-        def __init__(self, num_of_queues, depth_of_queues):
+        def __init__(self, num_of_queues, depth_of_queues, sq_entries=None):
             self.sq_heads = [0] * num_of_queues
             self.sq_tails = [0] * num_of_queues
             self.cq_heads = [0] * num_of_queues
             self.cq_tails = [0] * num_of_queues
             self.depth = depth_of_queues
             self.num_of_queues = num_of_queues
+            self._sq_entries = sq_entries  # 真实 SQ entries 列表引用
 
         def is_sq_empty(self, queue_id):
+            if self._sq_entries is not None:
+                return len(self._sq_entries[queue_id]) == 0
             return self.sq_heads[queue_id] == self.sq_tails[queue_id]
 
         def is_sq_full(self, queue_id):
+            if self._sq_entries is not None:
+                return len(self._sq_entries[queue_id]) >= self.depth
             return (self.sq_tails[queue_id] + 1) % self.depth == self.sq_heads[queue_id]
 
         def find_available_sq(self):
@@ -106,12 +111,14 @@ class Host:
         print("Initializing Host...")
         self.name = name
         self.num_of_queues = num_of_queues
-        self.queue_ptrs = self.Queue_ptrs(num_of_queues, depth_of_queues)
         self.memory = self.Memory(
-            queue_ptrs=self.queue_ptrs,
+            queue_ptrs=None,  # 先创建 Memory，再创建 Queue_ptrs（因为 ptrs 需要 sq_entries 引用）
             num_of_queues=num_of_queues,
             depth=depth_of_queues,
         )
+        self.queue_ptrs = self.Queue_ptrs(num_of_queues, depth_of_queues,
+                                          sq_entries=self.memory.sq_entries)
+        self.memory._queue_ptrs = self.queue_ptrs
         self.pcie_link: PCIe_link
         self.io_flows = [self.IO_Flow(sq_id=i) for i in range(num_of_queues)]
         self.io_flow_manager = self.IO_Flow_Manager(self.io_flows, self.queue_ptrs)
@@ -194,7 +201,16 @@ class Host:
             message_type = MessageType.SEARCH_REQ
         elif next_req.type == RequestType.COMPUTE:
             message_type = MessageType.COMPUTE_REQ
+        elif next_req.type == RequestType.STATIC_WRITE:
+            message_type = MessageType.STATIC_WRITE_REQ
         else: raise ValueError(f"Invalid request type: {next_req.type}")
+        # Mark the flow as busy and track the request properly
+        flow = self.io_flows[sq_id]
+        flow.busy = True
+        flow.current_req = next_req
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is not None:
+            recorder.note_host_sent(next_req, CURRENT_TIME())
         message = PCIe_message(
             type=message_type, payload={"req": next_req}
         )
@@ -212,6 +228,8 @@ class Host:
         if recorder is not None:
             recorder.note_sq_entered(req, CURRENT_TIME())
         if self.io_flow_manager.is_flow_available(target_sq_id):
+            # 从 sq_entries 中移除即将发送的请求，避免 send_next_req 重复发送
+            self.memory.sq_pop(target_sq_id)
             flow = self.io_flow_manager.io_flows[target_sq_id]
             flow.busy = True
             flow.current_req = req

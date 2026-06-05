@@ -356,6 +356,18 @@ class Request:
                 return False
         return True
 
+    def __eq__(self, other: object) -> bool:
+        """避免 dataclass 自动 __eq__ 遍历 transaction_list 导致循环递归。"""
+        if not isinstance(other, Request):
+            return NotImplemented
+        return self is other or (
+            self.type == other.type
+            and self.sq_id == other.sq_id
+            and self.lha_start == other.lha_start
+            and self.size == other.size
+            and self.trace_index == other.trace_index
+        )
+
     def __str__(self) -> str:
         return self.__repr__()
     
@@ -409,6 +421,15 @@ class SimEvent:
 
     def __lt__(self, other: 'SimEvent') -> bool:
         return self.time < other.time
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SimEvent):
+            return NotImplemented
+        return self is other or (
+            self.time == other.time
+            and self.type == other.type
+            and self.target is other.target
+        )
 
     def __str__(self) -> str:
         target_str = f"{type(self.target).__name__}(id={id(self.target)})" if self.target is not None else "None"
