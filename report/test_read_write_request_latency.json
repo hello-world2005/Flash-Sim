@@ -1,6 +1,6 @@
 {
   "meta": {
-    "trace_path": "E:\\Files\\Li_Meng\\HBF\\Flash-Sim\\test_case\\test_read_write.json",
+    "trace_path": "../Flash-Sim/test_case/test_read_write.json",
     "trace_name": "test_read_write.json",
     "final_time": 255616,
     "request_count": 2,
@@ -94,6 +94,8 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "energy_uj": 0.0,
+      "persistence_energy_uj": 11.34,
       "data_cache_status": "not_checked",
       "persistence_status": "persisted",
       "persistence_completion_time": 255616,
@@ -209,6 +211,8 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "energy_uj": 0.0,
+      "persistence_energy_uj": 0.0,
       "data_cache_status": "full_hit",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,

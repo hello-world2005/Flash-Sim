@@ -255,6 +255,11 @@ class PHY():
                 finish_time,
                 PHY_CMD_ADDR_TIME,
             )
+        # energy: data-in phase, attributed per-request
+        if recorder is not None:
+            data_in_ns = finish_time - (now + PHY_CMD_ADDR_TIME)
+            if data_in_ns > 0 and op in ("write", "search", "compute"):
+                recorder.add_energy(transactions, P_IF * data_in_ns * 1e-6)
         Register_event(event_type=ev, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=finish_time)
 
     # ── sim_object event handler ───────────────────────────────────────────────
@@ -369,21 +374,31 @@ class PHY():
         # ── Chip-internal operation complete ──────────────────────────────────
 
         elif ev_type == EventType.PHY_CHIP_READ_COMPLETE:
-            energy_stats.record_read(T_READ_LSB)
+            rec = REQUEST_LATENCY_RECORDER()
+            if rec is not None:
+                rec.add_energy(transactions, P_ARRAY * T_READ_LSB * 1e-6)
             self._handle_array_execution_finished(chip_id, die_id, "read", transactions)
 
         elif ev_type == EventType.PHY_CHIP_WRITE_COMPLETE:
-            energy_stats.record_write(T_PROG)
+            rec = REQUEST_LATENCY_RECORDER()
+            if rec is not None:
+                rec.add_energy(transactions, P_ARRAY * T_PROG * 1e-6)
             self._handle_array_execution_finished(chip_id, die_id, "write", transactions)
 
         elif ev_type == EventType.PHY_CHIP_ERASE_COMPLETE:
-            energy_stats.record_erase(T_BERS)
+            rec = REQUEST_LATENCY_RECORDER()
+            if rec is not None:
+                rec.add_energy(transactions, P_ARRAY * T_BERS * 1e-6)
             self._handle_array_execution_finished(chip_id, die_id, "erase", transactions)
         elif ev_type == EventType.PHY_CHIP_SEARCH_COMPLETE:
-            energy_stats.record_search(T_SEARCH)
+            rec = REQUEST_LATENCY_RECORDER()
+            if rec is not None:
+                rec.add_energy(transactions, P_SEARCH_ARRAY * T_SEARCH * 1e-6)
             self._handle_array_execution_finished(chip_id, die_id, "search", transactions)
         elif ev_type == EventType.PHY_CHIP_COMPUTE_COMPLETE:
-            energy_stats.record_compute(T_COMPUTE)
+            rec = REQUEST_LATENCY_RECORDER()
+            if rec is not None:
+                rec.add_energy(transactions, P_COMPUTE_ARRAY * T_COMPUTE * 1e-6)
             self._handle_array_execution_finished(chip_id, die_id, "compute", transactions)
 
         # ── Read data-out phase complete ──────────────────────────────────────
@@ -555,6 +570,9 @@ class PHY():
                 CURRENT_TIME(),
                 CURRENT_TIME() + PHY_DATA_OUT_TIME,
             )
+        # energy: data-out phase, attributed per-request
+        if recorder is not None and cmd_type in ("read", "search", "compute"):
+            recorder.add_energy(transactions, P_IF * PHY_DATA_OUT_TIME * 1e-6)
         Register_event(event_type=ev, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=CURRENT_TIME() + PHY_DATA_OUT_TIME)
 
     def _send_resume_command(self, chip_id: Tuple[int, int]) -> None:

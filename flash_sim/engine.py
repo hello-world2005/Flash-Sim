@@ -14,7 +14,7 @@ if __package__ in (None, ""):
     from flash_sim import PCIe_link
     from flash_sim import Device
     from flash_sim import common as _common
-    from flash_sim.common import EventType, SimEvent, Request, RequestType, format_event_queue, energy_stats
+    from flash_sim.common import EventType, SimEvent, Request, RequestType, format_event_queue
     from flash_sim.parser import parse_trace
     from flash_sim.request_latency_report import RequestLatencyRecorder
 else:
@@ -22,7 +22,7 @@ else:
     from . import PCIe_link
     from . import Device
     from . import common as _common
-    from .common import EventType, SimEvent, Request, RequestType, format_event_queue, energy_stats
+    from .common import EventType, SimEvent, Request, RequestType, format_event_queue
     from .parser import parse_trace
     from .request_latency_report import RequestLatencyRecorder
 
@@ -123,7 +123,6 @@ class Engine:
         self.Run()
         self._finalize_pending_cache_flushes()
         self._export_request_latency_report()
-        print(f"\n[Energy] {energy_stats}\n")
 
     def _finalize_pending_cache_flushes(self):
         cache_manager = self.device.hil.cache_manager
@@ -141,4 +140,5 @@ class Engine:
         csv_path = self.request_latency_recorder.derive_csv_report_path(report_dir)
         self.last_request_latency_report_path = self.request_latency_recorder.dump_json(report_path)
         self.last_request_latency_csv_path = self.request_latency_recorder.dump_csv(csv_path)
+
 

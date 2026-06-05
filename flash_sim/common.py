@@ -498,6 +498,11 @@ def Register_event(event_type: str, target: Any, param: Any, scheduled_time: int
         raise ValueError("Event scheduler is not initialized")
 
 
+# ── Request latency recorder (由 Engine 注入) ─────────────────────────────────
+
+_request_latency_recorder: Any = None
+
+
 def SET_REQUEST_LATENCY_RECORDER(recorder: Any) -> None:
     global _request_latency_recorder
     _request_latency_recorder = recorder
@@ -505,78 +510,6 @@ def SET_REQUEST_LATENCY_RECORDER(recorder: Any) -> None:
 
 def REQUEST_LATENCY_RECORDER() -> Any:
     return _request_latency_recorder
-
-
-# ── Energy statistics ─────────────────────────────────────────────────────────
-
-@dataclass
-class EnergyStats:
-    """仿真能耗统计, per-stage 模型 (参考 NANDFlashSim, ACM TOS 2016)。
-
-    Per-stage 分解:
-      E_read   = P_ARRAY × tR      + P_IF × PHY_DATA_OUT_TIME
-      E_prog   = P_IF × PHY_DATA_IN_TIME + P_ARRAY × tPROG
-      E_erase  = P_ARRAY × tBERS
-      E_search = P_SEARCH_ARRAY × tSEARCH  + P_IF × PHY_DATA_OUT_TIME
-      E_compute= P_COMPUTE_ARRAY × tCOMPUTE + P_IF × PHY_DATA_OUT_TIME
-
-    CLE/ALE 阶段功耗忽略 (<1% of total)。
-    不同 page_type 的 tR/tPROG 在 TimingConfig 中区分，energy 自动跟随。
-    """
-    read_energy:    float = 0.0   # total read energy (μJ)
-    write_energy:   float = 0.0   # total write/program energy (μJ)
-    erase_energy:   float = 0.0   # total erase energy (μJ)
-    search_energy:  float = 0.0   # total CIM search energy (μJ)
-    compute_energy: float = 0.0   # total CIM compute energy (μJ)
-    read_count:     int = 0       # count of read operations
-    write_count:    int = 0       # count of write operations
-    erase_count:    int = 0       # count of erase operations
-    search_count:   int = 0       # count of search operations
-    compute_count:  int = 0       # count of compute operations
-
-    def record_read(self, array_latency_ns: int) -> None:
-        """E_read = P_ARRAY × tR + P_IF × PHY_DATA_OUT_TIME (μJ)"""
-        self.read_energy += (P_ARRAY * array_latency_ns + P_IF * PHY_DATA_OUT_TIME) * 1e-6
-        self.read_count += 1
-
-    def record_write(self, array_latency_ns: int) -> None:
-        """E_prog = P_IF × PHY_DATA_IN_TIME + P_ARRAY × tPROG (μJ)"""
-        self.write_energy += (P_IF * PHY_DATA_IN_TIME + P_ARRAY * array_latency_ns) * 1e-6
-        self.write_count += 1
-
-    def record_erase(self, array_latency_ns: int) -> None:
-        """E_erase = P_ARRAY × tBERS (μJ)"""
-        self.erase_energy += P_ARRAY * array_latency_ns * 1e-6
-        self.erase_count += 1
-
-    def record_search(self, array_latency_ns: int) -> None:
-        """E_search = P_SEARCH_ARRAY × tSEARCH + P_IF × PHY_DATA_OUT_TIME (μJ)"""
-        self.search_energy += (P_SEARCH_ARRAY * array_latency_ns + P_IF * PHY_DATA_OUT_TIME) * 1e-6
-        self.search_count += 1
-
-    def record_compute(self, array_latency_ns: int) -> None:
-        """E_compute = P_COMPUTE_ARRAY × tCOMPUTE + P_IF × PHY_DATA_OUT_TIME (μJ)"""
-        self.compute_energy += (P_COMPUTE_ARRAY * array_latency_ns + P_IF * PHY_DATA_OUT_TIME) * 1e-6
-        self.compute_count += 1
-
-    def total_energy(self) -> float:
-        return (self.read_energy + self.write_energy + self.erase_energy
-                + self.search_energy + self.compute_energy)
-
-    def __str__(self) -> str:
-        return (
-            f"Energy (μJ): "
-            f"read={self.read_energy:.2f} (n={self.read_count}), "
-            f"write={self.write_energy:.2f} (n={self.write_count}), "
-            f"erase={self.erase_energy:.2f} (n={self.erase_count}), "
-            f"search={self.search_energy:.2f} (n={self.search_count}), "
-            f"compute={self.compute_energy:.2f} (n={self.compute_count}), "
-            f"total={self.total_energy():.2f}"
-        )
-
-
-# 全局能耗统计实例 (Engine 初始化时重置)
-energy_stats = EnergyStats()
 
 
 if __name__ == "__main__":
