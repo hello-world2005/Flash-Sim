@@ -11,7 +11,7 @@ if __package__ in (None, ""):
         sys.path.insert(0, project_root)
 
     from flash_sim import Host
-    from flash_sim import pcie_link
+    from flash_sim import PCIe_link
     from flash_sim import Device
     from flash_sim import common as _common
     from flash_sim.common import EventType, SimEvent, Request, RequestType, format_event_queue
@@ -19,7 +19,7 @@ if __package__ in (None, ""):
     from flash_sim.request_latency_report import RequestLatencyRecorder
 else:
     from . import Host
-    from . import pcie_link
+    from . import PCIe_link
     from . import Device
     from . import common as _common
     from .common import EventType, SimEvent, Request, RequestType, format_event_queue
@@ -45,7 +45,7 @@ class Engine:
 
         self.host = Host.Host("Host", num_of_queues=8, depth_of_queues=64)
         self.device = Device.Device(self.host)
-        self.pcie_link = pcie_link.PCIe_link(self.host, self.device)
+        self.pcie_link = PCIe_link.PCIe_link(self.host, self.device)
         self.host.pcie_link = self.pcie_link
         self.pcie_link.engine = self
         print("Engine initialization complete.")

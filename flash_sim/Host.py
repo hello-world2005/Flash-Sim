@@ -2,7 +2,7 @@
 from queue import Queue
 
 from .common import *
-from .pcie_link import PCIe_link, PCIe_message
+from .PCIe_link import PCIe_link, PCIe_message
 from .common import CQ_ENTRY_SIZE_BASIC
 
 class CQ_Entry:
