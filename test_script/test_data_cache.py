@@ -80,12 +80,44 @@ class TestDataCache(unittest.TestCase):
 
         read_tr = Transaction(source_req=None, type=TransactionType.USER_READ, lpa=5, bitmap=bitmap)
         read_req = Request(type=RequestType.READ, transaction_list=[read_tr])
-        cm.query_cache(read_req)
+        blocked = cm.query_cache(read_req)
 
+        self.assertTrue(blocked)
+        self.assertEqual(read_req.transaction_list, [read_tr])
+        self.assertFalse(read_tr.completed)
+        self.assertIn(5, cm.waiting_user_reads)
+        self.assertIs(cm.waiting_user_reads[5][0], read_req)
+
+    def test_waiting_read_resumes_after_write_payload_arrives(self):
+        hil = _DummyHIL()
+        cm = Cache_Manager(hil)
+        bitmap, payload = _make_user_payload({0: 11, 1: 22})
+
+        placeholder_write_req = Request(
+            type=RequestType.WRITE,
+            sq_id=0,
+            transaction_list=[Transaction(source_req=None, type=TransactionType.USER_WRITE, lpa=5, bitmap=bitmap)],
+        )
+        cm.register_write_request(placeholder_write_req)
+
+        read_tr = Transaction(source_req=None, type=TransactionType.USER_READ, lpa=5, bitmap=bitmap)
+        read_req = Request(type=RequestType.READ, transaction_list=[read_tr])
+        blocked = cm.query_cache(read_req)
+        self.assertTrue(blocked)
+
+        write_req = Request(
+            type=RequestType.WRITE,
+            sq_id=0,
+            transaction_list=[Transaction(source_req=None, type=TransactionType.USER_WRITE, lpa=5, bitmap=bitmap, payload=payload)],
+        )
+        resumed = cm.cache_write(write_req)
+
+        self.assertEqual(resumed, [read_req])
         self.assertEqual(read_req.transaction_list, [])
         self.assertTrue(read_tr.completed)
-        self.assertEqual(read_tr.payload[0], INVALID_DATA)
-        self.assertEqual(read_tr.payload[1], INVALID_DATA)
+        self.assertEqual(read_tr.payload[0], 11)
+        self.assertEqual(read_tr.payload[1], 22)
+        self.assertNotIn(5, cm.waiting_user_reads)
 
     def test_read_hit_returns_data_from_cache(self):
         hil = _DummyHIL()

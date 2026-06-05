@@ -144,6 +144,8 @@ if __name__ == "__main__":
             print(f"Simulation time: {sim_engine.Get_current_time()}")
             if sim_engine.last_request_latency_report_path is not None:
                 print(f"Request latency report: {sim_engine.last_request_latency_report_path}")
+            if getattr(sim_engine, "last_request_latency_csv_path", None) is not None:
+                print(f"Request latency CSV: {sim_engine.last_request_latency_csv_path}")
             print(format_event_queue(sim_engine.event_queue.queue))
             print(
                 "address_mapping_unit.gtd:",

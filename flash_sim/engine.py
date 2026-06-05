@@ -41,6 +41,7 @@ class Engine:
         self.request_latency_recorder.attach(self)
         _common.SET_REQUEST_LATENCY_RECORDER(self.request_latency_recorder)
         self.last_request_latency_report_path: Path | None = None
+        self.last_request_latency_csv_path: Path | None = None
 
         self.host = Host.Host("Host", num_of_queues=8, depth_of_queues=64)
         self.device = Device.Device(self.host)
@@ -134,6 +135,9 @@ class Engine:
             self.Run()
 
     def _export_request_latency_report(self):
-        report_path = self.request_latency_recorder.derive_report_path(self.repo_root / "report")
+        report_dir = self.repo_root / "report"
+        report_path = self.request_latency_recorder.derive_report_path(report_dir)
+        csv_path = self.request_latency_recorder.derive_csv_report_path(report_dir)
         self.last_request_latency_report_path = self.request_latency_recorder.dump_json(report_path)
+        self.last_request_latency_csv_path = self.request_latency_recorder.dump_csv(csv_path)
 

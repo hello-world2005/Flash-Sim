@@ -1261,16 +1261,16 @@ class Address_Mapping_Domain:
         self._construction_valid = True
         print("Address Mapping Domain construction validation complete.")
 
-    def query_cmt(self, transaction: Transaction) -> bool:
+    def query_cmt(self, transaction: Transaction) -> str | None:
         if self.cmt.is_cached(transaction.lpa):
             entry = self.cmt.get_cached_entry(transaction.lpa)
             transaction.address = entry.address
-            return True
+            return "cmt_hit"
         if transaction.lpa in self.gmt:
             entry = self.gmt[transaction.lpa]
             transaction.address = entry.address
-            return True
-        return False
+            return "gmt_hit"
+        return None
 
 class Address_Mapping_Unit:
     def Validate_construction(self):
@@ -1474,11 +1474,17 @@ class Address_Mapping_Unit:
         if req.type == RequestType.READ:
             to_submit: list[Transaction] = []
             mapping_waits: list[tuple[int, Transaction, Transaction]] = []
+            recorder = REQUEST_LATENCY_RECORDER()
             for tr in req.transaction_list:
-                if domain.query_cmt(tr):
+                resolution = domain.query_cmt(tr)
+                if resolution is not None:
+                    if recorder is not None:
+                        recorder.note_mapping_resolution(req, resolution)
                     debug_info(f"[AMU] <translate_and_submit> Cache hit for tr: {repr(tr)}")
                     to_submit.append(tr)
                 else:
+                    if recorder is not None:
+                        recorder.note_mapping_resolution(req, "mapping_read")
                     debug_info(f"[AMU] <translate_and_submit> Cache miss for tr: {repr(tr)}")
                     mvpn = tr.lpa // LPA_NO_PER_MAPPING_PAGE
                     if mvpn not in self.gtd:
@@ -1502,7 +1508,6 @@ class Address_Mapping_Unit:
                 self.tsu.Submit_trans(tr)
             for lpa, waiting_tr, read_tr in mapping_waits:
                 self.waiting_for_mapping_trans[lpa].append(waiting_tr)
-                recorder = REQUEST_LATENCY_RECORDER()
                 if recorder is not None:
                     recorder.note_mapping_wait_start(
                         waiting_tr.source_req,
@@ -1522,8 +1527,14 @@ class Address_Mapping_Unit:
                 tr.address = page_address
                 domain = self.domains[req.sq_id]
                 if not domain.cmt.is_cached(tr.lpa):
+                    recorder = REQUEST_LATENCY_RECORDER()
+                    if recorder is not None:
+                        recorder.note_mapping_resolution(req, "uncached_write")
                     domain.cmt.add_entry(tr.lpa, page_address, dirty=True) # dirty is true because a write tr must update the ppa of a lpa
                 else:
+                    recorder = REQUEST_LATENCY_RECORDER()
+                    if recorder is not None:
+                        recorder.note_mapping_resolution(req, "cmt_hit")
                     invalidation_victim_address = domain.cmt.update_entry(tr.lpa, page_address, dirty=True)
                     tr.invalidate_target = invalidation_victim_address
                 self.tsu.Submit_trans(tr)

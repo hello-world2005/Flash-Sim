@@ -232,9 +232,11 @@ class HIL:
             if message.type == MessageType.READ_REQ:
                 req = message.payload["req"]
                 self.segment(req)
-                self.cache_manager.query_cache(req)
+                blocked_by_cache = self.cache_manager.query_cache(req)
                 if req.is_serviced():
                     self._complete_request(req)
+                    return
+                if blocked_by_cache:
                     return
                 self.ftl.handle_new_req(req)
             elif message.type in (
@@ -264,8 +266,13 @@ class HIL:
                 for tr in req.transaction_list:
                     tr.data_ready = True
                 if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
-                    self.cache_manager.cache_write(req)
+                    resumed_reqs = self.cache_manager.cache_write(req)
                     self._complete_request(req)
+                    for resumed_req in resumed_reqs:
+                        if resumed_req.is_serviced():
+                            self._complete_request(resumed_req)
+                        else:
+                            self.ftl.handle_new_req(resumed_req)
                 else:
                     self.ftl.tsu.Prepare_trans_submission()
                     self.ftl.tsu.Schedule()
@@ -334,6 +341,8 @@ class Cache_Manager:
     def __init__(self, hil: HIL):
         self.hil = hil
         self.cache = Data_Cache()
+        self.waiting_user_reads: dict[int, list[Request]] = defaultdict(list)
+        self.waiting_read_lpas_by_req: dict[str, set[int]] = {}
 
     @property
     def pending_user_pages(self):
@@ -382,11 +391,56 @@ class Cache_Manager:
                 return False
         return True
 
+    def _user_entry_ready_for_transaction(self, entry: dict, tr: Transaction) -> bool:
+        for i in range(SECTOR_PER_PAGE):
+            if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
+                continue
+            if entry["bitmap"][i] == 0 or entry["ready_bitmap"][i] == 0:
+                return False
+        return True
+
     def _user_entry_is_fully_ready(self, entry: dict) -> bool:
         for i in range(SECTOR_PER_PAGE):
             if entry["bitmap"][i] == 1 and entry["ready_bitmap"][i] == 0:
                 return False
         return True
+
+    def _wait_key(self, req: Request) -> str:
+        return req.report_req_id or f"anon-{id(req)}"
+
+    def _unregister_waiting_read(self, req: Request) -> None:
+        wait_key = self._wait_key(req)
+        blocked_lpas = self.waiting_read_lpas_by_req.pop(wait_key, set())
+        for lpa in blocked_lpas:
+            retained = [waiting_req for waiting_req in self.waiting_user_reads[lpa] if waiting_req is not req]
+            if retained:
+                self.waiting_user_reads[lpa] = retained
+            else:
+                self.waiting_user_reads.pop(lpa, None)
+
+    def _register_waiting_read(self, req: Request, blocked_lpas: set[int]) -> None:
+        self._unregister_waiting_read(req)
+        if not blocked_lpas:
+            return
+        wait_key = self._wait_key(req)
+        self.waiting_read_lpas_by_req[wait_key] = set(blocked_lpas)
+        for lpa in blocked_lpas:
+            self.waiting_user_reads[lpa].append(req)
+
+    def _resume_waiting_reads_for_lpas(self, lpas: list[int]) -> list[Request]:
+        resumed: dict[str, Request] = {}
+        for lpa in set(lpas):
+            for req in self.waiting_user_reads.get(lpa, []):
+                resumed[self._wait_key(req)] = req
+        if not resumed:
+            return []
+        ready_to_resume: list[Request] = []
+        for req in resumed.values():
+            self._unregister_waiting_read(req)
+            blocked = self.query_cache(req)
+            if not blocked:
+                ready_to_resume.append(req)
+        return ready_to_resume
 
     def _count_new_ready_lines(self, req: Request) -> int:
         if req.type == RequestType.WRITE:
@@ -417,15 +471,27 @@ class Cache_Manager:
         elif req.type == RequestType.STATIC_WRITE:
             self._register_static_write(req)
 
-    def query_cache(self, req: Request):
+    def query_cache(self, req: Request) -> bool:
+        recorder = REQUEST_LATENCY_RECORDER()
         misses = []
+        blocked_lpas: set[int] = set()
+        hit_count = 0
+        miss_count = 0
+        blocked_count = 0
         for tr in req.transaction_list:
             if tr.type != TransactionType.USER_READ:
                 misses.append(tr)
+                miss_count += 1
                 continue
             entry = self.cache.user_entries.get(tr.lpa)
             if entry is None or not self._user_entry_covers_transaction(entry, tr):
                 misses.append(tr)
+                miss_count += 1
+                continue
+            if not self._user_entry_ready_for_transaction(entry, tr):
+                misses.append(tr)
+                blocked_lpas.add(tr.lpa)
+                blocked_count += 1
                 continue
             payload = [INVALID_DATA] * SECTOR_PER_PAGE
             for i in range(SECTOR_PER_PAGE):
@@ -435,11 +501,21 @@ class Cache_Manager:
                     payload[i] = entry["payload"][i]
             tr.payload = payload
             tr.completed = True
+            hit_count += 1
         req.transaction_list = misses
+        self._register_waiting_read(req, blocked_lpas)
+        if recorder is not None:
+            recorder.note_data_cache_result(
+                req,
+                hit_count=hit_count,
+                miss_count=miss_count,
+                blocked_count=blocked_count,
+            )
+        return bool(blocked_lpas)
 
-    def cache_write(self, req: Request):
+    def cache_write(self, req: Request) -> list[Request]:
         if req.type not in (RequestType.WRITE, RequestType.STATIC_WRITE):
-            return
+            return []
         self.register_write_request(req)
         new_lines = self._count_new_ready_lines(req)
         if new_lines > self.cache.free_lines():
@@ -447,9 +523,10 @@ class Cache_Manager:
         if new_lines > self.cache.free_lines():
             raise ValueError("Incoming write data exceeds DATA_CACHE_CAP")
         if req.type == RequestType.WRITE:
-            self._hydrate_user_write(req)
+            return self._hydrate_user_write(req)
         else:
             self._hydrate_static_write(req)
+            return []
 
     def _register_user_write(self, req: Request):
         sq_id = req.sq_id if req.sq_id is not None else 0
@@ -464,8 +541,9 @@ class Cache_Manager:
                 entry["payload"][i] = INVALID_DATA
                 entry["origin_request_ids"][i] = req.report_req_id
 
-    def _hydrate_user_write(self, req: Request):
+    def _hydrate_user_write(self, req: Request) -> list[Request]:
         sq_id = req.sq_id if req.sq_id is not None else 0
+        hydrated_lpas: list[int] = []
         for tr in req.transaction_list:
             entry = self.cache.user_entries.setdefault(tr.lpa, self._new_user_entry(sq_id))
             entry["sq_id"] = sq_id
@@ -478,6 +556,8 @@ class Cache_Manager:
                 entry["ready_bitmap"][i] = 1
                 entry["payload"][i] = tr.payload[i]
                 entry["origin_request_ids"][i] = req.report_req_id
+            hydrated_lpas.append(tr.lpa)
+        return self._resume_waiting_reads_for_lpas(hydrated_lpas)
 
     def _register_static_write(self, req: Request):
         sq_id = req.sq_id if req.sq_id is not None else 0

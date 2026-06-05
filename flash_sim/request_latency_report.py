@@ -1,12 +1,23 @@
 from __future__ import annotations
 
+import csv
 import json
-from collections import defaultdict
 from dataclasses import dataclass, field
+from math import ceil
 from pathlib import Path
 from typing import Any, Optional
 
-from .common import Request, RequestType, Transaction
+from .common import (
+    MessageType,
+    PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS,
+    PCIE_PACKET_OVERHEAD_BYTES,
+    REQUEST_STATUS_SUCCESS,
+    Request,
+    RequestType,
+    SECTOR_SIZE_BYTES,
+    Transaction,
+    TransactionType,
+)
 
 
 BASE_STAGE_NAMES = (
@@ -23,6 +34,59 @@ BASE_STAGE_NAMES = (
 )
 
 RECONCILIATION_STAGE_NAMES = ("overlap_latency", "untracked_latency")
+
+CSV_COLUMN_NAMES = (
+    "Issue时间",
+    "REQ类型",
+    "完成时间",
+    "SQ中等待时间",
+    "PCIe发送请求耗时",
+    "是否cache命中",
+    "Mapping处理时间",
+    "TSU中等待时间",
+    "阵列执行时间-指令/数据传输时间",
+    "阵列执行时间-阵列操作时间",
+    "PCIe返回状态耗时",
+    "PCIe返回数据耗时",
+)
+
+RESPONSE_DATA_MESSAGE_TYPES = {
+    MessageType.READ_RES_SEND_BACK.value,
+    MessageType.SEARCH_RES_SEND_BACK.value,
+    MessageType.COMPUTE_RES_SEND_BACK.value,
+}
+
+STATUS_MESSAGE_TYPES = {MessageType.REQ_COMP.value}
+REQUEST_SIDE_DEVICE_TO_HOST_MESSAGE_TYPES = {
+    MessageType.WRITE_DATA_REQ.value,
+    MessageType.SEARCH_DATA_REQ.value,
+    MessageType.COMPUTE_DATA_REQ.value,
+    MessageType.STATIC_WRITE_DATA_REQ.value,
+}
+
+WRITE_LIKE_REQUEST_TYPES = {RequestType.WRITE.value, RequestType.STATIC_WRITE.value}
+NON_MAPPING_REQUEST_TYPES = {
+    RequestType.SEARCH.value,
+    RequestType.COMPUTE.value,
+    RequestType.STATIC_WRITE.value,
+}
+HOST_VISIBLE_TRANSACTION_TYPES = {
+    TransactionType.USER_READ.value,
+    TransactionType.USER_WRITE.value,
+    TransactionType.USER_SEARCH.value,
+    TransactionType.USER_COMPUTE.value,
+    TransactionType.USER_STATIC_WRITE.value,
+}
+MAPPING_TRANSACTION_TYPES = {TransactionType.MAPPING_READ.value}
+
+
+def _empty_mapping_resolution_counts() -> dict[str, int]:
+    return {
+        "cmt_hit": 0,
+        "gmt_hit": 0,
+        "mapping_read": 0,
+        "uncached_write": 0,
+    }
 
 
 def _zero_breakdown() -> dict[str, int]:
@@ -73,6 +137,8 @@ class RequestLatencyState:
     )
     persistence_status: str = "not_applicable"
     persistence_completion_time: Optional[int] = None
+    mapping_resolution_counts: dict[str, int] = field(default_factory=_empty_mapping_resolution_counts)
+    data_cache_status: str = "not_checked"
 
 
 class RequestLatencyRecorder:
@@ -94,6 +160,10 @@ class RequestLatencyRecorder:
     def derive_report_path(self, root_dir: str | Path) -> Path:
         base_name = self.trace_path.stem if self.trace_path is not None else "request_latency"
         return Path(root_dir) / f"{base_name}_request_latency.json"
+
+    def derive_csv_report_path(self, root_dir: str | Path) -> Path:
+        base_name = self.trace_path.stem if self.trace_path is not None else "request_latency"
+        return Path(root_dir) / f"{base_name}_request_latency.csv"
 
     def register_request(self, req: Request, scheduled_time: Optional[int] = None) -> None:
         rec = self._ensure_request(req)
@@ -190,6 +260,42 @@ class RequestLatencyRecorder:
             timestamp,
             {"source": "mapping_wait", "wait_key": wait_key},
         )
+
+    def note_mapping_resolution(self, req: Optional[Request], resolution: str) -> None:
+        req_id = self._request_id(req)
+        if req_id is None:
+            return
+        rec = self.requests.get(req_id)
+        if rec is None:
+            return
+        if resolution not in rec.mapping_resolution_counts:
+            raise ValueError(f"Unsupported mapping resolution: {resolution}")
+        rec.mapping_resolution_counts[resolution] += 1
+
+    def note_data_cache_result(
+        self,
+        req: Optional[Request],
+        *,
+        hit_count: int,
+        miss_count: int,
+        blocked_count: int,
+    ) -> None:
+        req_id = self._request_id(req)
+        if req_id is None:
+            return
+        rec = self.requests.get(req_id)
+        if rec is None:
+            return
+        if blocked_count > 0:
+            rec.data_cache_status = "waiting_for_write_data"
+        elif hit_count > 0 and miss_count == 0:
+            rec.data_cache_status = "full_hit"
+        elif hit_count > 0:
+            rec.data_cache_status = "partial_hit"
+        elif miss_count > 0:
+            rec.data_cache_status = "miss"
+        else:
+            rec.data_cache_status = "not_checked"
 
     def note_tsu_enqueued(self, tr: Transaction, timestamp: int) -> None:
         self._tsu_enqueue_times.setdefault(id(tr), timestamp)
@@ -295,7 +401,7 @@ class RequestLatencyRecorder:
 
     def export(self) -> dict[str, Any]:
         requests_payload = []
-        for rec in sorted(self.requests.values(), key=lambda item: (item.trace_index if item.trace_index is not None else 10**9, item.req_id)):
+        for rec in self._iter_sorted_requests():
             total_latency = self._total_latency(rec.req_init_time, rec.host_completion_time)
             host_breakdown = self._summarize_breakdown(rec.intervals, total_latency)
             persistence_total = self._total_latency(rec.req_init_time, rec.persistence_completion_time)
@@ -330,6 +436,7 @@ class RequestLatencyRecorder:
                     "host_total_latency": total_latency,
                     "breakdown": host_breakdown,
                     "intervals": rec.intervals,
+                    "data_cache_status": rec.data_cache_status,
                     "persistence_status": persistence_status,
                     "persistence_completion_time": rec.persistence_completion_time,
                     "persistence_total_latency": persistence_total,
@@ -356,6 +463,36 @@ class RequestLatencyRecorder:
             json.dump(self.export(), handle, ensure_ascii=False, indent=2)
         return path
 
+    def export_csv_rows(self) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for rec in self._iter_sorted_requests():
+            rows.append(
+                {
+                    CSV_COLUMN_NAMES[0]: self._csv_value(self._issue_time(rec)),
+                    CSV_COLUMN_NAMES[1]: rec.req_type,
+                    CSV_COLUMN_NAMES[2]: self._csv_value(rec.host_completion_time),
+                    CSV_COLUMN_NAMES[3]: self._host_wait_time(rec),
+                    CSV_COLUMN_NAMES[4]: self._pcie_request_send_time(rec),
+                    CSV_COLUMN_NAMES[5]: self._csv_cache_hit_value(rec),
+                    CSV_COLUMN_NAMES[6]: self._mapping_time(rec),
+                    CSV_COLUMN_NAMES[7]: self._user_tsu_wait_time(rec),
+                    CSV_COLUMN_NAMES[8]: self._user_phy_transfer_time(rec),
+                    CSV_COLUMN_NAMES[9]: self._user_phy_array_time(rec),
+                    CSV_COLUMN_NAMES[10]: self._pcie_status_return_time(rec),
+                    CSV_COLUMN_NAMES[11]: self._pcie_data_return_time(rec),
+                }
+            )
+        return rows
+
+    def dump_csv(self, output_path: str | Path) -> Path:
+        path = Path(output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(CSV_COLUMN_NAMES))
+            writer.writeheader()
+            writer.writerows(self.export_csv_rows())
+        return path
+
     def _ensure_request(self, req: Request) -> RequestLatencyState:
         req_id = self._request_id(req)
         if req_id is None:
@@ -379,6 +516,15 @@ class RequestLatencyRecorder:
         rec.lha_start = req.lha_start
         rec.size = req.size
         return rec
+
+    def _iter_sorted_requests(self) -> list[RequestLatencyState]:
+        return sorted(
+            self.requests.values(),
+            key=lambda item: (
+                item.trace_index if item.trace_index is not None else 10**9,
+                item.req_id,
+            ),
+        )
 
     def _request_id(self, req: Optional[Request]) -> Optional[str]:
         if req is None:
@@ -462,3 +608,236 @@ class RequestLatencyRecorder:
         if start is None or end is None or end < start:
             return 0
         return int(end - start)
+
+    def _issue_time(self, rec: RequestLatencyState) -> Optional[int]:
+        if rec.req_init_time is not None:
+            return rec.req_init_time
+        if rec.scheduled_time is not None:
+            return rec.scheduled_time
+        return rec.trace_time
+
+    def _host_wait_time(self, rec: RequestLatencyState) -> int:
+        return self._merged_stage_durations(
+            rec.intervals["host_dispatch"] + rec.intervals["host_sq_wait"]
+        )
+
+    def _pcie_request_send_time(self, rec: RequestLatencyState) -> int:
+        issue_time = self._issue_time(rec)
+        if issue_time is None or rec.host_completion_time is None:
+            return self._raw_request_side_pcie_time(rec)
+
+        request_send_time = (
+            rec.host_completion_time
+            - issue_time
+            - self._host_wait_time(rec)
+            - self._mapping_time(rec)
+            - self._user_tsu_wait_time(rec)
+            - self._user_phy_transfer_time(rec)
+            - self._user_phy_array_time(rec)
+            - self._pcie_status_return_time(rec)
+        )
+        return max(0, request_send_time)
+
+    def _mapping_time(self, rec: RequestLatencyState) -> int:
+        mapping_end = self._mapping_phase_end(rec)
+        if mapping_end is None:
+            return 0
+        return max(0, mapping_end - self._request_side_pcie_end(rec))
+
+    def _user_tsu_wait_time(self, rec: RequestLatencyState) -> int:
+        first_command_start = self._first_user_command_start(rec)
+        if first_command_start is None:
+            return 0
+        submit_time = self._first_user_submit_time(rec, first_command_start)
+        effective_start = max(
+            submit_time,
+            self._request_side_pcie_end(rec),
+            self._mapping_phase_end(rec) or 0,
+        )
+        return max(0, first_command_start - effective_start)
+
+    def _user_phy_transfer_time(self, rec: RequestLatencyState) -> int:
+        return self._transaction_stage_duration(
+            rec.intervals["phy_cmd_addr"],
+            HOST_VISIBLE_TRANSACTION_TYPES,
+        ) + self._transaction_stage_duration(
+            rec.intervals["phy_data_in"],
+            HOST_VISIBLE_TRANSACTION_TYPES,
+        ) + self._transaction_stage_duration(
+            rec.intervals["phy_data_out"],
+            HOST_VISIBLE_TRANSACTION_TYPES,
+        )
+
+    def _user_phy_array_time(self, rec: RequestLatencyState) -> int:
+        return self._transaction_stage_duration(
+            rec.intervals["phy_array_exec"],
+            HOST_VISIBLE_TRANSACTION_TYPES,
+        )
+
+    def _merged_stage_durations(self, intervals: list[dict[str, Any]]) -> int:
+        return _merged_duration([(item["start"], item["end"]) for item in intervals])
+
+    def _stage_end(
+        self,
+        intervals: list[dict[str, Any]],
+        allowed_transaction_types: Optional[set[str]] = None,
+    ) -> Optional[int]:
+        ends = [
+            item["end"]
+            for item in intervals
+            if allowed_transaction_types is None
+            or item.get("transaction_type") in allowed_transaction_types
+        ]
+        return max(ends) if ends else None
+
+    def _stage_start(
+        self,
+        intervals: list[dict[str, Any]],
+        allowed_transaction_types: Optional[set[str]] = None,
+    ) -> Optional[int]:
+        starts = [
+            item["start"]
+            for item in intervals
+            if allowed_transaction_types is None
+            or item.get("transaction_type") in allowed_transaction_types
+        ]
+        return min(starts) if starts else None
+
+    def _transaction_stage_duration(
+        self,
+        intervals: list[dict[str, Any]],
+        allowed_transaction_types: set[str],
+    ) -> int:
+        filtered = [
+            (item["start"], item["end"])
+            for item in intervals
+            if item.get("transaction_type") in allowed_transaction_types
+        ]
+        return _merged_duration(filtered)
+
+    def _request_side_pcie_intervals(self, rec: RequestLatencyState) -> list[dict[str, Any]]:
+        request_intervals = list(rec.intervals["pcie_host_to_device"])
+        request_intervals.extend(
+            interval
+            for interval in rec.intervals["pcie_device_to_host"]
+            if interval.get("message_type") in REQUEST_SIDE_DEVICE_TO_HOST_MESSAGE_TYPES
+        )
+        return request_intervals
+
+    def _raw_request_side_pcie_time(self, rec: RequestLatencyState) -> int:
+        return self._merged_stage_durations(self._request_side_pcie_intervals(rec))
+
+    def _request_side_pcie_end(self, rec: RequestLatencyState) -> int:
+        intervals = self._request_side_pcie_intervals(rec)
+        if not intervals:
+            return self._issue_time(rec) or 0
+        return max(item["end"] for item in intervals)
+
+    def _mapping_phase_end(self, rec: RequestLatencyState) -> Optional[int]:
+        mapping_intervals = list(rec.intervals["amu_mapping_wait"])
+        for stage in ("tsu_queue_wait", "phy_cmd_addr", "phy_data_in", "phy_array_exec", "phy_data_out"):
+            mapping_intervals.extend(
+                interval
+                for interval in rec.intervals[stage]
+                if interval.get("transaction_type") in MAPPING_TRANSACTION_TYPES
+            )
+        if not mapping_intervals:
+            return None
+        return max(item["end"] for item in mapping_intervals)
+
+    def _first_user_command_start(self, rec: RequestLatencyState) -> Optional[int]:
+        return self._stage_start(
+            rec.intervals["phy_cmd_addr"],
+            HOST_VISIBLE_TRANSACTION_TYPES,
+        )
+
+    def _first_user_submit_time(
+        self,
+        rec: RequestLatencyState,
+        fallback: int,
+    ) -> int:
+        submit_time = self._stage_start(
+            rec.intervals["tsu_queue_wait"],
+            HOST_VISIBLE_TRANSACTION_TYPES,
+        )
+        return fallback if submit_time is None else submit_time
+
+    def _csv_cache_hit_value(self, rec: RequestLatencyState) -> str:
+        if rec.req_type in NON_MAPPING_REQUEST_TYPES:
+            return "/"
+        if rec.req_type == RequestType.READ.value and rec.data_cache_status == "full_hit":
+            return "是"
+        total_mapping_lookups = sum(rec.mapping_resolution_counts.values())
+        if total_mapping_lookups == 0:
+            return "否"
+        if rec.mapping_resolution_counts["cmt_hit"] == total_mapping_lookups:
+            return "是"
+        return "否"
+
+    def _cache_hit_value(self, rec: RequestLatencyState) -> str:
+        if rec.req_type in NON_MAPPING_REQUEST_TYPES:
+            return "/"
+        total_mapping_lookups = sum(rec.mapping_resolution_counts.values())
+        if total_mapping_lookups == 0:
+            return "否"
+        if rec.mapping_resolution_counts["cmt_hit"] == total_mapping_lookups:
+            return "是"
+        return "否"
+
+    def _pcie_status_return_time(
+        self,
+        rec: RequestLatencyState,
+    ) -> int:
+        return self._filtered_interval_duration(
+            rec.intervals["pcie_device_to_host"],
+            STATUS_MESSAGE_TYPES,
+        )
+
+    def _pcie_data_return_time(
+        self,
+        rec: RequestLatencyState,
+    ) -> int:
+        explicit_data_latency, has_explicit_response = self._filtered_interval_duration(
+            rec.intervals["pcie_device_to_host"],
+            RESPONSE_DATA_MESSAGE_TYPES,
+            return_response_presence=True,
+        )
+        if rec.req_type in WRITE_LIKE_REQUEST_TYPES:
+            return 0
+        if has_explicit_response or rec.status != REQUEST_STATUS_SUCCESS:
+            return explicit_data_latency
+        return self._estimate_response_payload_latency(rec)
+
+    def _estimate_response_payload_latency(self, rec: RequestLatencyState) -> int:
+        if rec.size is None or rec.size <= 0:
+            return 0
+        if PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS <= 0:
+            raise ValueError("PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS must be positive")
+        transfer_bytes = rec.size * SECTOR_SIZE_BYTES + PCIE_PACKET_OVERHEAD_BYTES
+        return ceil(transfer_bytes / PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS)
+
+    def _filtered_interval_duration(
+        self,
+        intervals: list[dict[str, Any]],
+        allowed_message_types: set[str],
+        *,
+        return_response_presence: bool = False,
+    ) -> int | tuple[int, bool]:
+        selected: list[tuple[int, int]] = []
+        has_response_data = False
+        for interval in intervals:
+            message_type = interval.get("message_type")
+            if message_type not in allowed_message_types:
+                continue
+            selected.append((interval["start"], interval["end"]))
+            if message_type in RESPONSE_DATA_MESSAGE_TYPES:
+                has_response_data = True
+        duration = _merged_duration(selected)
+        if return_response_presence:
+            return duration, has_response_data
+        return duration
+
+    def _csv_value(self, value: Optional[int]) -> int | str:
+        if value is None:
+            return ""
+        return value

@@ -1,0 +1,712 @@
+{
+  "meta": {
+    "trace_path": "C:\\Users\\21378\\AppData\\Local\\Temp\\tmpgfdfeng7\\test_search_compute.json",
+    "trace_name": "test_search_compute.json",
+    "final_time": 930400,
+    "request_count": 4,
+    "stage_names": [
+      "host_sq_wait",
+      "host_dispatch",
+      "pcie_host_to_device",
+      "pcie_device_to_host",
+      "amu_mapping_wait",
+      "tsu_queue_wait",
+      "phy_cmd_addr",
+      "phy_data_in",
+      "phy_array_exec",
+      "phy_data_out"
+    ]
+  },
+  "requests": [
+    {
+      "req_id": "req-0000-search-12582912-4",
+      "trace_index": 0,
+      "trace_time": 0,
+      "type": "SEARCH",
+      "stream_id": 0,
+      "sq_id": 0,
+      "lha_start": 12582912,
+      "size": 4,
+      "status": null,
+      "error_message": null,
+      "scheduled_time": 0,
+      "req_init_time": 0,
+      "host_completion_time": null,
+      "total_latency": 0,
+      "host_total_latency": 0,
+      "breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 364,
+        "pcie_device_to_host": 100,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 720200,
+        "phy_cmd_addr": 200,
+        "phy_data_in": 10000,
+        "phy_array_exec": 400000,
+        "phy_data_out": 10000,
+        "overlap_latency": 210464,
+        "untracked_latency": 0
+      },
+      "intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [
+          {
+            "start": 0,
+            "end": 100,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "SEARCH_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 200,
+            "end": 464,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "SEARCH_DATA",
+            "transfer_bytes": 656
+          }
+        ],
+        "pcie_device_to_host": [
+          {
+            "start": 100,
+            "end": 200,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "SEARCH_DATA_REQ",
+            "transfer_bytes": 400
+          }
+        ],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [
+          {
+            "start": 100,
+            "end": 720300,
+            "source": "tsu",
+            "transaction_type": "USER_SEARCH"
+          }
+        ],
+        "phy_cmd_addr": [
+          {
+            "start": 100,
+            "end": 200,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          },
+          {
+            "start": 720300,
+            "end": 720400,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_data_in": [
+          {
+            "start": 200,
+            "end": 5200,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          },
+          {
+            "start": 720400,
+            "end": 725400,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_array_exec": [
+          {
+            "start": 5200,
+            "end": 205200,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          },
+          {
+            "start": 725400,
+            "end": 925400,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_data_out": [
+          {
+            "start": 205200,
+            "end": 210200,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          },
+          {
+            "start": 925400,
+            "end": 930400,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ]
+      },
+      "data_cache_status": "not_checked",
+      "persistence_status": "not_applicable",
+      "persistence_completion_time": null,
+      "persistence_total_latency": 0,
+      "persistence_breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "persistence_intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      }
+    },
+    {
+      "req_id": "req-0001-compute-12583424-2",
+      "trace_index": 1,
+      "trace_time": 100,
+      "type": "COMPUTE",
+      "stream_id": 0,
+      "sq_id": 1,
+      "lha_start": 12583424,
+      "size": 2,
+      "status": "SUCCESS",
+      "error_message": null,
+      "scheduled_time": 100,
+      "req_init_time": 100,
+      "host_completion_time": 720400,
+      "total_latency": 720300,
+      "host_total_latency": 720300,
+      "breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 496,
+        "pcie_device_to_host": 200,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 210000,
+        "phy_cmd_addr": 100,
+        "phy_data_in": 5000,
+        "phy_array_exec": 500000,
+        "phy_data_out": 5000,
+        "overlap_latency": 496,
+        "untracked_latency": 0
+      },
+      "intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [
+          {
+            "start": 100,
+            "end": 200,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "COMPUTE_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 300,
+            "end": 696,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "COMPUTE_DATA",
+            "transfer_bytes": 528
+          }
+        ],
+        "pcie_device_to_host": [
+          {
+            "start": 200,
+            "end": 300,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "COMPUTE_DATA_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 720300,
+            "end": 720400,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "REQ_COMP",
+            "transfer_bytes": 400
+          }
+        ],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [
+          {
+            "start": 200,
+            "end": 210200,
+            "source": "tsu",
+            "transaction_type": "USER_COMPUTE"
+          },
+          {
+            "start": 200,
+            "end": 210200,
+            "source": "tsu",
+            "transaction_type": "USER_COMPUTE"
+          }
+        ],
+        "phy_cmd_addr": [
+          {
+            "start": 210200,
+            "end": 210300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 210200,
+            "end": 210300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ],
+        "phy_data_in": [
+          {
+            "start": 210300,
+            "end": 215300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 210300,
+            "end": 215300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ],
+        "phy_array_exec": [
+          {
+            "start": 215300,
+            "end": 715300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 215300,
+            "end": 715300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ],
+        "phy_data_out": [
+          {
+            "start": 715300,
+            "end": 720300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 715300,
+            "end": 720300,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ]
+      },
+      "data_cache_status": "not_checked",
+      "persistence_status": "not_applicable",
+      "persistence_completion_time": null,
+      "persistence_total_latency": 0,
+      "persistence_breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "persistence_intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      }
+    },
+    {
+      "req_id": "req-0002-search-12587008-2",
+      "trace_index": 2,
+      "trace_time": 200,
+      "type": "SEARCH",
+      "stream_id": 0,
+      "sq_id": 2,
+      "lha_start": 12587008,
+      "size": 2,
+      "status": null,
+      "error_message": null,
+      "scheduled_time": 200,
+      "req_init_time": 200,
+      "host_completion_time": null,
+      "total_latency": 0,
+      "host_total_latency": 0,
+      "breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 528,
+        "pcie_device_to_host": 100,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 720000,
+        "phy_cmd_addr": 100,
+        "phy_data_in": 5000,
+        "phy_array_exec": 200000,
+        "phy_data_out": 0,
+        "overlap_latency": 528,
+        "untracked_latency": 0
+      },
+      "intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [
+          {
+            "start": 200,
+            "end": 300,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "SEARCH_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 400,
+            "end": 828,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "SEARCH_DATA",
+            "transfer_bytes": 528
+          }
+        ],
+        "pcie_device_to_host": [
+          {
+            "start": 300,
+            "end": 400,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "SEARCH_DATA_REQ",
+            "transfer_bytes": 400
+          }
+        ],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [
+          {
+            "start": 300,
+            "end": 720300,
+            "source": "tsu",
+            "transaction_type": "USER_SEARCH"
+          }
+        ],
+        "phy_cmd_addr": [
+          {
+            "start": 720300,
+            "end": 720400,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_data_in": [
+          {
+            "start": 720400,
+            "end": 725400,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_array_exec": [
+          {
+            "start": 725400,
+            "end": 925400,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_data_out": []
+      },
+      "data_cache_status": "not_checked",
+      "persistence_status": "not_applicable",
+      "persistence_completion_time": null,
+      "persistence_total_latency": 0,
+      "persistence_breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "persistence_intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      }
+    },
+    {
+      "req_id": "req-0003-compute-12591104-3",
+      "trace_index": 3,
+      "trace_time": 300,
+      "type": "COMPUTE",
+      "stream_id": 0,
+      "sq_id": 3,
+      "lha_start": 12591104,
+      "size": 3,
+      "status": "SUCCESS",
+      "error_message": null,
+      "scheduled_time": 300,
+      "req_init_time": 300,
+      "host_completion_time": 511176,
+      "total_latency": 510876,
+      "host_total_latency": 510876,
+      "breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 576,
+        "pcie_device_to_host": 200,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 412,
+        "phy_cmd_addr": 100,
+        "phy_data_in": 5000,
+        "phy_array_exec": 500000,
+        "phy_data_out": 5000,
+        "overlap_latency": 412,
+        "untracked_latency": 0
+      },
+      "intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [
+          {
+            "start": 300,
+            "end": 564,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "COMPUTE_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 664,
+            "end": 976,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "COMPUTE_DATA",
+            "transfer_bytes": 592
+          }
+        ],
+        "pcie_device_to_host": [
+          {
+            "start": 564,
+            "end": 664,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "COMPUTE_DATA_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 511076,
+            "end": 511176,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "REQ_COMP",
+            "transfer_bytes": 400
+          }
+        ],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [
+          {
+            "start": 564,
+            "end": 976,
+            "source": "tsu",
+            "transaction_type": "USER_COMPUTE"
+          },
+          {
+            "start": 564,
+            "end": 976,
+            "source": "tsu",
+            "transaction_type": "USER_COMPUTE"
+          },
+          {
+            "start": 564,
+            "end": 976,
+            "source": "tsu",
+            "transaction_type": "USER_COMPUTE"
+          }
+        ],
+        "phy_cmd_addr": [
+          {
+            "start": 976,
+            "end": 1076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 976,
+            "end": 1076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 976,
+            "end": 1076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ],
+        "phy_data_in": [
+          {
+            "start": 1076,
+            "end": 6076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 1076,
+            "end": 6076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 1076,
+            "end": 6076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ],
+        "phy_array_exec": [
+          {
+            "start": 6076,
+            "end": 506076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 6076,
+            "end": 506076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 6076,
+            "end": 506076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ],
+        "phy_data_out": [
+          {
+            "start": 506076,
+            "end": 511076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 506076,
+            "end": 511076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          },
+          {
+            "start": 506076,
+            "end": 511076,
+            "source": "phy",
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
+          }
+        ]
+      },
+      "data_cache_status": "not_checked",
+      "persistence_status": "not_applicable",
+      "persistence_completion_time": null,
+      "persistence_total_latency": 0,
+      "persistence_breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "persistence_intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      }
+    }
+  ]
+}

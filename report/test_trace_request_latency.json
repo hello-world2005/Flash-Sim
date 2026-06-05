@@ -2,7 +2,7 @@
   "meta": {
     "trace_path": "E:\\Files\\Li_Meng\\HBF\\Flash-Sim\\test_case\\test_trace.json",
     "trace_name": "test_trace.json",
-    "final_time": 1033548,
+    "final_time": 781000,
     "request_count": 489,
     "stage_names": [
       "host_sq_wait",
@@ -94,16 +94,17 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "persisted",
-      "persistence_completion_time": 268248,
-      "persistence_total_latency": 268248,
+      "persistence_completion_time": 270800,
+      "persistence_total_latency": 270800,
       "persistence_breakdown": {
         "host_sq_wait": 0,
         "host_dispatch": 0,
         "pcie_host_to_device": 0,
         "pcie_device_to_host": 0,
         "amu_mapping_wait": 0,
-        "tsu_queue_wait": 0,
+        "tsu_queue_wait": 2552,
         "phy_cmd_addr": 100,
         "phy_data_in": 5000,
         "phy_array_exec": 250000,
@@ -117,11 +118,18 @@
         "pcie_host_to_device": [],
         "pcie_device_to_host": [],
         "amu_mapping_wait": [],
-        "tsu_queue_wait": [],
-        "phy_cmd_addr": [
+        "tsu_queue_wait": [
           {
             "start": 3048,
-            "end": 3148,
+            "end": 5600,
+            "source": "tsu",
+            "transaction_type": "USER_WRITE"
+          }
+        ],
+        "phy_cmd_addr": [
+          {
+            "start": 5600,
+            "end": 5700,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -129,8 +137,8 @@
         ],
         "phy_data_in": [
           {
-            "start": 3148,
-            "end": 8148,
+            "start": 5700,
+            "end": 10700,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -138,8 +146,8 @@
         ],
         "phy_array_exec": [
           {
-            "start": 8148,
-            "end": 258148,
+            "start": 10700,
+            "end": 260700,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -161,16 +169,16 @@
       "error_message": null,
       "scheduled_time": 10,
       "req_init_time": 10,
-      "host_completion_time": 20500,
-      "total_latency": 20490,
-      "host_total_latency": 20490,
+      "host_completion_time": 20900,
+      "total_latency": 20890,
+      "host_total_latency": 20890,
       "breakdown": {
         "host_sq_wait": 0,
         "host_dispatch": 0,
         "pcie_host_to_device": 190,
         "pcie_device_to_host": 100,
         "amu_mapping_wait": 10100,
-        "tsu_queue_wait": 0,
+        "tsu_queue_wait": 400,
         "phy_cmd_addr": 200,
         "phy_data_in": 0,
         "phy_array_exec": 10000,
@@ -193,8 +201,8 @@
         ],
         "pcie_device_to_host": [
           {
-            "start": 20400,
-            "end": 20500,
+            "start": 20800,
+            "end": 20900,
             "source": "pcie",
             "direction": "device_to_host",
             "message_type": "REQ_COMP",
@@ -206,10 +214,17 @@
             "start": 200,
             "end": 10300,
             "source": "mapping_wait",
-            "wait_key": "2347441062592"
+            "wait_key": "1965308153680"
           }
         ],
-        "tsu_queue_wait": [],
+        "tsu_queue_wait": [
+          {
+            "start": 10300,
+            "end": 10700,
+            "source": "tsu",
+            "transaction_type": "USER_READ"
+          }
+        ],
         "phy_cmd_addr": [
           {
             "start": 200,
@@ -219,8 +234,8 @@
             "op_kind": "read"
           },
           {
-            "start": 10300,
-            "end": 10400,
+            "start": 10700,
+            "end": 10800,
             "source": "phy",
             "transaction_type": "USER_READ",
             "op_kind": "read"
@@ -236,8 +251,8 @@
             "op_kind": "read"
           },
           {
-            "start": 10400,
-            "end": 15400,
+            "start": 10800,
+            "end": 15800,
             "source": "phy",
             "transaction_type": "USER_READ",
             "op_kind": "read"
@@ -252,14 +267,15 @@
             "op_kind": "read"
           },
           {
-            "start": 15400,
-            "end": 20400,
+            "start": 15800,
+            "end": 20800,
             "source": "phy",
             "transaction_type": "USER_READ",
             "op_kind": "read"
           }
         ]
       },
+      "data_cache_status": "miss",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -366,22 +382,23 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "persisted",
-      "persistence_completion_time": 523348,
-      "persistence_total_latency": 523328,
+      "persistence_completion_time": 525900,
+      "persistence_total_latency": 525880,
       "persistence_breakdown": {
         "host_sq_wait": 0,
         "host_dispatch": 0,
         "pcie_host_to_device": 0,
         "pcie_device_to_host": 0,
         "amu_mapping_wait": 0,
-        "tsu_queue_wait": 264076,
+        "tsu_queue_wait": 266512,
         "phy_cmd_addr": 100,
         "phy_data_in": 5000,
         "phy_array_exec": 250000,
         "phy_data_out": 0,
         "overlap_latency": 0,
-        "untracked_latency": 4152
+        "untracked_latency": 4268
       },
       "persistence_intervals": {
         "host_sq_wait": [],
@@ -391,16 +408,16 @@
         "amu_mapping_wait": [],
         "tsu_queue_wait": [
           {
-            "start": 4172,
-            "end": 268248,
+            "start": 4288,
+            "end": 270800,
             "source": "tsu",
             "transaction_type": "USER_WRITE"
           }
         ],
         "phy_cmd_addr": [
           {
-            "start": 268248,
-            "end": 268348,
+            "start": 270800,
+            "end": 270900,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -408,8 +425,8 @@
         ],
         "phy_data_in": [
           {
-            "start": 268348,
-            "end": 273348,
+            "start": 270900,
+            "end": 275900,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -417,8 +434,8 @@
         ],
         "phy_array_exec": [
           {
-            "start": 273348,
-            "end": 523348,
+            "start": 275900,
+            "end": 525900,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -428,8 +445,147 @@
       }
     },
     {
-      "req_id": "req-0003-read-8504448-64",
+      "req_id": "req-0003-search-12611587-1",
       "trace_index": 3,
+      "trace_time": 30,
+      "type": "SEARCH",
+      "stream_id": 0,
+      "sq_id": 4,
+      "lha_start": 12611587,
+      "size": 1,
+      "status": "SUCCESS",
+      "error_message": null,
+      "scheduled_time": 30,
+      "req_init_time": 30,
+      "host_completion_time": 210700,
+      "total_latency": 210670,
+      "host_total_latency": 210670,
+      "breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 3034,
+        "pcie_device_to_host": 200,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 100,
+        "phy_data_in": 5000,
+        "phy_array_exec": 200000,
+        "phy_data_out": 5000,
+        "overlap_latency": 2664,
+        "untracked_latency": 0
+      },
+      "intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [
+          {
+            "start": 30,
+            "end": 500,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "SEARCH_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 600,
+            "end": 3164,
+            "source": "pcie",
+            "direction": "host_to_device",
+            "message_type": "SEARCH_DATA",
+            "transfer_bytes": 464
+          }
+        ],
+        "pcie_device_to_host": [
+          {
+            "start": 500,
+            "end": 600,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "SEARCH_DATA_REQ",
+            "transfer_bytes": 400
+          },
+          {
+            "start": 210600,
+            "end": 210700,
+            "source": "pcie",
+            "direction": "device_to_host",
+            "message_type": "REQ_COMP",
+            "transfer_bytes": 400
+          }
+        ],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [
+          {
+            "start": 500,
+            "end": 600,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_data_in": [
+          {
+            "start": 600,
+            "end": 5600,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_array_exec": [
+          {
+            "start": 5600,
+            "end": 205600,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ],
+        "phy_data_out": [
+          {
+            "start": 205600,
+            "end": 210600,
+            "source": "phy",
+            "transaction_type": "USER_SEARCH",
+            "op_kind": "search"
+          }
+        ]
+      },
+      "data_cache_status": "not_checked",
+      "persistence_status": "not_applicable",
+      "persistence_completion_time": null,
+      "persistence_total_latency": 0,
+      "persistence_breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "persistence_intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      }
+    },
+    {
+      "req_id": "req-0004-read-8504448-64",
+      "trace_index": 4,
       "trace_time": 30,
       "type": "READ",
       "stream_id": 0,
@@ -485,7 +641,7 @@
             "start": 400,
             "end": 25500,
             "source": "mapping_wait",
-            "wait_key": "2347520477568"
+            "wait_key": "1965307751760"
           }
         ],
         "tsu_queue_wait": [
@@ -546,6 +702,7 @@
           }
         ]
       },
+      "data_cache_status": "miss",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -577,25 +734,25 @@
       }
     },
     {
-      "req_id": "req-0004-write-7268864-64",
-      "trace_index": 4,
+      "req_id": "req-0005-write-7268864-64",
+      "trace_index": 5,
       "trace_time": 40,
       "type": "WRITE",
       "stream_id": 0,
-      "sq_id": 4,
+      "sq_id": 5,
       "lha_start": 7268864,
       "size": 64,
       "status": "SUCCESS",
       "error_message": null,
       "scheduled_time": 40,
       "req_init_time": 40,
-      "host_completion_time": 4272,
-      "total_latency": 4232,
-      "host_total_latency": 4232,
+      "host_completion_time": 4388,
+      "total_latency": 4348,
+      "host_total_latency": 4348,
       "breakdown": {
         "host_sq_wait": 0,
         "host_dispatch": 0,
-        "pcie_host_to_device": 4032,
+        "pcie_host_to_device": 4148,
         "pcie_device_to_host": 200,
         "amu_mapping_wait": 0,
         "tsu_queue_wait": 0,
@@ -612,15 +769,15 @@
         "pcie_host_to_device": [
           {
             "start": 40,
-            "end": 500,
+            "end": 600,
             "source": "pcie",
             "direction": "host_to_device",
             "message_type": "WRITE_REQ",
             "transfer_bytes": 400
           },
           {
-            "start": 600,
-            "end": 4172,
+            "start": 700,
+            "end": 4288,
             "source": "pcie",
             "direction": "host_to_device",
             "message_type": "WRITE_DATA",
@@ -629,16 +786,16 @@
         ],
         "pcie_device_to_host": [
           {
-            "start": 500,
-            "end": 600,
+            "start": 600,
+            "end": 700,
             "source": "pcie",
             "direction": "device_to_host",
             "message_type": "WRITE_DATA_REQ",
             "transfer_bytes": 400
           },
           {
-            "start": 4172,
-            "end": 4272,
+            "start": 4288,
+            "end": 4388,
             "source": "pcie",
             "direction": "device_to_host",
             "message_type": "REQ_COMP",
@@ -652,22 +809,23 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "persisted",
-      "persistence_completion_time": 778448,
-      "persistence_total_latency": 778408,
+      "persistence_completion_time": 781000,
+      "persistence_total_latency": 780960,
       "persistence_breakdown": {
         "host_sq_wait": 0,
         "host_dispatch": 0,
         "pcie_host_to_device": 0,
         "pcie_device_to_host": 0,
         "amu_mapping_wait": 0,
-        "tsu_queue_wait": 518052,
+        "tsu_queue_wait": 0,
         "phy_cmd_addr": 100,
         "phy_data_in": 5000,
         "phy_array_exec": 250000,
         "phy_data_out": 0,
         "overlap_latency": 0,
-        "untracked_latency": 5256
+        "untracked_latency": 525860
       },
       "persistence_intervals": {
         "host_sq_wait": [],
@@ -675,18 +833,11 @@
         "pcie_host_to_device": [],
         "pcie_device_to_host": [],
         "amu_mapping_wait": [],
-        "tsu_queue_wait": [
-          {
-            "start": 5296,
-            "end": 523348,
-            "source": "tsu",
-            "transaction_type": "USER_WRITE"
-          }
-        ],
+        "tsu_queue_wait": [],
         "phy_cmd_addr": [
           {
-            "start": 523348,
-            "end": 523448,
+            "start": 525900,
+            "end": 526000,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -694,8 +845,8 @@
         ],
         "phy_data_in": [
           {
-            "start": 523448,
-            "end": 528448,
+            "start": 526000,
+            "end": 531000,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -703,8 +854,8 @@
         ],
         "phy_array_exec": [
           {
-            "start": 528448,
-            "end": 778448,
+            "start": 531000,
+            "end": 781000,
             "source": "phy",
             "transaction_type": "USER_WRITE",
             "op_kind": "write"
@@ -714,12 +865,12 @@
       }
     },
     {
-      "req_id": "req-0005-read-2765952-52",
-      "trace_index": 5,
+      "req_id": "req-0006-read-2765952-52",
+      "trace_index": 6,
       "trace_time": 50,
       "type": "READ",
       "stream_id": 0,
-      "sq_id": 5,
+      "sq_id": 6,
       "lha_start": 2765952,
       "size": 52,
       "status": "SUCCESS",
@@ -732,15 +883,15 @@
       "breakdown": {
         "host_sq_wait": 0,
         "host_dispatch": 0,
-        "pcie_host_to_device": 550,
+        "pcie_host_to_device": 650,
         "pcie_device_to_host": 100,
-        "amu_mapping_wait": 45100,
-        "tsu_queue_wait": 35000,
+        "amu_mapping_wait": 45000,
+        "tsu_queue_wait": 34900,
         "phy_cmd_addr": 200,
         "phy_data_in": 0,
         "phy_array_exec": 10000,
         "phy_data_out": 10000,
-        "overlap_latency": 45100,
+        "overlap_latency": 45000,
         "untracked_latency": 0
       },
       "intervals": {
@@ -749,7 +900,7 @@
         "pcie_host_to_device": [
           {
             "start": 50,
-            "end": 600,
+            "end": 700,
             "source": "pcie",
             "direction": "host_to_device",
             "message_type": "READ_REQ",
@@ -768,15 +919,15 @@
         ],
         "amu_mapping_wait": [
           {
-            "start": 600,
+            "start": 700,
             "end": 45700,
             "source": "mapping_wait",
-            "wait_key": "2347520480448"
+            "wait_key": "1965304111872"
           }
         ],
         "tsu_queue_wait": [
           {
-            "start": 600,
+            "start": 700,
             "end": 35600,
             "source": "tsu",
             "transaction_type": "MAPPING_READ"
@@ -832,6 +983,7 @@
           }
         ]
       },
+      "data_cache_status": "miss",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -863,33 +1015,33 @@
       }
     },
     {
-      "req_id": "req-0006-write-7249792-64",
-      "trace_index": 6,
-      "trace_time": 60,
-      "type": "WRITE",
+      "req_id": "req-0007-compute-12584184-1",
+      "trace_index": 7,
+      "trace_time": 55,
+      "type": "COMPUTE",
       "stream_id": 0,
-      "sq_id": 6,
-      "lha_start": 7249792,
-      "size": 64,
+      "sq_id": 7,
+      "lha_start": 12584184,
+      "size": 1,
       "status": "SUCCESS",
       "error_message": null,
-      "scheduled_time": 60,
-      "req_init_time": 60,
-      "host_completion_time": 5396,
-      "total_latency": 5336,
-      "host_total_latency": 5336,
+      "scheduled_time": 55,
+      "req_init_time": 55,
+      "host_completion_time": 514604,
+      "total_latency": 514549,
+      "host_total_latency": 514549,
       "breakdown": {
         "host_sq_wait": 0,
         "host_dispatch": 0,
-        "pcie_host_to_device": 5136,
+        "pcie_host_to_device": 4249,
         "pcie_device_to_host": 200,
         "amu_mapping_wait": 0,
-        "tsu_queue_wait": 0,
-        "phy_cmd_addr": 0,
-        "phy_data_in": 0,
-        "phy_array_exec": 0,
-        "phy_data_out": 0,
-        "overlap_latency": 0,
+        "tsu_queue_wait": 3604,
+        "phy_cmd_addr": 100,
+        "phy_data_in": 5000,
+        "phy_array_exec": 500000,
+        "phy_data_out": 5000,
+        "overlap_latency": 3604,
         "untracked_latency": 0
       },
       "intervals": {
@@ -897,34 +1049,34 @@
         "host_dispatch": [],
         "pcie_host_to_device": [
           {
-            "start": 60,
-            "end": 700,
+            "start": 55,
+            "end": 800,
             "source": "pcie",
             "direction": "host_to_device",
-            "message_type": "WRITE_REQ",
+            "message_type": "COMPUTE_REQ",
             "transfer_bytes": 400
           },
           {
-            "start": 800,
-            "end": 5296,
+            "start": 900,
+            "end": 4404,
             "source": "pcie",
             "direction": "host_to_device",
-            "message_type": "WRITE_DATA",
-            "transfer_bytes": 4496
+            "message_type": "COMPUTE_DATA",
+            "transfer_bytes": 464
           }
         ],
         "pcie_device_to_host": [
           {
-            "start": 700,
-            "end": 800,
+            "start": 800,
+            "end": 900,
             "source": "pcie",
             "direction": "device_to_host",
-            "message_type": "WRITE_DATA_REQ",
+            "message_type": "COMPUTE_DATA_REQ",
             "transfer_bytes": 400
           },
           {
-            "start": 5296,
-            "end": 5396,
+            "start": 514504,
+            "end": 514604,
             "source": "pcie",
             "direction": "device_to_host",
             "message_type": "REQ_COMP",
@@ -932,185 +1084,52 @@
           }
         ],
         "amu_mapping_wait": [],
-        "tsu_queue_wait": [],
-        "phy_cmd_addr": [],
-        "phy_data_in": [],
-        "phy_array_exec": [],
-        "phy_data_out": []
-      },
-      "persistence_status": "persisted",
-      "persistence_completion_time": 1033548,
-      "persistence_total_latency": 1033488,
-      "persistence_breakdown": {
-        "host_sq_wait": 0,
-        "host_dispatch": 0,
-        "pcie_host_to_device": 0,
-        "pcie_device_to_host": 0,
-        "amu_mapping_wait": 0,
-        "tsu_queue_wait": 0,
-        "phy_cmd_addr": 100,
-        "phy_data_in": 5000,
-        "phy_array_exec": 250000,
-        "phy_data_out": 0,
-        "overlap_latency": 0,
-        "untracked_latency": 778388
-      },
-      "persistence_intervals": {
-        "host_sq_wait": [],
-        "host_dispatch": [],
-        "pcie_host_to_device": [],
-        "pcie_device_to_host": [],
-        "amu_mapping_wait": [],
-        "tsu_queue_wait": [],
+        "tsu_queue_wait": [
+          {
+            "start": 800,
+            "end": 4404,
+            "source": "tsu",
+            "transaction_type": "USER_COMPUTE"
+          }
+        ],
         "phy_cmd_addr": [
           {
-            "start": 778448,
-            "end": 778548,
+            "start": 4404,
+            "end": 4504,
             "source": "phy",
-            "transaction_type": "USER_WRITE",
-            "op_kind": "write"
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
           }
         ],
         "phy_data_in": [
           {
-            "start": 778548,
-            "end": 783548,
+            "start": 4504,
+            "end": 9504,
             "source": "phy",
-            "transaction_type": "USER_WRITE",
-            "op_kind": "write"
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
           }
         ],
         "phy_array_exec": [
           {
-            "start": 783548,
-            "end": 1033548,
+            "start": 9504,
+            "end": 509504,
             "source": "phy",
-            "transaction_type": "USER_WRITE",
-            "op_kind": "write"
-          }
-        ],
-        "phy_data_out": []
-      }
-    },
-    {
-      "req_id": "req-0007-read-3319680-63",
-      "trace_index": 7,
-      "trace_time": 70,
-      "type": "READ",
-      "stream_id": 0,
-      "sq_id": 7,
-      "lha_start": 3319680,
-      "size": 63,
-      "status": "SUCCESS",
-      "error_message": null,
-      "scheduled_time": 70,
-      "req_init_time": 70,
-      "host_completion_time": 76100,
-      "total_latency": 76030,
-      "host_total_latency": 76030,
-      "breakdown": {
-        "host_sq_wait": 0,
-        "host_dispatch": 0,
-        "pcie_host_to_device": 730,
-        "pcie_device_to_host": 100,
-        "amu_mapping_wait": 65100,
-        "tsu_queue_wait": 55000,
-        "phy_cmd_addr": 200,
-        "phy_data_in": 0,
-        "phy_array_exec": 10000,
-        "phy_data_out": 10000,
-        "overlap_latency": 65100,
-        "untracked_latency": 0
-      },
-      "intervals": {
-        "host_sq_wait": [],
-        "host_dispatch": [],
-        "pcie_host_to_device": [
-          {
-            "start": 70,
-            "end": 800,
-            "source": "pcie",
-            "direction": "host_to_device",
-            "message_type": "READ_REQ",
-            "transfer_bytes": 400
-          }
-        ],
-        "pcie_device_to_host": [
-          {
-            "start": 76000,
-            "end": 76100,
-            "source": "pcie",
-            "direction": "device_to_host",
-            "message_type": "REQ_COMP",
-            "transfer_bytes": 400
-          }
-        ],
-        "amu_mapping_wait": [
-          {
-            "start": 800,
-            "end": 65900,
-            "source": "mapping_wait",
-            "wait_key": "2347520483184"
-          }
-        ],
-        "tsu_queue_wait": [
-          {
-            "start": 800,
-            "end": 55800,
-            "source": "tsu",
-            "transaction_type": "MAPPING_READ"
-          }
-        ],
-        "phy_cmd_addr": [
-          {
-            "start": 55800,
-            "end": 55900,
-            "source": "phy",
-            "transaction_type": "MAPPING_READ",
-            "op_kind": "read"
-          },
-          {
-            "start": 65900,
-            "end": 66000,
-            "source": "phy",
-            "transaction_type": "USER_READ",
-            "op_kind": "read"
-          }
-        ],
-        "phy_data_in": [],
-        "phy_array_exec": [
-          {
-            "start": 55900,
-            "end": 60900,
-            "source": "phy",
-            "transaction_type": "MAPPING_READ",
-            "op_kind": "read"
-          },
-          {
-            "start": 66000,
-            "end": 71000,
-            "source": "phy",
-            "transaction_type": "USER_READ",
-            "op_kind": "read"
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
           }
         ],
         "phy_data_out": [
           {
-            "start": 60900,
-            "end": 65900,
+            "start": 509504,
+            "end": 514504,
             "source": "phy",
-            "transaction_type": "MAPPING_READ",
-            "op_kind": "read"
-          },
-          {
-            "start": 71000,
-            "end": 76000,
-            "source": "phy",
-            "transaction_type": "USER_READ",
-            "op_kind": "read"
+            "transaction_type": "USER_COMPUTE",
+            "op_kind": "compute"
           }
         ]
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1142,12 +1161,158 @@
       }
     },
     {
-      "req_id": "req-0008-write-7253504-64",
+      "req_id": "req-0008-write-7249792-64",
       "trace_index": 8,
-      "trace_time": 80,
+      "trace_time": 60,
       "type": "WRITE",
       "stream_id": 0,
       "sq_id": 0,
+      "lha_start": 7249792,
+      "size": 64,
+      "status": null,
+      "error_message": null,
+      "scheduled_time": 60,
+      "req_init_time": 60,
+      "host_completion_time": null,
+      "total_latency": 0,
+      "host_total_latency": 0,
+      "breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      },
+      "data_cache_status": "not_checked",
+      "persistence_status": "superseded_in_cache",
+      "persistence_completion_time": null,
+      "persistence_total_latency": 0,
+      "persistence_breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "persistence_intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      }
+    },
+    {
+      "req_id": "req-0009-read-3319680-63",
+      "trace_index": 9,
+      "trace_time": 70,
+      "type": "READ",
+      "stream_id": 0,
+      "sq_id": 1,
+      "lha_start": 3319680,
+      "size": 63,
+      "status": null,
+      "error_message": null,
+      "scheduled_time": 70,
+      "req_init_time": 70,
+      "host_completion_time": null,
+      "total_latency": 0,
+      "host_total_latency": 0,
+      "breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      },
+      "data_cache_status": "not_checked",
+      "persistence_status": "not_applicable",
+      "persistence_completion_time": null,
+      "persistence_total_latency": 0,
+      "persistence_breakdown": {
+        "host_sq_wait": 0,
+        "host_dispatch": 0,
+        "pcie_host_to_device": 0,
+        "pcie_device_to_host": 0,
+        "amu_mapping_wait": 0,
+        "tsu_queue_wait": 0,
+        "phy_cmd_addr": 0,
+        "phy_data_in": 0,
+        "phy_array_exec": 0,
+        "phy_data_out": 0,
+        "overlap_latency": 0,
+        "untracked_latency": 0
+      },
+      "persistence_intervals": {
+        "host_sq_wait": [],
+        "host_dispatch": [],
+        "pcie_host_to_device": [],
+        "pcie_device_to_host": [],
+        "amu_mapping_wait": [],
+        "tsu_queue_wait": [],
+        "phy_cmd_addr": [],
+        "phy_data_in": [],
+        "phy_array_exec": [],
+        "phy_data_out": []
+      }
+    },
+    {
+      "req_id": "req-0010-write-7253504-64",
+      "trace_index": 10,
+      "trace_time": 80,
+      "type": "WRITE",
+      "stream_id": 0,
+      "sq_id": 2,
       "lha_start": 7253504,
       "size": 64,
       "status": null,
@@ -1183,6 +1348,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1214,84 +1380,12 @@
       }
     },
     {
-      "req_id": "req-0009-compute-12584184-1",
-      "trace_index": 9,
-      "trace_time": 90,
-      "type": "COMPUTE",
-      "stream_id": 0,
-      "sq_id": 1,
-      "lha_start": 12584184,
-      "size": 1,
-      "status": null,
-      "error_message": null,
-      "scheduled_time": 90,
-      "req_init_time": 90,
-      "host_completion_time": null,
-      "total_latency": 0,
-      "host_total_latency": 0,
-      "breakdown": {
-        "host_sq_wait": 0,
-        "host_dispatch": 0,
-        "pcie_host_to_device": 0,
-        "pcie_device_to_host": 0,
-        "amu_mapping_wait": 0,
-        "tsu_queue_wait": 0,
-        "phy_cmd_addr": 0,
-        "phy_data_in": 0,
-        "phy_array_exec": 0,
-        "phy_data_out": 0,
-        "overlap_latency": 0,
-        "untracked_latency": 0
-      },
-      "intervals": {
-        "host_sq_wait": [],
-        "host_dispatch": [],
-        "pcie_host_to_device": [],
-        "pcie_device_to_host": [],
-        "amu_mapping_wait": [],
-        "tsu_queue_wait": [],
-        "phy_cmd_addr": [],
-        "phy_data_in": [],
-        "phy_array_exec": [],
-        "phy_data_out": []
-      },
-      "persistence_status": "not_applicable",
-      "persistence_completion_time": null,
-      "persistence_total_latency": 0,
-      "persistence_breakdown": {
-        "host_sq_wait": 0,
-        "host_dispatch": 0,
-        "pcie_host_to_device": 0,
-        "pcie_device_to_host": 0,
-        "amu_mapping_wait": 0,
-        "tsu_queue_wait": 0,
-        "phy_cmd_addr": 0,
-        "phy_data_in": 0,
-        "phy_array_exec": 0,
-        "phy_data_out": 0,
-        "overlap_latency": 0,
-        "untracked_latency": 0
-      },
-      "persistence_intervals": {
-        "host_sq_wait": [],
-        "host_dispatch": [],
-        "pcie_host_to_device": [],
-        "pcie_device_to_host": [],
-        "amu_mapping_wait": [],
-        "tsu_queue_wait": [],
-        "phy_cmd_addr": [],
-        "phy_data_in": [],
-        "phy_array_exec": [],
-        "phy_data_out": []
-      }
-    },
-    {
-      "req_id": "req-0010-write-7266560-64",
-      "trace_index": 10,
+      "req_id": "req-0011-write-7266560-64",
+      "trace_index": 11,
       "trace_time": 100,
       "type": "WRITE",
       "stream_id": 0,
-      "sq_id": 2,
+      "sq_id": 3,
       "lha_start": 7266560,
       "size": 64,
       "status": null,
@@ -1327,6 +1421,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1358,12 +1453,12 @@
       }
     },
     {
-      "req_id": "req-0011-read-4373184-64",
-      "trace_index": 11,
+      "req_id": "req-0012-read-4373184-64",
+      "trace_index": 12,
       "trace_time": 110,
       "type": "READ",
       "stream_id": 0,
-      "sq_id": 3,
+      "sq_id": 4,
       "lha_start": 4373184,
       "size": 64,
       "status": null,
@@ -1399,6 +1494,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1430,12 +1526,12 @@
       }
     },
     {
-      "req_id": "req-0012-write-7274304-64",
-      "trace_index": 12,
+      "req_id": "req-0013-write-7274304-64",
+      "trace_index": 13,
       "trace_time": 120,
       "type": "WRITE",
       "stream_id": 0,
-      "sq_id": 4,
+      "sq_id": 5,
       "lha_start": 7274304,
       "size": 64,
       "status": null,
@@ -1471,79 +1567,8 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
-      "persistence_completion_time": null,
-      "persistence_total_latency": 0,
-      "persistence_breakdown": {
-        "host_sq_wait": 0,
-        "host_dispatch": 0,
-        "pcie_host_to_device": 0,
-        "pcie_device_to_host": 0,
-        "amu_mapping_wait": 0,
-        "tsu_queue_wait": 0,
-        "phy_cmd_addr": 0,
-        "phy_data_in": 0,
-        "phy_array_exec": 0,
-        "phy_data_out": 0,
-        "overlap_latency": 0,
-        "untracked_latency": 0
-      },
-      "persistence_intervals": {
-        "host_sq_wait": [],
-        "host_dispatch": [],
-        "pcie_host_to_device": [],
-        "pcie_device_to_host": [],
-        "amu_mapping_wait": [],
-        "tsu_queue_wait": [],
-        "phy_cmd_addr": [],
-        "phy_data_in": [],
-        "phy_array_exec": [],
-        "phy_data_out": []
-      }
-    },
-    {
-      "req_id": "req-0013-search-12611587-1",
-      "trace_index": 13,
-      "trace_time": 130,
-      "type": "SEARCH",
-      "stream_id": 0,
-      "sq_id": 5,
-      "lha_start": 12611587,
-      "size": 1,
-      "status": null,
-      "error_message": null,
-      "scheduled_time": 130,
-      "req_init_time": 130,
-      "host_completion_time": null,
-      "total_latency": 0,
-      "host_total_latency": 0,
-      "breakdown": {
-        "host_sq_wait": 0,
-        "host_dispatch": 0,
-        "pcie_host_to_device": 0,
-        "pcie_device_to_host": 0,
-        "amu_mapping_wait": 0,
-        "tsu_queue_wait": 0,
-        "phy_cmd_addr": 0,
-        "phy_data_in": 0,
-        "phy_array_exec": 0,
-        "phy_data_out": 0,
-        "overlap_latency": 0,
-        "untracked_latency": 0
-      },
-      "intervals": {
-        "host_sq_wait": [],
-        "host_dispatch": [],
-        "pcie_host_to_device": [],
-        "pcie_device_to_host": [],
-        "amu_mapping_wait": [],
-        "tsu_queue_wait": [],
-        "phy_cmd_addr": [],
-        "phy_data_in": [],
-        "phy_array_exec": [],
-        "phy_data_out": []
-      },
-      "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
       "persistence_breakdown": {
@@ -1615,6 +1640,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1687,6 +1713,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1759,6 +1786,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1831,6 +1859,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1903,6 +1932,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -1975,6 +2005,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2047,6 +2078,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2119,6 +2151,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2191,6 +2224,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2263,6 +2297,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2335,6 +2370,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2407,6 +2443,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2479,6 +2516,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2551,6 +2589,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2623,6 +2662,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2695,6 +2735,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2767,6 +2808,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2839,6 +2881,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2911,6 +2954,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -2983,6 +3027,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3055,6 +3100,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3127,6 +3173,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3199,6 +3246,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3271,6 +3319,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3343,6 +3392,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3415,6 +3465,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3487,6 +3538,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3559,6 +3611,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3631,6 +3684,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3703,6 +3757,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3775,6 +3830,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3847,6 +3903,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3919,6 +3976,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -3991,6 +4049,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4063,6 +4122,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4135,6 +4195,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4207,6 +4268,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4279,6 +4341,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4351,6 +4414,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4423,6 +4487,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4495,6 +4560,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4567,6 +4633,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4639,6 +4706,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4711,6 +4779,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4783,6 +4852,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4855,6 +4925,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4927,6 +4998,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -4999,6 +5071,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5071,6 +5144,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5143,6 +5217,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5215,6 +5290,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5287,6 +5363,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5359,6 +5436,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5431,6 +5509,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5503,6 +5582,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5575,6 +5655,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5647,6 +5728,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5719,6 +5801,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5791,6 +5874,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5863,6 +5947,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -5935,6 +6020,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6007,6 +6093,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6079,6 +6166,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6151,6 +6239,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6223,6 +6312,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6295,6 +6385,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6367,6 +6458,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6439,6 +6531,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6511,6 +6604,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6583,6 +6677,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6655,6 +6750,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6727,6 +6823,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6799,6 +6896,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6871,6 +6969,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -6943,6 +7042,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7015,6 +7115,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7087,6 +7188,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7159,6 +7261,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7231,6 +7334,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7303,6 +7407,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7375,6 +7480,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7447,6 +7553,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7519,6 +7626,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7591,6 +7699,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7663,6 +7772,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7735,6 +7845,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7807,6 +7918,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7879,6 +7991,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -7951,6 +8064,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8023,6 +8137,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8095,6 +8210,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8167,6 +8283,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8239,6 +8356,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8311,6 +8429,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8383,6 +8502,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8455,6 +8575,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8527,6 +8648,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8599,6 +8721,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8671,6 +8794,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8743,6 +8867,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8815,6 +8940,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8887,6 +9013,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -8959,6 +9086,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9031,6 +9159,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9103,6 +9232,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9175,6 +9305,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9247,6 +9378,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9319,6 +9451,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9391,6 +9524,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9463,6 +9597,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9535,6 +9670,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9607,6 +9743,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9679,6 +9816,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9751,6 +9889,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9823,6 +9962,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9895,6 +10035,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -9967,6 +10108,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10039,6 +10181,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10111,6 +10254,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10183,6 +10327,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10255,6 +10400,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10327,6 +10473,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10399,6 +10546,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10471,6 +10619,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10543,6 +10692,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10615,6 +10765,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10687,6 +10838,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10759,6 +10911,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10831,6 +10984,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10903,6 +11057,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -10975,6 +11130,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11047,6 +11203,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11119,6 +11276,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11191,6 +11349,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11263,6 +11422,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11335,6 +11495,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11407,6 +11568,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11479,6 +11641,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11551,6 +11714,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11623,6 +11787,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11695,6 +11860,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11767,6 +11933,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11839,6 +12006,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11911,6 +12079,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -11983,6 +12152,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12055,6 +12225,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12127,6 +12298,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12199,6 +12371,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12271,6 +12444,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12343,6 +12517,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12415,6 +12590,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12487,6 +12663,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12559,6 +12736,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12631,6 +12809,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12703,6 +12882,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12775,6 +12955,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12847,6 +13028,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12919,6 +13101,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -12991,6 +13174,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13063,6 +13247,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13135,6 +13320,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13207,6 +13393,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13279,6 +13466,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13351,6 +13539,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13423,6 +13612,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13495,6 +13685,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13567,6 +13758,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13639,6 +13831,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13711,6 +13904,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13783,6 +13977,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13855,6 +14050,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13927,6 +14123,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -13999,6 +14196,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14071,6 +14269,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14143,6 +14342,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14215,6 +14415,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14287,6 +14488,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14359,6 +14561,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14431,6 +14634,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14503,6 +14707,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14575,6 +14780,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14647,6 +14853,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14719,6 +14926,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14791,6 +14999,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14863,6 +15072,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -14935,6 +15145,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15007,6 +15218,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15079,6 +15291,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15151,6 +15364,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15223,6 +15437,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15295,6 +15510,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15367,6 +15583,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15439,6 +15656,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15511,6 +15729,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15583,6 +15802,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15655,6 +15875,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15727,6 +15948,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15799,6 +16021,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15871,6 +16094,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -15943,6 +16167,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16015,6 +16240,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16087,6 +16313,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16159,6 +16386,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16231,6 +16459,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16303,6 +16532,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16375,6 +16605,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16447,6 +16678,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16519,6 +16751,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16591,6 +16824,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16663,6 +16897,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16735,6 +16970,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16807,6 +17043,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16879,6 +17116,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -16951,6 +17189,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17023,6 +17262,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17095,6 +17335,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17167,6 +17408,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17239,6 +17481,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17311,6 +17554,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17383,6 +17627,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17455,6 +17700,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17527,6 +17773,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17599,6 +17846,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17671,6 +17919,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17743,6 +17992,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17815,6 +18065,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17887,6 +18138,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -17959,6 +18211,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18031,6 +18284,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18103,6 +18357,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18175,6 +18430,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18247,6 +18503,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18319,6 +18576,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18391,6 +18649,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18463,6 +18722,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18535,6 +18795,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18607,6 +18868,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18679,6 +18941,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18751,6 +19014,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18823,6 +19087,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18895,6 +19160,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -18967,6 +19233,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19039,6 +19306,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19111,6 +19379,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19183,6 +19452,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19255,6 +19525,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19327,6 +19598,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19399,6 +19671,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19471,6 +19744,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19543,6 +19817,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19615,6 +19890,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19687,6 +19963,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19759,6 +20036,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19831,6 +20109,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19903,6 +20182,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -19975,6 +20255,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20047,6 +20328,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20119,6 +20401,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20191,6 +20474,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20263,6 +20547,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20335,6 +20620,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20407,6 +20693,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20479,6 +20766,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20551,6 +20839,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20623,6 +20912,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20695,6 +20985,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20767,6 +21058,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20839,6 +21131,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20911,6 +21204,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -20983,6 +21277,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21055,6 +21350,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21127,6 +21423,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21199,6 +21496,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21271,6 +21569,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21343,6 +21642,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21415,6 +21715,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21487,6 +21788,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21559,6 +21861,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21631,6 +21934,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21703,6 +22007,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21775,6 +22080,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21847,6 +22153,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21919,6 +22226,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -21991,6 +22299,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22063,6 +22372,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22135,6 +22445,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22207,6 +22518,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22279,6 +22591,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22351,6 +22664,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22423,6 +22737,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22495,6 +22810,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22567,6 +22883,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22639,6 +22956,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22711,6 +23029,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22783,6 +23102,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22855,6 +23175,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22927,6 +23248,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -22999,6 +23321,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23071,6 +23394,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23143,6 +23467,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23215,6 +23540,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23287,6 +23613,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23359,6 +23686,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23431,6 +23759,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23503,6 +23832,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23575,6 +23905,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23647,6 +23978,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23719,6 +24051,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23791,6 +24124,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23863,6 +24197,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -23935,6 +24270,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24007,6 +24343,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24079,6 +24416,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24151,6 +24489,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24223,6 +24562,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24295,6 +24635,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24367,6 +24708,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24439,6 +24781,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24511,6 +24854,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24583,6 +24927,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24655,6 +25000,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24727,6 +25073,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24799,6 +25146,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24871,6 +25219,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -24943,6 +25292,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25015,6 +25365,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25087,6 +25438,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25159,6 +25511,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25231,6 +25584,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25303,6 +25657,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25375,6 +25730,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25447,6 +25803,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25519,6 +25876,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25591,6 +25949,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25663,6 +26022,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25735,6 +26095,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25807,6 +26168,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25879,6 +26241,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -25951,6 +26314,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26023,6 +26387,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26095,6 +26460,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26167,6 +26533,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26239,6 +26606,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26311,6 +26679,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26383,6 +26752,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26455,6 +26825,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26527,6 +26898,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26599,6 +26971,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26671,6 +27044,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26743,6 +27117,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26815,6 +27190,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26887,6 +27263,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -26959,6 +27336,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27031,6 +27409,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27103,6 +27482,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27175,6 +27555,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27247,6 +27628,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27319,6 +27701,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27391,6 +27774,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27463,6 +27847,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27535,6 +27920,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27607,6 +27993,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27679,6 +28066,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27751,6 +28139,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27823,6 +28212,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27895,6 +28285,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -27967,6 +28358,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28039,6 +28431,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28111,6 +28504,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28183,6 +28577,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28255,6 +28650,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28327,6 +28723,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28399,6 +28796,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28471,6 +28869,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28543,6 +28942,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28615,6 +29015,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28687,6 +29088,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28759,6 +29161,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28831,6 +29234,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28903,6 +29307,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -28975,6 +29380,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29047,6 +29453,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29119,6 +29526,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29191,6 +29599,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29263,6 +29672,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29335,6 +29745,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29407,6 +29818,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29479,6 +29891,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29551,6 +29964,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29623,6 +30037,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29695,6 +30110,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29767,6 +30183,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29839,6 +30256,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29911,6 +30329,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -29983,6 +30402,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30055,6 +30475,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30127,6 +30548,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30199,6 +30621,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30271,6 +30694,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30343,6 +30767,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30415,6 +30840,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30487,6 +30913,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30559,6 +30986,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30631,6 +31059,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30703,6 +31132,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30775,6 +31205,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30847,6 +31278,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30919,6 +31351,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -30991,6 +31424,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31063,6 +31497,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31135,6 +31570,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31207,6 +31643,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31279,6 +31716,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31351,6 +31789,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31423,6 +31862,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31495,6 +31935,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31567,6 +32008,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31639,6 +32081,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31711,6 +32154,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31783,6 +32227,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31855,6 +32300,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31927,6 +32373,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -31999,6 +32446,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32071,6 +32519,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32143,6 +32592,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32215,6 +32665,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32287,6 +32738,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32359,6 +32811,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32431,6 +32884,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32503,6 +32957,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32575,6 +33030,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32647,6 +33103,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32719,6 +33176,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32791,6 +33249,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "not_applicable",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32863,6 +33322,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -32935,6 +33395,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33007,6 +33468,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33079,6 +33541,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33151,6 +33614,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33223,6 +33687,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33295,6 +33760,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33367,6 +33833,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33439,6 +33906,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33511,6 +33979,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33583,6 +34052,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33655,6 +34125,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33727,6 +34198,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33799,6 +34271,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33871,6 +34344,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -33943,6 +34417,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34015,6 +34490,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34087,6 +34563,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34159,6 +34636,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34231,6 +34709,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34303,6 +34782,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34375,6 +34855,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34447,6 +34928,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34519,6 +35001,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34591,6 +35074,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34663,6 +35147,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34735,6 +35220,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34807,6 +35293,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34879,6 +35366,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -34951,6 +35439,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35023,6 +35512,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35095,6 +35585,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35167,6 +35658,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35239,6 +35731,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35311,6 +35804,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35383,6 +35877,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35455,6 +35950,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35527,6 +36023,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35599,6 +36096,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35671,6 +36169,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
@@ -35743,6 +36242,7 @@
         "phy_array_exec": [],
         "phy_data_out": []
       },
+      "data_cache_status": "not_checked",
       "persistence_status": "superseded_in_cache",
       "persistence_completion_time": null,
       "persistence_total_latency": 0,
