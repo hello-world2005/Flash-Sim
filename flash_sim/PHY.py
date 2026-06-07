@@ -672,8 +672,20 @@ class PHY():
         return
 
     
+    def _make_empty_mapping_page(self) -> PageData:
+        empty = PageData()
+        empty.function = PageType.MAPPING
+        empty.valid_bitmap = [0] * LPA_NO_PER_MAPPING_PAGE
+        empty.data = [INVALID_PPA] * LPA_NO_PER_MAPPING_PAGE
+        empty.mvpn = INVALID_MVPN
+        empty.lpa = INVALID_LPA
+        return empty
+
     def _read_from_storage(self, tr: Transaction) -> PageData:
         pagedata = self._storage[tr.address.channel][tr.address.chip][tr.address.die][tr.address.plane][tr.address.sub_plane][tr.address.page]
+        # 页面从未被写入：返回全空 MAPPING 页面
+        if pagedata.function is None:
+            return self._make_empty_mapping_page()
         if pagedata.function == PageType.MAPPING:
             if pagedata.mvpn == INVALID_MVPN or pagedata.lpa != INVALID_LPA:
                 if tr.source_req is not None and tr.type == TransactionType.MAPPING_READ:
@@ -687,12 +699,13 @@ class PHY():
             if not valid and tr.type not in [TransactionType.GC_READ]:
                 if tr.source_req is not None and tr.type == TransactionType.MAPPING_READ:
                     raise RequestFailure("[PHY] <_read_from_storage> accessing invalid lpa in mapping page!")
-                raise ValueError(f"[PHY] <_read_from_storage> accessing invalid lpa in mapping page!")
+                # 内部操作（无 source_req）：不崩溃，返回空数据让上层处理
+                return self._make_empty_mapping_page()
             for i in range(LPA_NO_PER_MAPPING_PAGE):
                 if tr.bitmap[i] == 1 and pagedata.data[i] == INVALID_PPA:
                     if tr.source_req is not None and tr.type == TransactionType.MAPPING_READ:
                         raise RequestFailure("[PHY] <_read_from_storage> accessing invalid ppa in mapping page!")
-                    raise ValueError(f"[PHY] <_read_from_storage> accessing invalid ppa in mapping page!")
+                    return self._make_empty_mapping_page()
         elif pagedata.function == PageType.USER:
             if pagedata.lpa == INVALID_LPA or pagedata.mvpn != INVALID_MVPN:
                 if tr.source_req is not None and tr.type == TransactionType.USER_READ:

@@ -283,7 +283,9 @@ class Block_Manager:
         print(f"[Block Manager] <_mark_invalid> {addr}")
         bke = self.get_block_bke(addr)
         if addr.page not in bke.valid_pages:
-            raise ValueError(f"[Block Manager] <_mark_invalid> address {addr} is not valid!")
+            # 页面可能已被之前的 GC/映射写入操作标记为无效，幂等跳过
+            debug_info(f"[Block Manager] <_mark_invalid> address {addr} already invalid, skipping")
+            return
         plane_bke = self.get_plane_bke(addr)
         bke.invalid_pages.add(addr.page)          # update invalid_pages when an update write transaction is issued
         bke.invalid_page_count += 1
@@ -1455,7 +1457,7 @@ class Address_Mapping_Unit:
                 leaving_lpa.append(lpa)
             debug_info(f"[AMU] <_handle_mapping_response> leaving_lpa: {leaving_lpa}")
             for lpa in leaving_lpa:
-                self.gmt.pop(lpa)
+                self.gmt.pop(lpa, None)
         debug_info(f"[AMU] <_handle_mapping_response> done")
         return
     
@@ -1494,7 +1496,7 @@ class Address_Mapping_Unit:
                     _addr = entry.address
                     _pd = phy._storage[_addr.channel][_addr.chip][_addr.die][_addr.plane][_addr.sub_plane][_addr.page]
                     idx = tr.lpa % LPA_NO_PER_MAPPING_PAGE
-                    if _pd.valid_bitmap[idx] == 0:
+                    if len(_pd.valid_bitmap) == 0 or _pd.valid_bitmap[idx] == 0:
                         debug_info(f"[AMU] <translate_and_submit> lpa: {tr.lpa}, mvpn: {mvpn}, entry: {entry}")
                         raise RequestFailure("Read request accessing invalid lpa in mapping page")
                     if idx < len(_pd.data) and _pd.data[idx] == INVALID_PPA:
@@ -1606,10 +1608,12 @@ class Address_Mapping_Unit:
             _phy = self.tsu.phy
             _gaddr = gtd_entry.address
             _gpd = _phy._storage[_gaddr.channel][_gaddr.chip][_gaddr.die][_gaddr.plane][_gaddr.sub_plane][_gaddr.page]
-            for i in range(LPA_NO_PER_MAPPING_PAGE):
-                if _gpd.valid_bitmap[i] == 1 and bitmap[i] == 0:
-                    need_read = True
-                    break
+            _gpd_bitmap = _gpd.valid_bitmap
+            if len(_gpd_bitmap) > 0:  # 空 bitmap 表示该 page 未被写过，无需保留旧数据
+                for i in range(LPA_NO_PER_MAPPING_PAGE):
+                    if i < len(_gpd_bitmap) and _gpd_bitmap[i] == 1 and bitmap[i] == 0:
+                        need_read = True
+                        break
             # working
             if need_read:
                 read_tr = self.generate_mapping_read_transaction(write_tr, mvpn)

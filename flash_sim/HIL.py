@@ -226,11 +226,33 @@ class HIL:
         message = PCIe_link.PCIe_message(type=message_type, payload={"req": req})
         self.pcie_link.send(message, self.host)
 
+    def _ack_request_received(self, req):
+        """Send *_RECEIVED message to Host to release the SQ entry and IO flow."""
+        ack_type = {
+            RequestType.WRITE: MessageType.WRITE_DATA_RECEIVED,
+            RequestType.READ: MessageType.READ_REQ_RECEIVED,
+            RequestType.SEARCH: MessageType.SEARCH_DATA_RECEIVED,
+            RequestType.COMPUTE: MessageType.COMPUTE_DATA_RECEIVED,
+            RequestType.STATIC_WRITE: MessageType.WRITE_DATA_RECEIVED,
+        }.get(req.type)
+        if ack_type is None:
+            return
+        ack_msg = PCIe_link.PCIe_message(
+            type=ack_type,
+            payload={"sq_id": req.sq_id},
+        )
+        self.pcie_link.send(ack_msg, self.host)
+        debug_info(
+            f"[HIL] sent {ack_type.value} sq_id={req.sq_id} "
+            f"for req {self._request_brief(req)}"
+        )
+
     def receive_pcie_message(self, message):
         req = message.payload.get("req") if hasattr(message, "payload") else None
         try:
             if message.type == MessageType.READ_REQ:
                 req = message.payload["req"]
+                self._ack_request_received(req)
                 self.segment(req)
                 blocked_by_cache = self.cache_manager.query_cache(req)
                 if req.is_serviced():
@@ -263,6 +285,7 @@ class HIL:
                 data = message.payload["data"]
                 debug_info(f"[HIL] received data for req: {req}")
                 self._tile_data(req, data)
+                self._ack_request_received(req)
                 for tr in req.transaction_list:
                     tr.data_ready = True
                 if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
