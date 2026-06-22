@@ -808,37 +808,17 @@ class TSU:
 
     def _on_channel_idle(self, channel_id: int):
         """对标 handle_channel_idle_signal(): 轮询该 channel 下的 chip 尝试激活。"""
-        # Priority: if any chip in this channel has completed a read but is still
-        # holding data (waiting_data_out non-empty), start the data-out transfer
-        # immediately before handing the channel to the TSU for new commands.
-        # This mirrors MQSim's logic of checking WaitingReadTXCount in Execute_simulator_event.
         debug_info(f"[TSU] <_on_channel_idle> handling channel {channel_id} idle")
-        for chip_no in range(CHIP_PER_CHANNEL):
-            chip_id_check = (channel_id, chip_no)
-            if chip_id_check not in self.phy._chip_bkes:
-                raise ValueError(f"Chip {chip_id_check} not found in PHY while broadcasting channel idle")
-            bke = self.phy._chip_bkes[chip_id_check]
-            if not bke._has_data_waiting:
-                continue
-            debug_info(f"[TSU] <_on_channel_idle> chip {chip_id_check} has data waiting")
-            for die_no in range(DIE_PER_CHIP):
-                die_bke = bke.get_die_bke(die_no)
-                if die_bke.active_command:
-                    debug_info(f"[TSU] <_on_channel_idle> die {die_no} sending data out")
-                    op = die_bke.active_command.cmd_type
-                    transactions = die_bke.active_command.transactions
-                    self.phy._transfer_data(chip_id_check, die_no, op, transactions)
-            return
-        debug_info(f"[TSU] <_on_channel_idle> no chip has data waiting, trying to activate chips")
         for _ in range(self.chip_no_per_channel):
             chip_id = (channel_id, self.round_robin_turn[channel_id])
             self.try_activate(chip_id)
             self.round_robin_turn[channel_id] = (
                 (self.round_robin_turn[channel_id] + 1) % self.chip_no_per_channel
             )
-            if self.channel_is_busy(channel_id):
+            if self.phy._active_transfers[channel_id] is not None:
                 debug_info(f"[TSU] <_on_channel_idle> channel {channel_id} is busy, moving to next chip")
                 break
+        self.phy.schedule_next_channel_transfer(channel_id)
 
     def _on_chip_idle(self, chip_id):
         """对标 handle_chip_idle_signal(): chip 空闲且 channel 空闲时尝试激活。"""

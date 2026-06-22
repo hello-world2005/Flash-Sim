@@ -68,6 +68,7 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         csv_row = csv_rows[0]
 
         self.assertEqual(req["type"], "READ")
+        self.assertEqual(req["size"], trace_content[0]["size"])
         self.assertEqual(req["persistence_status"], "not_applicable")
         self.assertGreater(req["breakdown"]["pcie_host_to_device"], 0)
         self.assertGreater(req["breakdown"]["pcie_device_to_host"], 0)
@@ -76,7 +77,7 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertGreater(req["breakdown"]["phy_array_exec"], 0)
         self.assertGreater(req["breakdown"]["phy_data_out"], 0)
         self.assertEqual(csv_row[CSV_COLUMN_NAMES[1]], "READ")
-        self.assertEqual(csv_row[CSV_COLUMN_NAMES[5]], "否")
+        self.assertEqual(csv_row[CSV_COLUMN_NAMES[5]], "No")
         self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[6]]), 0)
         self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[8]]), 0)
         self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[9]]), 0)
@@ -89,8 +90,8 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
 
     def test_mapping_dependency_queue_is_absorbed_into_mapping_column(self):
         trace_content = [
-            {"type": "read", "time": 0, "start_lha": 106688, "size": 1},
-            {"type": "read", "time": 0, "start_lha": 106688, "size": 1},
+            {"type": "read", "time": 0, "start_lha": 4508800, "size": 1},
+            {"type": "read", "time": 0, "start_lha": 4508800, "size": 1},
         ]
         report, csv_rows, output = _run_engine_and_load_report(trace_content, "read_queue_trace.json")
 
@@ -158,6 +159,10 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertEqual(
             [row[CSV_COLUMN_NAMES[1]] for row in csv_rows],
             ["SEARCH", "COMPUTE", "SEARCH", "COMPUTE"],
+        )
+        self.assertEqual(
+            [req["size"] for req in report["requests"]],
+            [trace_req["size"] for trace_req in trace_content],
         )
         self.assertTrue(all(row[CSV_COLUMN_NAMES[5]] == "/" for row in csv_rows))
         self.assertTrue(all(int(row[CSV_COLUMN_NAMES[6]]) == 0 for row in csv_rows))

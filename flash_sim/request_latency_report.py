@@ -369,6 +369,22 @@ class RequestLatencyRecorder:
                 {"source": "phy", "transaction_type": tr.type.value, "op_kind": op_kind},
             )
 
+    def note_phy_data_in_phase(
+        self,
+        transactions: list[Transaction],
+        op_kind: str,
+        start_time: int,
+        finish_time: int,
+    ) -> None:
+        for tr in transactions:
+            self._record_transaction_interval(
+                tr,
+                "phy_data_in",
+                start_time,
+                finish_time,
+                {"source": "phy", "transaction_type": tr.type.value, "op_kind": op_kind},
+            )
+
     def note_phy_data_out_phase(
         self,
         transactions: list[Transaction],

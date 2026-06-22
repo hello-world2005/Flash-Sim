@@ -295,7 +295,7 @@ class TestRequestLatencyRecorder(unittest.TestCase):
 
         self.assertEqual(row[CSV_COLUMN_NAMES[1]], "WRITE")
         self.assertEqual(row[CSV_COLUMN_NAMES[2]], 60)
-        self.assertEqual(row[CSV_COLUMN_NAMES[5]], "否")
+        self.assertEqual(row[CSV_COLUMN_NAMES[5]], "No")
         self.assertEqual(row[CSV_COLUMN_NAMES[3]], 10)
         self.assertEqual(row[CSV_COLUMN_NAMES[4]], 45)
         self.assertEqual(row[CSV_COLUMN_NAMES[6]], 0)
@@ -346,7 +346,7 @@ class TestRequestLatencyRecorder(unittest.TestCase):
         self.assertEqual(row[CSV_COLUMN_NAMES[0]], 12)
         self.assertEqual(row[CSV_COLUMN_NAMES[1]], "READ")
         self.assertEqual(row[CSV_COLUMN_NAMES[2]], 110)
-        self.assertEqual(row[CSV_COLUMN_NAMES[5]], "是")
+        self.assertEqual(row[CSV_COLUMN_NAMES[5]], "Yes")
         self.assertEqual(row[CSV_COLUMN_NAMES[6]], 0)
         self.assertEqual(row[CSV_COLUMN_NAMES[7]], 0)
         self.assertEqual(row[CSV_COLUMN_NAMES[10]], 20)

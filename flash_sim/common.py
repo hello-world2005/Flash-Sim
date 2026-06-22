@@ -6,9 +6,9 @@ import time
 from typing import Any, List, Optional
 from enum import Enum
 try:
-    from .config import TimingConfig, make_event_runtime_geometry
+    from .config import OnfiTimingConfig, TimingConfig, make_event_runtime_geometry
 except ImportError:
-    from config import TimingConfig, make_event_runtime_geometry
+    from config import OnfiTimingConfig, TimingConfig, make_event_runtime_geometry
 
 class EventType(Enum):
     # ----- 事件类型常量 -----
@@ -20,6 +20,7 @@ class EventType(Enum):
     PHY_ERASE_CMD_TRANSFERRED = "PHY_ERASE_CMD_TRANSFERRED"  # cmd sent → chip erases
     PHY_SEARCH_CMD_TRANSFERRED = "PHY_SEARCH_CMD_TRANSFERRED"  # cmd sent → chip searches
     PHY_COMPUTE_CMD_TRANSFERRED = "PHY_COMPUTE_CMD_TRANSFERRED"  # cmd sent → chip computes
+    PHY_DATA_IN_TRANSFERRED = "PHY_DATA_IN_TRANSFERRED"  # data-in sent to chip
 
     PHY_CHIP_READ_COMPLETE    = "PHY_CHIP_READ_COMPLETE"     # chip internal read done
     PHY_CHIP_WRITE_COMPLETE   = "PHY_CHIP_WRITE_COMPLETE"    # chip internal program done
@@ -129,7 +130,7 @@ STATIC_BASE_LHA = SECTOR_PER_PAGE * PAGE_PER_BLOCK * BLOCK_PER_PLANE * PLANE_PER
 
 
 # ----- 常量 -----
-CMT_SIZE = 2
+CMT_SIZE = 64
 LPA_NO_PER_SECTOR = 4
 LPA_NO_PER_MAPPING_PAGE = LPA_NO_PER_SECTOR * SECTOR_PER_PAGE # 256
 NUM_OF_QUEUES = 8
@@ -158,6 +159,8 @@ def debug_info(*args, **kwargs):
 PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
 PHY_DATA_IN_TIME  = 5_000        # data transfer from controller to chip (write)
 PHY_DATA_OUT_TIME = 5_000        # data transfer from chip to controller (read)
+DEFAULT_ONFI_TIMING = OnfiTimingConfig()
+ONFI_CHANNEL_WIDTH_BYTES = DEFAULT_ONFI_TIMING.channel_width_bytes
 T_READ_LSB        = TimingConfig.t_r_lsb       # chip internal LSB read latency (tR)
 T_PROG            = TimingConfig.t_prog_lsb    # chip internal program latency (tPROG)
 T_BERS            = TimingConfig.t_bers   # chip internal erase latency (tBERS)
@@ -204,6 +207,7 @@ class DieStatus(Enum):
 # ----- Chip Status --------
 class ChipStatus(Enum):
     IDLE = "IDLE"
+    TRANSFER = "TRANSFER"
     READ = "READ"
     WRITE = "WRITE"
     SEARCH = "SEARCH"

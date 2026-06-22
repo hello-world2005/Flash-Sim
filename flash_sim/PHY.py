@@ -4,7 +4,9 @@
 SEARCH/COMPUTE 专属操作由子类或独立路径扩展，此处仅实现 READ/WRITE/ERASE。
 """
 
+from dataclasses import dataclass, field
 from doctest import debug
+from enum import Enum
 from typing import Dict, List, Tuple, Optional, Callable
 from .common import *
 
@@ -29,7 +31,157 @@ def _op_kind(trans_type: TransactionType) -> str:
     return "read"
 
 
+def _valid_plane_count(plane_count: int) -> int:
+    return max(1, min(int(plane_count), 4))
+
+
+def _ceil_two_unit_duration(payload_bytes: int, channel_width_bytes: int, two_unit_time: int) -> int:
+    if payload_bytes <= 0:
+        return 0
+    units = (payload_bytes + channel_width_bytes * 2 - 1) // (channel_width_bytes * 2)
+    return max(1, units * two_unit_time)
+
+
+def onfi_data_in_duration(payload_bytes: int, timing: Optional[OnfiTimingConfig] = None) -> int:
+    timing = timing or DEFAULT_ONFI_TIMING
+    return _ceil_two_unit_duration(
+        payload_bytes,
+        timing.channel_width_bytes,
+        timing.two_unit_data_in_time,
+    )
+
+
+def onfi_read_data_out_setup_duration(
+    plane_count: int = 1,
+    timing: Optional[OnfiTimingConfig] = None,
+) -> int:
+    timing = timing or DEFAULT_ONFI_TIMING
+    planes = _valid_plane_count(plane_count)
+    base = timing.t_rpre + timing.t_dqsre
+    if planes == 1:
+        return base
+    per_extra_plane = timing.t_rhw + 6 * timing.t_wc + timing.t_ccs + timing.t_rpre + timing.t_dqsre
+    return base + (planes - 1) * per_extra_plane
+
+
+def onfi_data_out_duration(
+    payload_bytes: int,
+    plane_count: int = 1,
+    timing: Optional[OnfiTimingConfig] = None,
+) -> int:
+    timing = timing or DEFAULT_ONFI_TIMING
+    payload_time = _ceil_two_unit_duration(
+        payload_bytes,
+        timing.channel_width_bytes,
+        timing.two_unit_data_out_time,
+    )
+    if payload_time == 0:
+        return 0
+    return onfi_read_data_out_setup_duration(plane_count, timing) + payload_time
+
+
+def onfi_read_command_duration(
+    plane_count: int = 1,
+    timing: Optional[OnfiTimingConfig] = None,
+) -> int:
+    timing = timing or DEFAULT_ONFI_TIMING
+    planes = _valid_plane_count(plane_count)
+    return (
+        timing.t_cs
+        + planes * 6 * timing.t_wc
+        + (planes - 1) * timing.t_dbsy
+        + timing.t_wb
+        + timing.t_rr
+    )
+
+
+def onfi_program_command_duration(
+    plane_count: int = 1,
+    timing: Optional[OnfiTimingConfig] = None,
+) -> int:
+    timing = timing or DEFAULT_ONFI_TIMING
+    planes = _valid_plane_count(plane_count)
+    final_plane = 6 * timing.t_wc + timing.t_adl + timing.t_wpst + timing.t_wpsth + timing.t_wb
+    if planes == 1:
+        return timing.t_cs + final_plane
+    intermediate = 5 * timing.t_wc + timing.t_adl + timing.t_wpst + timing.t_cals + timing.t_wb
+    return timing.t_cs + (planes - 1) * (intermediate + timing.t_dbsy) + final_plane
+
+
+def onfi_erase_command_duration(
+    plane_count: int = 1,
+    timing: Optional[OnfiTimingConfig] = None,
+) -> int:
+    timing = timing or DEFAULT_ONFI_TIMING
+    planes = _valid_plane_count(plane_count)
+    per_plane = 4 * timing.t_wc + timing.t_wb
+    return timing.t_cs + per_plane + (planes - 1) * (timing.t_dbsy + per_plane)
+
+
 # ── Data structures ───────────────────────────────────────────────────────────
+
+class ChannelTransferKind(Enum):
+    COMMAND = "command"
+    USER_DATA_IN = "user_data_in"
+    GC_WRITE_DATA_IN = "gc_write_data_in"
+    MAPPING_DATA_OUT = "mapping_data_out"
+    USER_DATA_OUT = "user_data_out"
+    STATIC_RESULT_DATA_OUT = "static_result_data_out"
+    GC_READ_DATA_OUT = "gc_read_data_out"
+
+
+CHANNEL_TRANSFER_PRIORITY = {
+    ChannelTransferKind.COMMAND: 0,
+    ChannelTransferKind.USER_DATA_IN: 1,
+    ChannelTransferKind.GC_WRITE_DATA_IN: 2,
+    ChannelTransferKind.MAPPING_DATA_OUT: 3,
+    ChannelTransferKind.USER_DATA_OUT: 4,
+    ChannelTransferKind.STATIC_RESULT_DATA_OUT: 5,
+    ChannelTransferKind.GC_READ_DATA_OUT: 6,
+}
+
+DATA_OUT_TRANSFER_KINDS = {
+    ChannelTransferKind.MAPPING_DATA_OUT,
+    ChannelTransferKind.USER_DATA_OUT,
+    ChannelTransferKind.STATIC_RESULT_DATA_OUT,
+    ChannelTransferKind.GC_READ_DATA_OUT,
+}
+
+DATA_IN_TRANSFER_KINDS = {
+    ChannelTransferKind.USER_DATA_IN,
+    ChannelTransferKind.GC_WRITE_DATA_IN,
+}
+
+
+@dataclass
+class ChannelTransferTask:
+    kind: ChannelTransferKind
+    channel_id: int
+    chip_id: Tuple[int, int]
+    die_id: int
+    transactions: list
+    total_duration: int
+    op_kind: str
+    remaining_duration: int = 0
+    start_time: Optional[int] = None
+    finish_time: Optional[int] = None
+    completion_event: Optional[SimEvent] = None
+    sequence: int = 0
+    priority: int = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.priority = CHANNEL_TRANSFER_PRIORITY[self.kind]
+        if self.remaining_duration <= 0:
+            self.remaining_duration = self.total_duration
+
+    @property
+    def is_data_out(self) -> bool:
+        return self.kind in DATA_OUT_TRANSFER_KINDS
+
+    @property
+    def is_data_in(self) -> bool:
+        return self.kind in DATA_IN_TRANSFER_KINDS
+
 
 class ActiveCommandInfo:
     """Bundles an operation kind with its pending transactions.
@@ -116,10 +268,14 @@ class PageData:
 class PHY():
     """Flash 物理层。接收 TSU 下发的命令（send_command_to_chip），通过仿真事件驱动 chip/channel 状态机，事务完成时通过回调通知 TSU 及上层。
     """
-    def __init__(self):
+    def __init__(self, onfi_timing: Optional[OnfiTimingConfig] = None):
         print("Initializing PHY...")
         self._construction_valid: bool = False
+        self.onfi_timing: OnfiTimingConfig = onfi_timing or DEFAULT_ONFI_TIMING
         self._channel_busy: List[bool] = [False] * CHANNEL_NO
+        self._active_transfers: List[Optional[ChannelTransferTask]] = [None] * CHANNEL_NO
+        self._pending_transfers: List[List[ChannelTransferTask]] = [[] for _ in range(CHANNEL_NO)]
+        self._transfer_sequence: int = 0
         self._chip_bkes: Dict[Tuple[int, int], ChipBKE] = {
             (channel_id, chip_id): ChipBKE((channel_id, chip_id)) for channel_id in range(CHANNEL_NO) for chip_id in range(CHIP_PER_CHANNEL)
         }
@@ -152,6 +308,8 @@ class PHY():
         if self._construction_valid:
             return
         assert self._channel_busy is not None, "PHY _channel_busy is not set"
+        assert self._active_transfers is not None, "PHY _active_transfers is not set"
+        assert self._pending_transfers is not None, "PHY _pending_transfers is not set"
         assert self._chip_bkes is not None, "PHY _chip_bkes is not set"
         self._construction_valid = True
 
@@ -163,7 +321,21 @@ class PHY():
         return self._chip_bkes[chip_id]
 
     def channel_is_busy(self, channel_id: int) -> bool:
-        return self._channel_busy[channel_id]
+        active = self._active_transfers[channel_id]
+        if active is not None:
+            if not active.is_data_out:
+                return True
+            return any(
+                task.kind in DATA_IN_TRANSFER_KINDS or task.kind == ChannelTransferKind.COMMAND
+                for task in self._pending_transfers[channel_id]
+            )
+        for task in self._pending_transfers[channel_id]:
+            if task.kind in DATA_IN_TRANSFER_KINDS or task.kind == ChannelTransferKind.COMMAND:
+                return True
+        return False
+
+    def configure_onfi_timing(self, timing: OnfiTimingConfig) -> None:
+        self.onfi_timing = timing
 
     # ── Callback registration ────────────────────────────────────────────────
 
@@ -180,6 +352,7 @@ class PHY():
         self._channel_busy[channel_id] = False
         for cb in self._channel_idle_cbs:
             cb(channel_id)
+        self.schedule_next_channel_transfer(channel_id)
 
     def _broadcast_chip_idle(self, chip_id: Tuple[int, int]) -> None:
         for cb in self._chip_idle_cbs:
@@ -188,6 +361,241 @@ class PHY():
     def _broadcast_transaction_serviced(self, tr) -> None:
         for cb in self._transaction_serviced_cbs:
             cb(tr)
+
+    # Channel transfer scheduler
+
+    def _next_transfer_sequence(self) -> int:
+        self._transfer_sequence += 1
+        return self._transfer_sequence
+
+    def _transfer_plane_count(self, transactions: list) -> int:
+        planes = {tr.address.plane for tr in transactions if tr.address is not None and tr.address.plane >= 0}
+        return _valid_plane_count(len(planes) or 1)
+
+    def _transaction_payload_bytes(self, tr: Transaction) -> int:
+        if tr.type in (TransactionType.MAPPING_READ, TransactionType.MAPPING_WRITE):
+            entries = sum(1 for bit in tr.bitmap if bit) if tr.bitmap else LPA_NO_PER_MAPPING_PAGE
+            sectors = max(1, (entries + LPA_NO_PER_SECTOR - 1) // LPA_NO_PER_SECTOR)
+            return sectors * SECTOR_SIZE_BYTES
+        sectors = sum(1 for bit in tr.bitmap if bit) if tr.bitmap else len(tr.payload)
+        if sectors <= 0:
+            sectors = SECTOR_PER_PAGE
+        return sectors * SECTOR_SIZE_BYTES
+
+    def _transfer_payload_bytes(self, transactions: list) -> int:
+        return sum(self._transaction_payload_bytes(tr) for tr in transactions)
+
+    def _command_transfer_duration(self, op_kind: str, transactions: list) -> int:
+        plane_count = self._transfer_plane_count(transactions)
+        if op_kind == "read":
+            return onfi_read_command_duration(plane_count, self.onfi_timing)
+        if op_kind in ("write", "search", "compute"):
+            return onfi_program_command_duration(plane_count, self.onfi_timing)
+        if op_kind == "erase":
+            return onfi_erase_command_duration(plane_count, self.onfi_timing)
+        raise ValueError(f"Invalid operation type: {op_kind}")
+
+    def _data_in_transfer_duration(self, transactions: list) -> int:
+        return onfi_data_in_duration(self._transfer_payload_bytes(transactions), self.onfi_timing)
+
+    def _data_out_transfer_duration(self, transactions: list) -> int:
+        return onfi_data_out_duration(
+            self._transfer_payload_bytes(transactions),
+            self._transfer_plane_count(transactions),
+            self.onfi_timing,
+        )
+
+    def _classify_data_in_transfer(self, transactions: list) -> ChannelTransferKind:
+        if transactions and transactions[0].type == TransactionType.GC_WRITE:
+            return ChannelTransferKind.GC_WRITE_DATA_IN
+        return ChannelTransferKind.USER_DATA_IN
+
+    def _classify_data_out_transfer(self, cmd_type: str, transactions: list) -> ChannelTransferKind:
+        tr_type = transactions[0].type if transactions else None
+        if tr_type == TransactionType.MAPPING_READ:
+            return ChannelTransferKind.MAPPING_DATA_OUT
+        if tr_type == TransactionType.GC_READ:
+            return ChannelTransferKind.GC_READ_DATA_OUT
+        if cmd_type in ("search", "compute"):
+            return ChannelTransferKind.STATIC_RESULT_DATA_OUT
+        return ChannelTransferKind.USER_DATA_OUT
+
+    def _command_completion_event_type(self, op_kind: str) -> EventType:
+        if op_kind == "read":
+            return EventType.PHY_READ_CMD_TRANSFERRED
+        if op_kind == "write":
+            return EventType.PHY_WRITE_CMD_TRANSFERRED
+        if op_kind == "erase":
+            return EventType.PHY_ERASE_CMD_TRANSFERRED
+        if op_kind == "search":
+            return EventType.PHY_SEARCH_CMD_TRANSFERRED
+        if op_kind == "compute":
+            return EventType.PHY_COMPUTE_CMD_TRANSFERRED
+        raise ValueError(f"Invalid operation type: {op_kind}")
+
+    def _data_out_completion_event_type(self, op_kind: str) -> EventType:
+        if op_kind == "read":
+            return EventType.PHY_READ_DATA_TRANSFERRED
+        if op_kind == "search":
+            return EventType.PHY_SEARCH_DATA_TRANSFERRED
+        if op_kind == "compute":
+            return EventType.PHY_COMPUTE_DATA_TRANSFERRED
+        raise ValueError(f"Command type {op_kind} does not need data-out transfer")
+
+    def _completion_event_type(self, task: ChannelTransferTask) -> EventType:
+        if task.kind == ChannelTransferKind.COMMAND:
+            return self._command_completion_event_type(task.op_kind)
+        if task.is_data_in:
+            return EventType.PHY_DATA_IN_TRANSFERRED
+        if task.is_data_out:
+            return self._data_out_completion_event_type(task.op_kind)
+        raise ValueError(f"Unsupported transfer kind: {task.kind}")
+
+    def _submit_channel_transfer(self, task: ChannelTransferTask, *, defer_start: bool = False) -> ChannelTransferTask:
+        task.sequence = self._next_transfer_sequence()
+        channel_id = task.channel_id
+        if task.kind == ChannelTransferKind.COMMAND:
+            active = self._active_transfers[channel_id]
+            if active is not None and active.is_data_out:
+                self._preempt_active_data_out(active)
+        self._pending_transfers[channel_id].append(task)
+        if not defer_start:
+            self.schedule_next_channel_transfer(channel_id)
+        return task
+
+    def schedule_next_channel_transfer(self, channel_id: int) -> bool:
+        if self._active_transfers[channel_id] is not None:
+            return False
+        pending = self._pending_transfers[channel_id]
+        if not pending:
+            self._channel_busy[channel_id] = False
+            return False
+        best_index = min(
+            range(len(pending)),
+            key=lambda idx: (pending[idx].priority, pending[idx].sequence),
+        )
+        task = pending.pop(best_index)
+        self._start_channel_transfer(task)
+        return True
+
+    def _start_channel_transfer(self, task: ChannelTransferTask) -> None:
+        now = CURRENT_TIME()
+        duration = max(0, task.remaining_duration)
+        task.start_time = now
+        task.finish_time = now + duration
+        self._active_transfers[task.channel_id] = task
+        self._channel_busy[task.channel_id] = True
+        if task.kind == ChannelTransferKind.COMMAND or task.is_data_in:
+            chip_bke = self.get_chip_bke(task.chip_id)
+            die_bke = chip_bke.get_die_bke(task.die_id)
+            die_bke.expected_finish_time = task.finish_time
+            chip_bke.Expected_Finish_Time = task.finish_time
+        task.completion_event = Register_event(
+            event_type=self._completion_event_type(task),
+            target=self,
+            param={
+                "chip_id": task.chip_id,
+                "die_id": task.die_id,
+                "transactions": task.transactions,
+                "transfer_task": task,
+            },
+            scheduled_time=task.finish_time,
+        )
+
+    def _record_transfer_segment(self, task: ChannelTransferTask, start_time: int, finish_time: int) -> None:
+        if finish_time <= start_time:
+            return
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is None:
+            return
+        if task.kind == ChannelTransferKind.COMMAND:
+            recorder.note_phy_command_phase(
+                task.transactions,
+                task.op_kind,
+                start_time,
+                finish_time,
+                finish_time - start_time,
+            )
+        elif task.is_data_in:
+            recorder.note_phy_data_in_phase(task.transactions, task.op_kind, start_time, finish_time)
+            recorder.add_energy(task.transactions, P_IF * (finish_time - start_time) * 1e-6)
+        elif task.is_data_out:
+            recorder.note_phy_data_out_phase(task.transactions, task.op_kind, start_time, finish_time)
+            recorder.add_energy(task.transactions, P_IF * (finish_time - start_time) * 1e-6)
+
+    def _finish_active_transfer_from_event(self, event: SimEvent) -> Optional[ChannelTransferTask]:
+        task = event.param.get("transfer_task")
+        if task is None:
+            return None
+        active = self._active_transfers[task.channel_id]
+        if active is not task or task.completion_event is not event:
+            return None
+        now = CURRENT_TIME()
+        start_time = now if task.start_time is None else task.start_time
+        self._record_transfer_segment(task, start_time, now)
+        task.remaining_duration = 0
+        task.completion_event = None
+        self._active_transfers[task.channel_id] = None
+        self._channel_busy[task.channel_id] = False
+        return task
+
+    def _preempt_active_data_out(self, task: ChannelTransferTask) -> bool:
+        now = CURRENT_TIME()
+        if task.finish_time is None or task.finish_time <= now:
+            return False
+        if task.completion_event is not None:
+            task.completion_event.ignored = True
+        start_time = now if task.start_time is None else task.start_time
+        self._record_transfer_segment(task, start_time, now)
+        task.remaining_duration = max(0, task.finish_time - now)
+        task.start_time = None
+        task.finish_time = None
+        task.completion_event = None
+        self._active_transfers[task.channel_id] = None
+        self._channel_busy[task.channel_id] = False
+        task.sequence = self._next_transfer_sequence()
+        self._pending_transfers[task.channel_id].append(task)
+        return True
+
+    def _enqueue_data_in_transfer(
+        self,
+        chip_id: Tuple[int, int],
+        die_id: int,
+        op_kind: str,
+        transactions: list,
+        *,
+        defer_start: bool = True,
+    ) -> ChannelTransferTask:
+        task = ChannelTransferTask(
+            kind=self._classify_data_in_transfer(transactions),
+            channel_id=chip_id[0],
+            chip_id=chip_id,
+            die_id=die_id,
+            transactions=transactions,
+            total_duration=self._data_in_transfer_duration(transactions),
+            op_kind=op_kind,
+        )
+        return self._submit_channel_transfer(task, defer_start=defer_start)
+
+    def _enqueue_data_out_transfer(
+        self,
+        chip_id: Tuple[int, int],
+        die_id: int,
+        cmd_type: str,
+        transactions: list,
+        *,
+        defer_start: bool = True,
+    ) -> ChannelTransferTask:
+        task = ChannelTransferTask(
+            kind=self._classify_data_out_transfer(cmd_type, transactions),
+            channel_id=chip_id[0],
+            chip_id=chip_id,
+            die_id=die_id,
+            transactions=transactions,
+            total_duration=self._data_out_transfer_duration(transactions),
+            op_kind=cmd_type,
+        )
+        return self._submit_channel_transfer(task, defer_start=defer_start)
 
     # ── TSU → PHY interface ────────────────────────────────────────────────────
 
@@ -222,67 +630,51 @@ class PHY():
 
         # 2. Register new command on the die
         die_bke.active_command = ActiveCommandInfo(op, transactions)
+        chip_bke.status = ChipStatus.TRANSFER
         chip_bke.No_of_active_dies += 1
 
-        # 3. Schedule the appropriate command-transfer event
-        if op == "read":
-            finish_time = now + PHY_CMD_ADDR_TIME
-            ev = EventType.PHY_READ_CMD_TRANSFERRED
-        elif op == "write":
-            finish_time = now + PHY_CMD_ADDR_TIME + PHY_DATA_IN_TIME
-            ev = EventType.PHY_WRITE_CMD_TRANSFERRED
-        elif op == "erase":
-            finish_time = now + PHY_CMD_ADDR_TIME
-            ev = EventType.PHY_ERASE_CMD_TRANSFERRED
-        elif op == "search":
-            finish_time = now + PHY_CMD_ADDR_TIME + PHY_DATA_IN_TIME
-            ev = EventType.PHY_SEARCH_CMD_TRANSFERRED
-        elif op == "compute":
-            finish_time = now + PHY_CMD_ADDR_TIME + PHY_DATA_IN_TIME
-            ev = EventType.PHY_COMPUTE_CMD_TRANSFERRED
-        else:
-            raise ValueError(f"Invalid operation type: {op}")
-
+        # 3. Submit the command/address transfer to the channel scheduler.
+        command_duration = self._command_transfer_duration(op, transactions)
+        finish_time = now + command_duration
         die_bke.expected_finish_time = finish_time
         chip_bke.Expected_Finish_Time = finish_time
-        self._channel_busy[channel_id] = True
-        recorder = REQUEST_LATENCY_RECORDER()
-        if recorder is not None:
-            recorder.note_phy_command_phase(
-                transactions,
-                op,
-                now,
-                finish_time,
-                PHY_CMD_ADDR_TIME,
-            )
-        # energy: data-in phase, attributed per-request
-        if recorder is not None:
-            data_in_ns = finish_time - (now + PHY_CMD_ADDR_TIME)
-            if data_in_ns > 0 and op in ("write", "search", "compute"):
-                recorder.add_energy(transactions, P_IF * data_in_ns * 1e-6)
-        Register_event(event_type=ev, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=finish_time)
+        task = ChannelTransferTask(
+            kind=ChannelTransferKind.COMMAND,
+            channel_id=channel_id,
+            chip_id=chip_id,
+            die_id=die_id,
+            transactions=transactions,
+            total_duration=command_duration,
+            op_kind=op,
+        )
+        self._submit_channel_transfer(task)
 
     # ── sim_object event handler ───────────────────────────────────────────────
 
     def execute(self, event: SimEvent) -> None:
         """处理 PHY 仿真事件，对标 Execute_simulator_event()。"""
+        if event.ignored:
+            return
         from .common import log_execute_event
         log_execute_event(self.__class__.__name__, event)
         ev_type = event.type
         chip_id = event.param.get("chip_id", (-1, -1))
         die_id = event.param.get("die_id", -1)
         transactions = event.param.get("transactions", [])
+        transfer_task = event.param.get("transfer_task")
         now = CURRENT_TIME()    
 
         # ── Command/address transfer phase complete ────────────────────────────
 
         if ev_type == EventType.PHY_READ_CMD_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             # Cmd+addr sent to chip; chip begins internal read; release channel.
             chip_bke.status = ChipStatus.READ
-            self._channel_busy[channel_id] = False
             finish = now + T_READ_LSB
             recorder = REQUEST_LATENCY_RECORDER()
             if recorder is not None:
@@ -293,13 +685,19 @@ class PHY():
             self._broadcast_channel_idle(channel_id)
 
         elif ev_type == EventType.PHY_WRITE_CMD_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
+            if task is not None and task.kind == ChannelTransferKind.COMMAND:
+                self._enqueue_data_in_transfer(chip_id, die_id, "write", transactions, defer_start=True)
+                self._broadcast_channel_idle(chip_id[0])
+                return
             # Cmd+data sent to chip; chip begins internal program; release channel.
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             is_gc = "gc" in transactions[0].type.value.lower()
             chip_bke.status = ChipStatus.GC_WRITE if is_gc else ChipStatus.WRITE
-            self._channel_busy[channel_id] = False
             finish = now + T_PROG
             recorder = REQUEST_LATENCY_RECORDER()
             if recorder is not None:
@@ -317,12 +715,14 @@ class PHY():
             self._broadcast_channel_idle(channel_id)
 
         elif ev_type == EventType.PHY_ERASE_CMD_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
             # Cmd sent to chip; chip begins internal erase; release channel.
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             chip_bke.status = ChipStatus.ERASE
-            self._channel_busy[channel_id] = False
             finish = now + T_BERS
             recorder = REQUEST_LATENCY_RECORDER()
             if recorder is not None:
@@ -340,12 +740,18 @@ class PHY():
             self._broadcast_channel_idle(channel_id)
 
         elif ev_type == EventType.PHY_SEARCH_CMD_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
+            if task is not None and task.kind == ChannelTransferKind.COMMAND:
+                self._enqueue_data_in_transfer(chip_id, die_id, "search", transactions, defer_start=True)
+                self._broadcast_channel_idle(chip_id[0])
+                return
             # Cmd sent to chip; chip begins internal search; release channel.
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             chip_bke.status = ChipStatus.SEARCH
-            self._channel_busy[channel_id] = False
             finish = now + T_SEARCH
             recorder = REQUEST_LATENCY_RECORDER()
             if recorder is not None:
@@ -356,12 +762,18 @@ class PHY():
             self._broadcast_channel_idle(channel_id)
 
         elif ev_type == EventType.PHY_COMPUTE_CMD_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
+            if task is not None and task.kind == ChannelTransferKind.COMMAND:
+                self._enqueue_data_in_transfer(chip_id, die_id, "compute", transactions, defer_start=True)
+                self._broadcast_channel_idle(chip_id[0])
+                return
             # Cmd sent to chip; chip begins internal compute; release channel.
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             chip_bke.status = ChipStatus.COMPUTE
-            self._channel_busy[channel_id] = False
             finish = now + T_COMPUTE
             recorder = REQUEST_LATENCY_RECORDER()
             if recorder is not None:
@@ -372,6 +784,53 @@ class PHY():
             self._broadcast_channel_idle(channel_id)
 
         # ── Chip-internal operation complete ──────────────────────────────────
+
+        elif ev_type == EventType.PHY_DATA_IN_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if task is None:
+                return
+            chip_bke = self.get_chip_bke(chip_id)
+            die_bke = chip_bke.get_die_bke(die_id)
+            channel_id = chip_id[0]
+            op_kind = task.op_kind
+            if op_kind == "write":
+                is_gc = "gc" in transactions[0].type.value.lower()
+                chip_bke.status = ChipStatus.GC_WRITE if is_gc else ChipStatus.WRITE
+                finish = now + T_PROG
+                recorder = REQUEST_LATENCY_RECORDER()
+                if recorder is not None:
+                    recorder.note_phy_array_phase(transactions, "write", now, finish)
+                die_bke.expected_finish_time = finish
+                chip_bke.Expected_Finish_Time = finish
+                exec_event = Register_event(
+                    event_type=EventType.PHY_CHIP_WRITE_COMPLETE,
+                    target=self,
+                    param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions},
+                    scheduled_time=finish,
+                )
+                for tr in transactions:
+                    tr.exec_event = exec_event
+            elif op_kind == "search":
+                chip_bke.status = ChipStatus.SEARCH
+                finish = now + T_SEARCH
+                recorder = REQUEST_LATENCY_RECORDER()
+                if recorder is not None:
+                    recorder.note_phy_array_phase(transactions, "search", now, finish)
+                die_bke.expected_finish_time = finish
+                chip_bke.Expected_Finish_Time = finish
+                Register_event(event_type=EventType.PHY_CHIP_SEARCH_COMPLETE, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=finish)
+            elif op_kind == "compute":
+                chip_bke.status = ChipStatus.COMPUTE
+                finish = now + T_COMPUTE
+                recorder = REQUEST_LATENCY_RECORDER()
+                if recorder is not None:
+                    recorder.note_phy_array_phase(transactions, "compute", now, finish)
+                die_bke.expected_finish_time = finish
+                chip_bke.Expected_Finish_Time = finish
+                Register_event(event_type=EventType.PHY_CHIP_COMPUTE_COMPLETE, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=finish)
+            else:
+                raise ValueError(f"Invalid data-in operation type: {op_kind}")
+            self._broadcast_channel_idle(channel_id)
 
         elif ev_type == EventType.PHY_CHIP_READ_COMPLETE:
             rec = REQUEST_LATENCY_RECORDER()
@@ -404,11 +863,13 @@ class PHY():
         # ── Read data-out phase complete ──────────────────────────────────────
 
         elif ev_type == EventType.PHY_READ_DATA_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             chip_bke.No_of_active_dies -= 1
-            self._channel_busy[channel_id] = False
             chip_bke._has_data_waiting = False
             die_bke.active_command = None
             # Data DMA'd from chip to controller; complete all waiting read transactions.
@@ -444,13 +905,15 @@ class PHY():
                 self._broadcast_channel_idle(channel_id)
         
         elif ev_type == EventType.PHY_SEARCH_DATA_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             chip_bke._has_data_waiting = False
             die_bke.active_command = None
             chip_bke.No_of_active_dies -= 1
-            self._channel_busy[channel_id] = False
             for tr in transactions:
                 tr.completed = True
                 for required_by_tr in tr.required_by_transactions:
@@ -464,13 +927,15 @@ class PHY():
                 self._broadcast_channel_idle(channel_id)
         
         elif ev_type == EventType.PHY_COMPUTE_DATA_TRANSFERRED:
+            task = self._finish_active_transfer_from_event(event)
+            if transfer_task is not None and task is None:
+                return
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
             chip_bke._has_data_waiting = False
             die_bke.active_command = None
             chip_bke.No_of_active_dies -= 1
-            self._channel_busy[channel_id] = False
             for tr in transactions:
                 tr.completed = True
                 for required_by_tr in tr.required_by_transactions:
@@ -500,11 +965,12 @@ class PHY():
         channel_id = chip_id[0]
 
         if cmd_type in ("read", "search", "compute"):
-            # Queue transactions for data-out; start DMA if channel is free.
+            # Queue data-out and let PHY/TSU channel-idle arbitration pick the next transfer.
             if die_bke.active_command:
                 chip_bke._has_data_waiting = True
-            if not self._channel_busy[channel_id]:
-                self._transfer_data(chip_id, die_id, cmd_type, transactions)
+            self._enqueue_data_out_transfer(chip_id, die_id, cmd_type, transactions, defer_start=True)
+            if self._active_transfers[channel_id] is None:
+                self._broadcast_channel_idle(channel_id)
             # If channel busy, _broadcast_channel_idle will trigger _transfer_data
             # via TSU callback → try_activate → (no more queued work) → the waiting
             # data-out will be picked up when channel next becomes idle.
@@ -552,28 +1018,7 @@ class PHY():
         transactions: list[Transaction]
     ) -> None:
         """启动读数据回传阶段"""
-        channel_id = chip_id[0]
-        self._channel_busy[channel_id] = True
-        if cmd_type == "read":
-            ev = EventType.PHY_READ_DATA_TRANSFERRED
-        elif cmd_type == "search":
-            ev = EventType.PHY_SEARCH_DATA_TRANSFERRED
-        elif cmd_type == "compute":
-            ev = EventType.PHY_COMPUTE_DATA_TRANSFERRED
-        else:
-            raise ValueError(f"Command type {cmd_type} do not need to transfer data!")
-        recorder = REQUEST_LATENCY_RECORDER()
-        if recorder is not None:
-            recorder.note_phy_data_out_phase(
-                transactions,
-                cmd_type,
-                CURRENT_TIME(),
-                CURRENT_TIME() + PHY_DATA_OUT_TIME,
-            )
-        # energy: data-out phase, attributed per-request
-        if recorder is not None and cmd_type in ("read", "search", "compute"):
-            recorder.add_energy(transactions, P_IF * PHY_DATA_OUT_TIME * 1e-6)
-        Register_event(event_type=ev, target=self, param={"chip_id": chip_id, "die_id": die_id, "transactions": transactions}, scheduled_time=CURRENT_TIME() + PHY_DATA_OUT_TIME)
+        self._enqueue_data_out_transfer(chip_id, die_id, cmd_type, transactions, defer_start=False)
 
     def _send_resume_command(self, chip_id: Tuple[int, int]) -> None:
         """恢复被挂起的命令"""

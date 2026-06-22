@@ -7,11 +7,11 @@ from enum import Enum
 
 DEFAULT_CHANNEL_NO = 8
 DEFAULT_CHIP_PER_CHANNEL = 4
-DEFAULT_DIES = 1
-DEFAULT_PLANES_PER_DIE = 2
+DEFAULT_DIES = 4
+DEFAULT_PLANES_PER_DIE = 4
 DEFAULT_BLOCKS_PER_PLANE = 1024
 DEFAULT_LAYERS_PER_BLOCK = 128
-DEFAULT_SL_PER_BLOCK = 2
+DEFAULT_SL_PER_BLOCK = 1
 DEFAULT_SSL_PER_SL = 4
 DEFAULT_SUB_BLOCKS_PER_BLOCK = DEFAULT_SL_PER_BLOCK * DEFAULT_SSL_PER_SL
 DEFAULT_SECTOR_PER_PAGE = 16
@@ -515,6 +515,58 @@ class TimingConfig:
 
 
 @dataclass
+class OnfiTimingConfig:
+    """ONFI NVDDR2 channel timing parameters in nanoseconds."""
+
+    channel_width_bytes: int = 8
+    t_rc: int = 6
+    t_dsc: int = 6
+    t_dbsy: int = 500
+    t_cs: int = 20
+    t_rr: int = 20
+    t_wb: int = 100
+    t_wc: int = 25
+    t_adl: int = 70
+    t_cals: int = 15
+    t_dqsre: int = 15
+    t_rpre: int = 15
+    t_rhw: int = 100
+    t_ccs: int = 300
+    t_wpst: int = 6
+    t_wpsth: int = 15
+
+    def __post_init__(self):
+        for field_name in (
+            "channel_width_bytes",
+            "t_rc",
+            "t_dsc",
+            "t_dbsy",
+            "t_cs",
+            "t_rr",
+            "t_wb",
+            "t_wc",
+            "t_adl",
+            "t_cals",
+            "t_dqsre",
+            "t_rpre",
+            "t_rhw",
+            "t_ccs",
+            "t_wpst",
+            "t_wpsth",
+        ):
+            if getattr(self, field_name) <= 0:
+                raise ValueError(f"{field_name} must be positive")
+
+    @property
+    def two_unit_data_in_time(self) -> int:
+        return self.t_rc
+
+    @property
+    def two_unit_data_out_time(self) -> int:
+        return self.t_dsc
+
+
+@dataclass
 class ParallelConfig:
     """Parallelism configuration for search and compute operations."""
     max_parallel_wl: int = 64    # Maximum parallel Word Lines for search
@@ -531,6 +583,7 @@ class ParallelConfig:
 class FlashConfig:
     """Complete flash simulator configuration."""
     timing: TimingConfig = field(default_factory=TimingConfig)
+    onfi: OnfiTimingConfig = field(default_factory=OnfiTimingConfig)
     parallel: ParallelConfig = field(default_factory=ParallelConfig)
     geometry: FlashGeometry = field(default_factory=FlashGeometry)
 
@@ -538,6 +591,7 @@ class FlashConfig:
     def from_dict(cls, config_dict: dict) -> "FlashConfig":
         """Create configuration from a dictionary."""
         timing_dict = config_dict.get("timing", {})
+        onfi_dict = config_dict.get("onfi", {})
         parallel_dict = config_dict.get("parallel", {})
         geometry_dict = config_dict.get("geometry", {})
 
@@ -559,6 +613,25 @@ class FlashConfig:
             t_prog_csb=timing_dict.get("t_prog_csb", 1_000_000),
             t_prog_msb=timing_dict.get("t_prog_msb", 1_500_000),
             t_bers=timing_dict.get("t_bers", 3_800_000),
+        )
+
+        onfi = OnfiTimingConfig(
+            channel_width_bytes=onfi_dict.get("channel_width_bytes", 8),
+            t_rc=onfi_dict.get("t_rc", 6),
+            t_dsc=onfi_dict.get("t_dsc", 6),
+            t_dbsy=onfi_dict.get("t_dbsy", 500),
+            t_cs=onfi_dict.get("t_cs", 20),
+            t_rr=onfi_dict.get("t_rr", 20),
+            t_wb=onfi_dict.get("t_wb", 100),
+            t_wc=onfi_dict.get("t_wc", 25),
+            t_adl=onfi_dict.get("t_adl", 70),
+            t_cals=onfi_dict.get("t_cals", 15),
+            t_dqsre=onfi_dict.get("t_dqsre", 15),
+            t_rpre=onfi_dict.get("t_rpre", 15),
+            t_rhw=onfi_dict.get("t_rhw", 100),
+            t_ccs=onfi_dict.get("t_ccs", 300),
+            t_wpst=onfi_dict.get("t_wpst", 6),
+            t_wpsth=onfi_dict.get("t_wpsth", 15),
         )
 
         parallel = ParallelConfig(
@@ -590,7 +663,7 @@ class FlashConfig:
             ),
         )
 
-        return cls(timing=timing, parallel=parallel, geometry=geometry)
+        return cls(timing=timing, onfi=onfi, parallel=parallel, geometry=geometry)
 
     def to_dict(self) -> dict:
         """Convert configuration to a dictionary."""
@@ -604,6 +677,24 @@ class FlashConfig:
                 "t_prog_csb": self.timing.t_prog_csb,
                 "t_prog_msb": self.timing.t_prog_msb,
                 "t_bers": self.timing.t_bers,
+            },
+            "onfi": {
+                "channel_width_bytes": self.onfi.channel_width_bytes,
+                "t_rc": self.onfi.t_rc,
+                "t_dsc": self.onfi.t_dsc,
+                "t_dbsy": self.onfi.t_dbsy,
+                "t_cs": self.onfi.t_cs,
+                "t_rr": self.onfi.t_rr,
+                "t_wb": self.onfi.t_wb,
+                "t_wc": self.onfi.t_wc,
+                "t_adl": self.onfi.t_adl,
+                "t_cals": self.onfi.t_cals,
+                "t_dqsre": self.onfi.t_dqsre,
+                "t_rpre": self.onfi.t_rpre,
+                "t_rhw": self.onfi.t_rhw,
+                "t_ccs": self.onfi.t_ccs,
+                "t_wpst": self.onfi.t_wpst,
+                "t_wpsth": self.onfi.t_wpsth,
             },
             "parallel": {
                 "max_parallel_wl": self.parallel.max_parallel_wl,

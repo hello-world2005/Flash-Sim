@@ -1,4 +1,7 @@
 # TODO List
+## Important Major Change!
+修改CIM和CAM的ISA与切分方式，将切分粒度完全改为X, Y, Z方向上的一条cell
+
 ## Host
 1. 检查NVMe协议的多队列并发实现有没有问题。目前的trace超过8条req之后无法执行可能是由于Host侧SQ队列实现的问题导致后面的REQ都没被发送给Device
 

@@ -15,6 +15,15 @@ After an event-driven simulation completes, the system SHALL write request-level
 - **WHEN** `Engine.Start_simulation(trace_path)` completes for a trace containing one or more requests
 - **THEN** the system MUST write a `*_request_latency.json` report and a `*_request_latency.csv` report under `report/`, and each output MUST contain one entry for every input trace request
 
+### Requirement: JSON request reports include request size
+
+Each JSON request latency record SHALL include a top-level `size` field whose value matches the original input `Request.size` for that request.
+
+#### Scenario: Generated JSON preserves input request sizes
+
+- **WHEN** an event-driven simulation completes for a trace containing requests with `size` values
+- **THEN** each entry in the generated JSON report's `requests` array MUST include `size` equal to the corresponding input trace request size
+
 ### Requirement: JSON request reports include host, PCIe, AMU, TSU, and PHY stage breakdowns
 
 Each JSON request record MUST include a stage breakdown with at least `host_sq_wait`, `host_dispatch`, `pcie_host_to_device`, `pcie_device_to_host`, `amu_mapping_wait`, `tsu_queue_wait`, `phy_cmd_addr`, `phy_data_in`, `phy_array_exec`, and `phy_data_out`. If a request does not pass through a stage, that stage value MUST remain `0` instead of being omitted.

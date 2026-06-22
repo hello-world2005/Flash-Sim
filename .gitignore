@@ -44,9 +44,11 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# project reports
 prompt.md
 arch_intro.md
 note.md
+result_report.md
 
 # logs and reports
 output/
