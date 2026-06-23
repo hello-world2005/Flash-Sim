@@ -4,7 +4,7 @@ The current simulator models ONFI channel occupancy inside `flash_sim/PHY.py` us
 
 MQSim's NVDDR2 path separates channel status from chip execution state. In `../MQSim/src/ssd/ONFI_Channel_NVDDR2.h`, command and data transfer delays are derived from NVDDR2 timing parameters and channel width. In `NVM_PHY_ONFI_NVDDR2.cpp`, command/address transfer, command+data-in transfer, and read data-out are separate bus occupations, and completed read data-out queues are prioritized as mapping read, user read, and GC read when the channel becomes available.
 
-This change brings that shape into Flash-Sim while also adding the user-requested rule that commands may preempt active data-out transfers.
+This change brings that shape into Flash-Sim while also adding the user-requested rule that commands may preempt any active ONFI transfer task with lower priority than command.
 
 ## Goals / Non-Goals
 
@@ -13,9 +13,9 @@ This change brings that shape into Flash-Sim while also adding the user-requeste
 - Make channel transfers explicit objects with task kind, priority, channel, target chip/die, transaction batch, total duration, remaining duration, and associated completion event.
 - Schedule pending channel transfers by the requested priority order:
   `command` > `search/write/compute_data_in` > `gc_write_data_in` > `mapping_data_out` > `user_data_out` > `search/compute_data_out` > `gc_read_data_out`.
-- Allow only `data_out` transfers to be preempted by newly available command transfers.
-- Use `SimEvent.ignored` to invalidate a superseded data-out completion event when preempting.
-- Resume interrupted data-out by re-registering a completion event with the remaining transfer time.
+- Allow command transfers to preempt any active lower-priority transfer task on the same channel.
+- Use `SimEvent.ignored` to invalidate a superseded lower-priority transfer completion event when preempting.
+- Resume interrupted transfer tasks by re-registering a completion event with the remaining transfer time.
 - Replace fixed ONFI transfer durations with MQSim-inspired NVDDR2 formulas based on payload bytes, channel width, plane count, and ONFI timing parameters.
 - Keep request latency reports explainable by recording command/data-in/data-out intervals for the actual transfer segments that occur.
 
@@ -35,7 +35,7 @@ This change brings that shape into Flash-Sim while also adding the user-requeste
    - `pending_transfers`: queues or a priority queue of waiting transfers.
    - enough metadata to resume an interrupted transfer and ignore its stale event.
 
-   Rationale: data-out preemption requires knowing what is active, which event will complete it, how much time has already elapsed, and which work is waiting. Encoding that in scattered `_channel_busy` booleans would make correctness fragile.
+   Rationale: command preemption requires knowing what lower-priority transfer is active, which event will complete it, how much time has already elapsed, and which work is waiting. Encoding that in scattered `_channel_busy` booleans would make correctness fragile.
 
    Alternative considered: keep `_channel_busy` and add special cases in `_on_channel_idle`. That would not reliably handle mid-transfer command arrival because the preemption point happens while the channel is busy.
 
@@ -54,11 +54,13 @@ This change brings that shape into Flash-Sim while also adding the user-requeste
 
    Alternative considered: reuse existing `TransactionType` ordering. It cannot distinguish command transfer from data-in/data-out transfer phases and would not express the requested priority list.
 
-3. Preempt only when an active transfer is data-out and the pending transfer is command.
+3. Preempt when a submitted command outranks the active transfer.
 
-   Rationale: this directly implements the requested behavior and avoids introducing broad preemption semantics that would complicate data-in or command atomicity. The preempted data-out stores `remaining_time = old_finish_time - now`, marks the old completion event ignored, and becomes pending again.
+   When a command transfer is submitted while the channel is occupied by a lower-priority transfer task, the active task should store `remaining_time = old_finish_time - now`, mark the old completion event ignored, and become pending again. The command then runs to completion, after which normal priority selection can resume the interrupted task or choose another pending transfer according to priority. Commands do not preempt active commands because they have equal priority.
 
-   Alternative considered: allow higher-priority data-in to preempt data-out too. The request only names commands as preemptors; expanding the rule could make results harder to reason about.
+   Rationale: this directly implements the requested command-preemption rule while preserving command atomicity and keeping lower-priority tasks from preempting each other.
+
+   Alternative considered: keep the earlier data-out-only preemption rule. That still lets read data return be interrupted, but it does not satisfy the requirement that commands can interrupt any lower-priority channel transfer.
 
 4. Model NVDDR2 transfer time with local helper functions.
 
@@ -83,20 +85,20 @@ This change brings that shape into Flash-Sim while also adding the user-requeste
 
 6. Preserve request latency intervals as actual segments.
 
-   When data-out is preempted, the report should contain separate `phy_data_out` intervals for the completed segments, not one interval spanning the interruption. Command and data-in phases should likewise be recorded only for the time the channel actually transfers them.
+   When a lower-priority transfer is preempted, the report should contain separate intervals for the completed segments of that phase, not one interval spanning the interruption. Preempted data-in should split `phy_data_in`; preempted data-out should split `phy_data_out`; command phases should be recorded only for the time the channel actually transfers them.
 
-   Rationale: existing reports are used to explain contention. A single continuous data-out interval over a preemption would hide exactly the behavior this change adds.
+   Rationale: existing reports are used to explain contention. A single continuous transfer interval over a preemption would hide exactly the behavior this change adds.
 
 ## Design Rationale
 
-This design moves ONFI transfer arbitration down into PHY because PHY owns channel busy state, event registration, chip/die active command state, and request-latency interval emission. TSU should continue to decide which transactions are eligible to issue, but PHY should decide when channel bus phases can actually run and whether an active data-out phase must be paused.
+This design moves ONFI transfer arbitration down into PHY because PHY owns channel busy state, event registration, chip/die active command state, and request-latency interval emission. TSU should continue to decide which transactions are eligible to issue, but PHY should decide when channel bus phases can actually run and whether an active lower-priority transfer phase must be paused.
 
-MQSim is used as a reference for timing formulas and state separation, not as a line-by-line port. The user-requested command-over-data-out preemption is stricter than MQSim's default channel-busy guard, so the Flash-Sim model needs an explicit preemption path rather than relying only on MQSim's idle callback order.
+MQSim is used as a reference for timing formulas and state separation, not as a line-by-line port. The user-requested command-over-lower-priority-transfer preemption is stricter than MQSim's default channel-busy guard, so the Flash-Sim model needs an explicit preemption path rather than relying only on MQSim's idle callback order.
 
 ## Risks / Trade-offs
 
-- [Risk] Preempting data-out can create stale completion events that complete a request twice. -> Mitigation: store the completion `SimEvent` object on the active transfer and mark it `ignored` before requeueing the remaining transfer.
-- [Risk] Latency reporting may overcount data-out if interrupted intervals are not split. -> Mitigation: record PHY data-out intervals per actual transfer segment and add tests that assert no interval spans a command preemption.
+- [Risk] Preempting lower-priority transfers can create stale completion events that complete a request twice or apply data-in/data-out side effects early. -> Mitigation: store the completion `SimEvent` object on the active transfer and mark it `ignored` before requeueing the remaining transfer.
+- [Risk] Latency reporting may overcount interrupted transfer phases if intervals are not split. -> Mitigation: record PHY data-in/data-out intervals per actual transfer segment and add tests that assert no interval spans a command preemption.
 - [Risk] New priority ordering can change existing e2e latency baselines. -> Mitigation: add focused tests for the new ordering and update only expectations that depend on ONFI channel arbitration.
 - [Risk] MQSim timing formulas may produce zero duration for tiny payloads if translated with integer truncation. -> Mitigation: use a ceil-based two-unit count and validate that non-zero payloads produce positive transfer time.
 - [Risk] Combining command and data-in as a single event can blur the requested priority distinction. -> Mitigation: either split command and data-in into separate transfer tasks or store sub-phase boundaries so command remains the highest-priority preemptor and data-in uses the correct class.
@@ -107,7 +109,7 @@ MQSim is used as a reference for timing formulas and state separation, not as a 
 1. Add ONFI transfer timing constants/helpers and tests for MQSim-style calculations.
 2. Add PHY channel transfer state while keeping the old code path covered by tests during the transition.
 3. Route command/data-in/data-out scheduling through the new transfer scheduler.
-4. Add data-out preemption/resume and ignored-event tests.
+4. Add lower-priority transfer preemption/resume and ignored-event tests.
 5. Run focused PHY/TSU tests plus request latency e2e tests affected by ONFI timing.
 6. No data migration is required; generated reports may contain different timing values because the simulation model becomes more detailed.
 

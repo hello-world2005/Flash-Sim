@@ -469,6 +469,7 @@ class RequestLatencyRecorder:
                     "host_total_latency": total_latency,
                     "breakdown": host_breakdown,
                     "intervals": rec.intervals,
+                    "mapping_resolution_counts": dict(rec.mapping_resolution_counts),
                     "energy_uj": rec.energy_uj,
                     "persistence_energy_uj": rec.persistence_energy_uj,
                     "data_cache_status": rec.data_cache_status,

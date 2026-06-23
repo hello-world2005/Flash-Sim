@@ -27,7 +27,11 @@ else:
 from flash_sim.common import (
     BLOCK_PER_PLANE,
     CHANNEL_NO,
+    CHIP_PER_CHANNEL,
+    CMT_SIZE,
     DIE_PER_CHIP,
+    LPA_NO_PER_MAPPING_PAGE,
+    PAGE_PER_BLOCK,
     PLANE_PER_DIE,
     SECTOR_PER_PAGE,
     SL_PER_BLOCK,
@@ -35,6 +39,7 @@ from flash_sim.common import (
     STATIC_BASE_LHA,
     STATIC_CHIP_PER_CHANNEL,
 )
+from flash_sim.config import make_event_runtime_geometry
 from flash_sim.engine import Engine
 
 
@@ -42,11 +47,32 @@ DEFAULT_OUTPUT_ROOT = _REPO_ROOT / "output" / "request_resource_contention_exper
 DEFAULT_PRE_DATA_PATH = _REPO_ROOT / "pre_data" / "precondition_data.json"
 DEFAULT_SCAN_SIZES = (1, 2, 4, 8)
 SIZE_SCAN_REQUEST_TYPES = ("compute", "search")
-DEFAULT_READ_COUNT = 3
+SIZE_SCAN_CHART_TITLES = {
+    "compute": "CIM normalized latency",
+    "search": "CAM normalized latency",
+}
+DEFAULT_READ_COUNT: int | None = None
 DEFAULT_FIRST_READ_ISSUE_TIME_NS = 1
 DEFAULT_READ_TIME_STEP_NS = 100
-DEFAULT_READ_SIZE_SECTORS = 1
+DEFAULT_READ_SIZE_SECTORS = SECTOR_PER_PAGE
 DEFAULT_CONTENTION_COMPUTE_SIZE = 8
+READ_IMPACT_RATIO_SCAN_VALUES = (0.1, 0.2, 0.4, 0.8)
+READ_IMPACT_SIZE_SCAN_VALUES = (8, 32, 128, 512)
+READ_IMPACT_FIXED_SIZE_SCAN_RATIO = 0.2
+READ_IMPACT_RATIO_SCAN_COMPUTE_SIZE = 128
+READ_IMPACT_BASELINE_GROUP = "baseline"
+READ_IMPACT_RATIO_SCAN_GROUP = "ratio_scan"
+READ_IMPACT_SIZE_SCAN_GROUP = "size_scan"
+READ_IMPACT_GROUP_LABELS = {
+    READ_IMPACT_BASELINE_GROUP: "Control",
+    READ_IMPACT_RATIO_SCAN_GROUP: "Insertion ratio (req size = 128)",
+    READ_IMPACT_SIZE_SCAN_GROUP: "Req size (insertion ratio = 0.2)",
+}
+READ_IMPACT_GROUP_COLORS = {
+    READ_IMPACT_BASELINE_GROUP: "#1f77b4",
+    READ_IMPACT_RATIO_SCAN_GROUP: "#ff7f0e",
+    READ_IMPACT_SIZE_SCAN_GROUP: "#9467bd",
+}
 
 
 @dataclass(frozen=True)
@@ -54,6 +80,19 @@ class SimulationResult:
     trace_path: Path
     report_path: Path
     report: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class ReadImpactTracePlan:
+    condition_id: str
+    group: str
+    parameter_label: str
+    parameter_value: str | int | float
+    configured_ratio: float | None
+    compute_size: int | None
+    num_read_req: int
+    num_compute_req: int
+    commands: list[dict[str, Any]]
 
 
 def normalize_path(path: str | Path) -> Path:
@@ -285,6 +324,7 @@ def write_svg_bar_chart(
     )
     if not selected:
         raise ValueError(f"no rows available for {request_type} chart")
+    chart_title = SIZE_SCAN_CHART_TITLES[request_type]
 
     width = max(480, 120 + len(selected) * 80)
     height = 320
@@ -300,9 +340,7 @@ def write_svg_bar_chart(
     elements = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="#ffffff"/>',
-        f'<text x="{width / 2:.1f}" y="24" text-anchor="middle" font-family="Arial" font-size="16">{html.escape(request_type.upper())} normalized latency by size</text>',
-        f'<line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{height - margin_bottom}" stroke="#333"/>',
-        f'<line x1="{margin_left}" y1="{height - margin_bottom}" x2="{width - margin_right}" y2="{height - margin_bottom}" stroke="#333"/>',
+        f'<text x="{width / 2:.1f}" y="24" text-anchor="middle" font-family="Arial" font-size="16">{html.escape(chart_title)}</text>',
         f'<text x="18" y="{margin_top + chart_height / 2:.1f}" transform="rotate(-90 18 {margin_top + chart_height / 2:.1f})" text-anchor="middle" font-family="Arial" font-size="12">Normalized latency</text>',
         f'<text x="{margin_left + chart_width / 2:.1f}" y="{height - 18}" text-anchor="middle" font-family="Arial" font-size="12">Size</text>',
     ]
@@ -314,7 +352,7 @@ def write_svg_bar_chart(
         x = margin_left + bar_gap + index * (bar_width + bar_gap)
         y = margin_top + chart_height - bar_height
         size_label = html.escape(str(row["size"]))
-        value_label = f"{value:.3f}".rstrip("0").rstrip(".")
+        value_label = f"{value:.2f}"
         elements.extend(
             [
                 f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_width:.1f}" height="{bar_height:.1f}" fill="#2f6f8f"/>',
@@ -323,6 +361,9 @@ def write_svg_bar_chart(
             ]
         )
 
+    elements.append(
+        f'<rect x="{margin_left}" y="{margin_top}" width="{chart_width}" height="{chart_height}" fill="none" stroke="#333"/>'
+    )
     elements.append("</svg>")
     path = normalize_path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -396,38 +437,211 @@ def load_precondition_records(pre_data_path: str | Path = DEFAULT_PRE_DATA_PATH)
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _merge_sector_ranges(ranges: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    if not ranges:
+        return []
+    ordered = sorted((start, start + length) for start, length in ranges)
+    merged: list[list[int]] = [[ordered[0][0], ordered[0][1]]]
+    for start, end in ordered[1:]:
+        if start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return [(start, end - start) for start, end in merged]
+
+
+def read_lpa_sector_ranges(read_commands: list[dict[str, Any]]) -> dict[int, list[tuple[int, int]]]:
+    touched: dict[int, list[tuple[int, int]]] = {}
+    for command in read_commands:
+        if str(command.get("type", "")).lower() != "read":
+            raise ValueError("read-impact CMT-hit validation only accepts read commands")
+        start_lha = int(command.get("start_lha", -1))
+        size = int(command.get("size", 0))
+        if start_lha < 0:
+            raise ValueError(f"read start_lha must be non-negative: {start_lha}")
+        if size <= 0:
+            raise ValueError(f"read size must be positive: {size}")
+
+        current_lha = start_lha
+        remaining = size
+        while remaining > 0:
+            lpa = current_lha // SECTOR_PER_PAGE
+            sector_offset = current_lha % SECTOR_PER_PAGE
+            length = min(remaining, SECTOR_PER_PAGE - sector_offset)
+            touched.setdefault(lpa, []).append((sector_offset, length))
+            current_lha += length
+            remaining -= length
+
+    return {lpa: _merge_sector_ranges(ranges) for lpa, ranges in touched.items()}
+
+
+def read_impact_cmt_warm_capacity() -> int:
+    geometry = make_event_runtime_geometry()
+    cmt_ratio = getattr(geometry, "preconditioning_cmt_ratio", 0.5)
+    if not (0.0 < cmt_ratio <= 1.0):
+        cmt_ratio = 0.5
+    return int(CMT_SIZE * cmt_ratio)
+
+
+def read_impact_random_access_data_pages() -> int:
+    geometry = make_event_runtime_geometry()
+    non_static_chip_no = geometry.chip_per_channel - geometry.static_chip_per_channel
+    total_random_access_pages = (
+        geometry.channel_no
+        * non_static_chip_no
+        * geometry.dies
+        * geometry.planes_per_die
+        * geometry.blocks_per_plane
+        * geometry.pages_per_block
+    )
+    mapping_page_count = (
+        total_random_access_pages + LPA_NO_PER_MAPPING_PAGE - 1
+    ) // LPA_NO_PER_MAPPING_PAGE
+    return total_random_access_pages - mapping_page_count
+
+
+def read_impact_lpa_chip(lpa: int) -> int:
+    lpa = int(lpa)
+    if lpa < 0 or lpa >= read_impact_random_access_data_pages():
+        raise ValueError(
+            f"LPA {lpa} out of random-access data range "
+            f"[0, {read_impact_random_access_data_pages() - 1}]"
+        )
+    pages_per_plane = BLOCK_PER_PLANE * PAGE_PER_BLOCK
+    rem = lpa // pages_per_plane
+    rem //= PLANE_PER_DIE
+    rem //= DIE_PER_CHIP
+    return rem % CHIP_PER_CHANNEL
+
+
+def read_impact_lpa_is_preconditionable(lpa: int) -> bool:
+    try:
+        chip = read_impact_lpa_chip(lpa)
+    except ValueError:
+        return False
+    return chip < CHIP_PER_CHANNEL - STATIC_CHIP_PER_CHANNEL
+
+
+def validate_read_impact_page_reads(read_commands: list[dict[str, Any]]) -> None:
+    for command in read_commands:
+        if str(command.get("type", "")).lower() != "read":
+            raise ValueError("read-impact CMT-hit validation only accepts read commands")
+        start_lha = int(command.get("start_lha", -1))
+        size = int(command.get("size", 0))
+        if start_lha < 0:
+            raise ValueError(f"read start_lha must be non-negative: {start_lha}")
+        if start_lha % SECTOR_PER_PAGE != 0 or size != SECTOR_PER_PAGE:
+            raise ValueError(
+                "read-impact CMT-hit validation failed: "
+                f"read must be a page-aligned page read, got start_lha={start_lha}, size={size}"
+            )
+
+
+def validate_read_commands_for_cmt_hit(
+    read_commands: list[dict[str, Any]],
+    precondition_records: list[dict[str, Any]],
+    *,
+    cmt_capacity: int | None = None,
+) -> list[dict[str, Any]]:
+    validate_read_impact_page_reads(read_commands)
+    touched = read_lpa_sector_ranges(read_commands)
+    capacity = read_impact_cmt_warm_capacity() if cmt_capacity is None else int(cmt_capacity)
+    if len(touched) > capacity:
+        raise ValueError(
+            "read-impact CMT-hit validation failed: "
+            f"{len(touched)} touched LPAs exceed CMT warm capacity {capacity}"
+        )
+
+    records_by_lpa = {int(record["lpa"]): record for record in precondition_records}
+    for lpa, ranges in touched.items():
+        if not read_impact_lpa_is_preconditionable(lpa):
+            raise ValueError(
+                "read-impact CMT-hit validation failed: "
+                f"LPA {lpa} is not preconditionable for CMT warm-up"
+            )
+        record = records_by_lpa.get(lpa)
+        if record is None:
+            raise ValueError(
+                f"read-impact CMT-hit validation failed: missing preconditioned LPA {lpa}"
+            )
+        valid_bitmap = [int(bit) for bit in record.get("valid_bitmap", [])]
+        for sector_offset, length in ranges:
+            end = sector_offset + length
+            if end > len(valid_bitmap):
+                raise ValueError(
+                    "read-impact CMT-hit validation failed: "
+                    f"LPA {lpa} sector range {sector_offset}:{end} exceeds valid bitmap"
+                )
+            if any(bit == 0 for bit in valid_bitmap[sector_offset:end]):
+                raise ValueError(
+                    "read-impact CMT-hit validation failed: "
+                    f"LPA {lpa} has invalid sector in range {sector_offset}:{end}"
+                )
+
+    touched_lpas = set(touched)
+    return [dict(record) for record in precondition_records if int(record["lpa"]) in touched_lpas]
+
+
+def select_read_impact_precondition_records(
+    read_commands: list[dict[str, Any]],
+    *,
+    pre_data_path: str | Path = DEFAULT_PRE_DATA_PATH,
+) -> list[dict[str, Any]]:
+    return validate_read_commands_for_cmt_hit(
+        read_commands,
+        load_precondition_records(pre_data_path),
+    )
+
+
+def write_read_impact_precondition(
+    output_root: str | Path,
+    records: list[dict[str, Any]],
+) -> Path:
+    path = normalize_path(output_root) / "traces" / "read_impact" / "read_impact_cmt_hit_precondition.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(records, indent=2), encoding="utf-8")
+    return path
+
+
+def _precondition_record_has_full_valid_page(record: dict[str, Any]) -> bool:
+    if not read_impact_lpa_is_preconditionable(int(record["lpa"])):
+        return False
+    valid_bitmap = [int(bit) for bit in record.get("valid_bitmap", [])]
+    return len(valid_bitmap) >= SECTOR_PER_PAGE and all(valid_bitmap[:SECTOR_PER_PAGE])
+
+
 def build_default_read_commands(
     *,
     pre_data_path: str | Path = DEFAULT_PRE_DATA_PATH,
-    read_count: int = DEFAULT_READ_COUNT,
+    read_count: int | None = DEFAULT_READ_COUNT,
     first_issue_time_ns: int = DEFAULT_FIRST_READ_ISSUE_TIME_NS,
     time_step_ns: int = DEFAULT_READ_TIME_STEP_NS,
     read_size_sectors: int = DEFAULT_READ_SIZE_SECTORS,
 ) -> list[dict[str, int | str]]:
-    if read_count <= 0:
+    if read_count is not None and read_count <= 0:
         raise ValueError("read_count must be positive")
-    if read_size_sectors <= 0:
-        raise ValueError("read_size_sectors must be positive")
+    if int(read_size_sectors) != SECTOR_PER_PAGE:
+        raise ValueError("read-impact default reads must target exactly one page")
 
     commands: list[dict[str, int | str]] = []
+    target_count = read_impact_cmt_warm_capacity() if read_count is None else int(read_count)
     for record in load_precondition_records(pre_data_path):
+        if not _precondition_record_has_full_valid_page(record):
+            continue
         lpa = int(record["lpa"])
-        for sector_offset, run_length in valid_sector_runs(record.get("valid_bitmap", [])):
-            size = min(int(read_size_sectors), run_length)
-            if size <= 0:
-                continue
-            commands.append(
-                {
-                    "type": "read",
-                    "time": int(first_issue_time_ns) + len(commands) * int(time_step_ns),
-                    "start_lha": lpa * SECTOR_PER_PAGE + sector_offset,
-                    "size": size,
-                }
-            )
-            break
-        if len(commands) >= read_count:
+        commands.append(
+            {
+                "type": "read",
+                "time": int(first_issue_time_ns) + len(commands) * int(time_step_ns),
+                "start_lha": lpa * SECTOR_PER_PAGE,
+                "size": SECTOR_PER_PAGE,
+            }
+        )
+        if len(commands) >= target_count:
             return commands
-    raise ValueError(f"not enough valid preconditioned records for {read_count} read requests")
+    if commands and read_count is None:
+        return commands
+    raise ValueError(f"not enough full-page preconditioned records for {target_count} read requests")
 
 
 def read_commands_only(commands: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -445,13 +659,75 @@ def build_compute_prefix_commands(
     ]
 
 
-def build_paired_read_impact_traces(
+def _format_read_impact_ratio(ratio: float) -> str:
+    return f"{float(ratio):g}"
+
+
+def _read_impact_condition_id(prefix: str, value: object) -> str:
+    return f"{prefix}_{str(value).replace('.', '_')}"
+
+
+def read_impact_compute_count(num_read_req: int, ratio: float) -> int:
+    num_read_req = int(num_read_req)
+    ratio = float(ratio)
+    if num_read_req <= 0:
+        raise ValueError("num_read_req must be positive")
+    if ratio <= 0:
+        raise ValueError("read-impact compute insertion ratio must be positive")
+    return max(1, round(num_read_req * ratio))
+
+
+def read_impact_insertion_anchors(num_read_req: int, num_compute_req: int) -> list[int]:
+    num_read_req = int(num_read_req)
+    num_compute_req = int(num_compute_req)
+    if num_read_req <= 0:
+        raise ValueError("num_read_req must be positive")
+    if num_compute_req <= 0:
+        raise ValueError("num_compute_req must be positive")
+    return [
+        min(num_read_req - 1, ((index + 1) * num_read_req) // (num_compute_req + 1))
+        for index in range(num_compute_req)
+    ]
+
+
+def insert_compute_commands_for_read_impact(
+    read_commands: list[dict[str, Any]],
     *,
-    read_commands: list[dict[str, Any]] | None = None,
-    pre_data_path: str | Path = DEFAULT_PRE_DATA_PATH,
-    read_count: int = DEFAULT_READ_COUNT,
-    compute_size: int = DEFAULT_CONTENTION_COMPUTE_SIZE,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    ratio: float,
+    compute_size: int,
+) -> tuple[list[dict[str, Any]], int]:
+    validate_read_impact_page_reads(read_commands)
+    compute_size = validate_scan_sizes([compute_size])[0]
+    compute_count = read_impact_compute_count(len(read_commands), ratio)
+    anchor_counts: dict[int, int] = {}
+    for anchor in read_impact_insertion_anchors(len(read_commands), compute_count):
+        anchor_counts[anchor] = anchor_counts.get(anchor, 0) + 1
+
+    commands: list[dict[str, Any]] = []
+    compute_slot = 0
+    for read_index, read_command in enumerate(read_commands):
+        for _ in range(anchor_counts.get(read_index, 0)):
+            commands.append(
+                build_static_request_command(
+                    "compute",
+                    compute_size,
+                    time_ns=int(read_command["time"]),
+                    slot=compute_slot,
+                )
+            )
+            compute_slot += 1
+        commands.append(dict(read_command))
+    if read_commands_only(commands) != [dict(command) for command in read_commands]:
+        raise ValueError("contention trace read portion does not match baseline")
+    return commands, compute_count
+
+
+def _copy_read_commands_for_impact(
+    *,
+    read_commands: list[dict[str, Any]] | None,
+    pre_data_path: str | Path,
+    read_count: int | None,
+) -> list[dict[str, Any]]:
     baseline = [
         dict(command)
         for command in (
@@ -462,12 +738,117 @@ def build_paired_read_impact_traces(
     ]
     if not baseline:
         raise ValueError("at least one read command is required")
-    if any(str(command.get("type")).lower() != "read" for command in baseline):
-        raise ValueError("baseline read-impact commands must all be read requests")
-    contended = [*build_compute_prefix_commands(compute_size=compute_size), *[dict(command) for command in baseline]]
-    if read_commands_only(contended) != baseline:
-        raise ValueError("contention trace read portion does not match baseline")
+    validate_read_impact_page_reads(baseline)
+    return baseline
+
+
+def build_read_impact_trace_plans(
+    *,
+    read_commands: list[dict[str, Any]] | None = None,
+    pre_data_path: str | Path = DEFAULT_PRE_DATA_PATH,
+    read_count: int | None = DEFAULT_READ_COUNT,
+    ratio_scan_values: Iterable[float] = READ_IMPACT_RATIO_SCAN_VALUES,
+    size_scan_values: Iterable[int] = READ_IMPACT_SIZE_SCAN_VALUES,
+) -> list[ReadImpactTracePlan]:
+    baseline = _copy_read_commands_for_impact(
+        read_commands=read_commands,
+        pre_data_path=pre_data_path,
+        read_count=read_count,
+    )
+    plans = [
+        ReadImpactTracePlan(
+            condition_id="baseline",
+            group=READ_IMPACT_BASELINE_GROUP,
+            parameter_label="control",
+            parameter_value="control",
+            configured_ratio=None,
+            compute_size=None,
+            num_read_req=len(baseline),
+            num_compute_req=0,
+            commands=[dict(command) for command in baseline],
+        )
+    ]
+
+    for ratio in ratio_scan_values:
+        ratio_label = _format_read_impact_ratio(float(ratio))
+        commands, compute_count = insert_compute_commands_for_read_impact(
+            baseline,
+            ratio=float(ratio),
+            compute_size=READ_IMPACT_RATIO_SCAN_COMPUTE_SIZE,
+        )
+        plans.append(
+            ReadImpactTracePlan(
+                condition_id=_read_impact_condition_id("ratio", ratio_label),
+                group=READ_IMPACT_RATIO_SCAN_GROUP,
+                parameter_label=ratio_label,
+                parameter_value=float(ratio),
+                configured_ratio=float(ratio),
+                compute_size=READ_IMPACT_RATIO_SCAN_COMPUTE_SIZE,
+                num_read_req=len(baseline),
+                num_compute_req=compute_count,
+                commands=commands,
+            )
+        )
+
+    for compute_size in validate_scan_sizes(size_scan_values):
+        commands, compute_count = insert_compute_commands_for_read_impact(
+            baseline,
+            ratio=READ_IMPACT_FIXED_SIZE_SCAN_RATIO,
+            compute_size=compute_size,
+        )
+        plans.append(
+            ReadImpactTracePlan(
+                condition_id=_read_impact_condition_id("size", compute_size),
+                group=READ_IMPACT_SIZE_SCAN_GROUP,
+                parameter_label=str(compute_size),
+                parameter_value=compute_size,
+                configured_ratio=READ_IMPACT_FIXED_SIZE_SCAN_RATIO,
+                compute_size=compute_size,
+                num_read_req=len(baseline),
+                num_compute_req=compute_count,
+                commands=commands,
+            )
+        )
+
+    return plans
+
+
+def build_paired_read_impact_traces(
+    *,
+    read_commands: list[dict[str, Any]] | None = None,
+    pre_data_path: str | Path = DEFAULT_PRE_DATA_PATH,
+    read_count: int | None = DEFAULT_READ_COUNT,
+    compute_size: int = DEFAULT_CONTENTION_COMPUTE_SIZE,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    baseline = _copy_read_commands_for_impact(
+        read_commands=read_commands,
+        pre_data_path=pre_data_path,
+        read_count=read_count,
+    )
+    contended, _ = insert_compute_commands_for_read_impact(
+        baseline,
+        ratio=READ_IMPACT_FIXED_SIZE_SCAN_RATIO,
+        compute_size=compute_size,
+    )
     return baseline, contended
+
+
+def _read_impact_trace_filename(plan: ReadImpactTracePlan) -> str:
+    if plan.group == READ_IMPACT_BASELINE_GROUP:
+        return "read_impact_baseline.json"
+    return trace_filename("read_impact", plan.condition_id)
+
+
+def write_read_impact_trace_plans(
+    output_root: str | Path,
+    plans: list[ReadImpactTracePlan],
+) -> dict[str, Path]:
+    output_root = normalize_path(output_root)
+    trace_dir = output_root / "traces" / "read_impact"
+    return {
+        plan.condition_id: write_trace(plan.commands, trace_dir / _read_impact_trace_filename(plan))
+        for plan in plans
+    }
 
 
 def write_read_impact_traces(
@@ -530,6 +911,79 @@ def validate_compute_prefix_overlap(
             )
 
 
+def _mapping_resolution_counts_for_read(
+    request: dict[str, Any],
+    *,
+    label: str,
+) -> dict[str, int]:
+    identity = read_identity_from_report_request(request)
+    raw_counts = request.get("mapping_resolution_counts")
+    if not isinstance(raw_counts, dict):
+        raise ValueError(
+            f"read-impact CMT-hit validation failed for {label} read {identity}: "
+            "missing mapping_resolution_counts"
+        )
+    required_keys = ("cmt_hit", "gmt_hit", "mapping_read", "uncached_write")
+    missing = [key for key in required_keys if key not in raw_counts]
+    if missing:
+        raise ValueError(
+            f"read-impact CMT-hit validation failed for {label} read {identity}: "
+            f"missing mapping count keys {missing}"
+        )
+    return {key: int(raw_counts[key]) for key in required_keys}
+
+
+def validate_read_report_cmt_hits(
+    report: dict[str, Any],
+    *,
+    label: str,
+) -> None:
+    reads = _read_request_map(report)
+    for identity, request in reads.items():
+        counts = _mapping_resolution_counts_for_read(request, label=label)
+        total_lookups = sum(counts.values())
+        if (
+            total_lookups <= 0
+            or counts["mapping_read"] != 0
+            or counts["cmt_hit"] != total_lookups
+        ):
+            raise ValueError(
+                f"read-impact CMT-hit validation failed for {label} read {identity}: "
+                f"mapping_resolution_counts={counts}"
+            )
+
+
+def validate_read_impact_reports_cmt_hits(
+    baseline_report: dict[str, Any],
+    contended_report: dict[str, Any],
+) -> None:
+    baseline_reads = _read_request_map(baseline_report)
+    contended_reads = _read_request_map(contended_report)
+    if set(baseline_reads) != set(contended_reads):
+        missing = sorted(set(baseline_reads) - set(contended_reads))
+        extra = sorted(set(contended_reads) - set(baseline_reads))
+        raise ValueError(f"read identity mismatch: missing={missing}, extra={extra}")
+    validate_read_report_cmt_hits(baseline_report, label="baseline")
+    validate_read_report_cmt_hits(contended_report, label="compute-contention")
+
+
+def validate_read_impact_scan_reports_cmt_hits(
+    baseline_report: dict[str, Any],
+    condition_reports: dict[str, dict[str, Any]],
+) -> None:
+    baseline_reads = _read_request_map(baseline_report)
+    validate_read_report_cmt_hits(baseline_report, label="baseline")
+    for condition_id, report in condition_reports.items():
+        condition_reads = _read_request_map(report)
+        if set(baseline_reads) != set(condition_reads):
+            missing = sorted(set(baseline_reads) - set(condition_reads))
+            extra = sorted(set(condition_reads) - set(baseline_reads))
+            raise ValueError(
+                f"read identity mismatch for {condition_id}: missing={missing}, extra={extra}"
+            )
+        validate_read_report_cmt_hits(report, label=condition_id)
+
+
 def compare_read_completion_times(
     baseline_report: dict[str, Any],
     contended_report: dict[str, Any],
@@ -561,19 +1015,80 @@ def compare_read_completion_times(
     return rows
 
 
+def _request_latency_value(request: dict[str, Any]) -> float:
+    total_latency = request.get("total_latency")
+    if total_latency is not None:
+        return float(total_latency)
+    completion_time = request.get("host_completion_time")
+    if completion_time is None:
+        raise ValueError(f"READ request missing total_latency and host_completion_time: {request}")
+    return float(int(completion_time) - _report_issue_time(request))
+
+
+def average_read_latency(report: dict[str, Any]) -> float:
+    reads = list(_read_request_map(report).values())
+    if not reads:
+        raise ValueError("read-impact report contains no READ requests")
+    return sum(_request_latency_value(request) for request in reads) / len(reads)
+
+
+def build_read_impact_result_rows(
+    plans: list[ReadImpactTracePlan],
+    simulations: dict[str, SimulationResult],
+) -> list[dict[str, Any]]:
+    if not plans or plans[0].group != READ_IMPACT_BASELINE_GROUP:
+        raise ValueError("read-impact result rows require the first plan to be the baseline")
+    baseline_simulation = simulations[plans[0].condition_id]
+    baseline_average = average_read_latency(baseline_simulation.report)
+
+    rows: list[dict[str, Any]] = []
+    for plan in plans:
+        simulation = simulations[plan.condition_id]
+        average_latency = average_read_latency(simulation.report)
+        normalized_latency = (
+            1.0
+            if plan.group == READ_IMPACT_BASELINE_GROUP
+            else (0.0 if baseline_average <= 0 else average_latency / baseline_average)
+        )
+        rows.append(
+            {
+                "condition_id": plan.condition_id,
+                "group": plan.group,
+                "group_label": READ_IMPACT_GROUP_LABELS[plan.group],
+                "parameter_label": plan.parameter_label,
+                "parameter_value": plan.parameter_value,
+                "configured_ratio": "" if plan.configured_ratio is None else plan.configured_ratio,
+                "compute_size": "" if plan.compute_size is None else plan.compute_size,
+                "num_read_req": plan.num_read_req,
+                "num_compute_req": plan.num_compute_req,
+                "average_read_latency": average_latency,
+                "normalized_latency": normalized_latency,
+                "trace_path": str(simulation.trace_path),
+                "report_path": str(simulation.report_path),
+            }
+        )
+    return rows
+
+
 def write_read_impact_json(
     rows: list[dict[str, Any]],
     output_path: str | Path,
     *,
     baseline_trace_path: str | Path,
-    contended_trace_path: str | Path,
+    trace_paths: dict[str, str | Path],
+    cmt_hit_precondition_path: str | Path,
 ) -> Path:
     path = normalize_path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
+        "normalization": "baseline_average_read_latency",
         "baseline_trace_path": str(normalize_path(baseline_trace_path)),
-        "contended_trace_path": str(normalize_path(contended_trace_path)),
-        "comparison": rows,
+        "cmt_hit_precondition_path": str(normalize_path(cmt_hit_precondition_path)),
+        "trace_paths": {
+            condition_id: str(normalize_path(trace_path))
+            for condition_id, trace_path in trace_paths.items()
+        },
+        "results": rows,
     }
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return path
@@ -583,13 +1098,19 @@ def write_read_impact_csv(rows: list[dict[str, Any]], output_path: str | Path) -
     path = normalize_path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
-        "type",
-        "time",
-        "start_lha",
-        "size",
-        "baseline_host_completion_time",
-        "contended_host_completion_time",
-        "completion_time_delta",
+        "condition_id",
+        "group",
+        "group_label",
+        "parameter_label",
+        "parameter_value",
+        "configured_ratio",
+        "compute_size",
+        "num_read_req",
+        "num_compute_req",
+        "average_read_latency",
+        "normalized_latency",
+        "trace_path",
+        "report_path",
     ]
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -599,45 +1120,159 @@ def write_read_impact_csv(rows: list[dict[str, Any]], output_path: str | Path) -
     return path
 
 
+def write_read_impact_grouped_bar_chart(
+    rows: list[dict[str, Any]],
+    output_path: str | Path,
+) -> Path:
+    group_order = [
+        READ_IMPACT_BASELINE_GROUP,
+        READ_IMPACT_RATIO_SCAN_GROUP,
+        READ_IMPACT_SIZE_SCAN_GROUP,
+    ]
+    rows_by_group = {
+        group: [row for row in rows if row.get("group") == group]
+        for group in group_order
+    }
+    if any(not rows_by_group[group] for group in group_order):
+        raise ValueError("read-impact chart requires baseline, ratio-scan, and size-scan rows")
+
+    margin_left = 64
+    margin_right = 28
+    margin_top = 44
+    margin_bottom = 96
+    chart_height = 220
+    bar_width = 42
+    bar_gap = 12
+    group_gap = 58
+    edge_padding = 36
+    total_bars = sum(len(rows_by_group[group]) for group in group_order)
+    total_inner_gaps = sum(max(0, len(rows_by_group[group]) - 1) for group in group_order)
+    chart_width = (
+        edge_padding * 2
+        + total_bars * bar_width
+        + total_inner_gaps * bar_gap
+        + (len(group_order) - 1) * group_gap
+    )
+    width = margin_left + chart_width + margin_right
+    height = margin_top + chart_height + margin_bottom
+    max_value = max(1.0, *(float(row["normalized_latency"]) for row in rows))
+    y_scale_max = max_value * 1.15
+
+    elements = [
+        (
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}" data-bar-gap="{bar_gap}" '
+            f'data-group-gap="{group_gap}" data-edge-padding="{edge_padding}">'
+        ),
+        '<rect width="100%" height="100%" fill="#ffffff"/>',
+        f'<text x="{width / 2:.1f}" y="24" text-anchor="middle" font-family="Arial" font-size="16">Average READ Latency under READ/CIM Resource competetion</text>',
+        f'<text x="18" y="{margin_top + chart_height / 2:.1f}" transform="rotate(-90 18 {margin_top + chart_height / 2:.1f})" text-anchor="middle" font-family="Arial" font-size="12">Normalized latency</text>',
+    ]
+
+    x = margin_left + edge_padding
+    group_centers: dict[str, float] = {}
+    for group in group_order:
+        group_rows = rows_by_group[group]
+        group_start = x
+        fill = READ_IMPACT_GROUP_COLORS[group]
+        for row in group_rows:
+            value = float(row["normalized_latency"])
+            bar_height = 0.0 if y_scale_max <= 0 else chart_height * (value / y_scale_max)
+            y = margin_top + chart_height - bar_height
+            parameter_label = html.escape(str(row["parameter_label"]))
+            value_label = f"{value:.2f}"
+            elements.extend(
+                [
+                    f'<rect data-group="{group}" x="{x:.1f}" y="{y:.1f}" width="{bar_width}" height="{bar_height:.1f}" fill="{fill}"/>',
+                    f'<text x="{x + bar_width / 2:.1f}" y="{max(margin_top + 12, y - 6):.1f}" text-anchor="middle" font-family="Arial" font-size="11">{value_label}</text>',
+                    f'<text x="{x + bar_width / 2:.1f}" y="{margin_top + chart_height + 22}" text-anchor="middle" font-family="Arial" font-size="12">{parameter_label}</text>',
+                ]
+            )
+            x += bar_width + bar_gap
+        group_end = x - bar_gap
+        group_centers[group] = (group_start + group_end) / 2
+        x += group_gap - bar_gap
+
+    for group in group_order:
+        elements.append(
+            f'<text x="{group_centers[group]:.1f}" y="{height - 24}" text-anchor="middle" font-family="Arial" font-size="12">{html.escape(READ_IMPACT_GROUP_LABELS[group])}</text>'
+        )
+    elements.append(
+        f'<rect x="{margin_left}" y="{margin_top}" width="{chart_width}" height="{chart_height}" fill="none" stroke="#333"/>'
+    )
+    elements.append("</svg>")
+    path = normalize_path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(elements), encoding="utf-8")
+    return path
+
+
 def run_read_impact_comparison(
     *,
     output_root: str | Path = DEFAULT_OUTPUT_ROOT,
     pre_data_path: str | Path = DEFAULT_PRE_DATA_PATH,
     read_commands: list[dict[str, Any]] | None = None,
-    read_count: int = DEFAULT_READ_COUNT,
+    read_count: int | None = DEFAULT_READ_COUNT,
     compute_size: int = DEFAULT_CONTENTION_COMPUTE_SIZE,
     engine_factory: Callable[[], Any] = Engine,
     simulate: Callable[..., SimulationResult] = run_engine_and_load_report,
 ) -> dict[str, Any]:
     output_root = normalize_path(output_root)
-    baseline, contended = build_paired_read_impact_traces(
+    plans = build_read_impact_trace_plans(
         read_commands=read_commands,
         pre_data_path=pre_data_path,
         read_count=read_count,
-        compute_size=compute_size,
     )
-    baseline_path, contended_path = write_read_impact_traces(output_root, baseline, contended)
-    baseline_sim = simulate(baseline_path, engine_factory=engine_factory)
-    contended_sim = simulate(contended_path, engine_factory=engine_factory)
-    first_read_issue_time = int(baseline[0]["time"])
-    validate_compute_prefix_overlap(contended_sim.report, first_read_issue_time=first_read_issue_time)
-    rows = compare_read_completion_times(baseline_sim.report, contended_sim.report)
+    baseline_plan = plans[0]
+    trace_paths = write_read_impact_trace_plans(output_root, plans)
+    cmt_hit_precondition_records = select_read_impact_precondition_records(
+        baseline_plan.commands,
+        pre_data_path=pre_data_path,
+    )
+    cmt_hit_precondition_path = write_read_impact_precondition(
+        output_root,
+        cmt_hit_precondition_records,
+    )
+    simulations: dict[str, SimulationResult] = {}
+    for plan in plans:
+        simulations[plan.condition_id] = simulate(
+            trace_paths[plan.condition_id],
+            engine_factory=engine_factory,
+            pre_trace=cmt_hit_precondition_path,
+        )
+    baseline_sim = simulations[baseline_plan.condition_id]
+    condition_reports = {
+        plan.condition_id: simulations[plan.condition_id].report
+        for plan in plans
+        if plan.group != READ_IMPACT_BASELINE_GROUP
+    }
+    validate_read_impact_scan_reports_cmt_hits(baseline_sim.report, condition_reports)
+    rows = build_read_impact_result_rows(plans, simulations)
 
     results_dir = output_root / "results"
+    charts_dir = output_root / "charts"
     json_path = write_read_impact_json(
         rows,
         results_dir / "read_impact_comparison.json",
-        baseline_trace_path=baseline_path,
-        contended_trace_path=contended_path,
+        baseline_trace_path=trace_paths[baseline_plan.condition_id],
+        trace_paths=trace_paths,
+        cmt_hit_precondition_path=cmt_hit_precondition_path,
     )
     csv_path = write_read_impact_csv(rows, results_dir / "read_impact_comparison.csv")
+    chart_path = write_read_impact_grouped_bar_chart(
+        rows,
+        charts_dir / "read_impact_normalized_latency.svg",
+    )
     return {
         "output_root": str(output_root),
-        "baseline_trace_path": str(baseline_path),
-        "contended_trace_path": str(contended_path),
+        "baseline_trace_path": str(trace_paths[baseline_plan.condition_id]),
+        "trace_paths": {condition_id: str(path) for condition_id, path in trace_paths.items()},
+        "cmt_hit_precondition_path": str(cmt_hit_precondition_path),
         "results_json": str(json_path),
         "results_csv": str(csv_path),
-        "comparison": rows,
+        "chart_path": str(chart_path),
+        "results": rows,
+        "simulation_count": len(plans),
     }
 
 
@@ -676,13 +1311,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--read-count",
         type=int,
         default=DEFAULT_READ_COUNT,
-        help="Number of default read requests in the read-impact experiment.",
+        help="Number of default read requests in the read-impact experiment; omit to use all CMT-warmable page reads.",
     )
     parser.add_argument(
         "--compute-size",
         type=int,
         default=DEFAULT_CONTENTION_COMPUTE_SIZE,
-        help="Size for each prepended compute request in the read-impact experiment.",
+        help="Deprecated for read-impact scans; ratio and request-size scans use fixed configured sizes.",
     )
     return parser.parse_args(argv)
 
@@ -699,9 +1334,15 @@ def _print_size_scan_summary(result: dict[str, Any]) -> None:
 
 def _print_read_impact_summary(result: dict[str, Any]) -> None:
     print(f"[read-impact] baseline trace: {result['baseline_trace_path']}")
-    print(f"[read-impact] compute-contention trace: {result['contended_trace_path']}")
+    print("[read-impact] scan traces:")
+    for condition_id, path in result["trace_paths"].items():
+        if condition_id == "baseline":
+            continue
+        print(f"  {condition_id}: {path}")
+    print(f"[read-impact] CMT-hit precondition: {result['cmt_hit_precondition_path']}")
     print(f"[read-impact] comparison JSON: {result['results_json']}")
     print(f"[read-impact] comparison CSV: {result['results_csv']}")
+    print(f"[read-impact] normalized latency chart: {result['chart_path']}")
 
 
 def main(argv: list[str] | None = None) -> int:

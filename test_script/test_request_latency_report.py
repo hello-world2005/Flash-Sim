@@ -223,6 +223,58 @@ class TestRequestLatencyRecorder(unittest.TestCase):
         self.assertEqual(row[CSV_COLUMN_NAMES[11]], expected_payload_latency)
         self.assertEqual(row[CSV_COLUMN_NAMES[2]] - row[CSV_COLUMN_NAMES[0]], _csv_latency_sum(row))
 
+    def test_json_mapping_resolution_counts_exports_cmt_hit(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.READ, "req-json-cmt")
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_req_init_executed(req, 0)
+        recorder.note_mapping_resolution(req, "cmt_hit")
+        recorder.note_request_completed(req, 10)
+
+        exported = recorder.export()["requests"][0]
+
+        self.assertEqual(
+            exported["mapping_resolution_counts"],
+            {
+                "cmt_hit": 1,
+                "gmt_hit": 0,
+                "mapping_read": 0,
+                "uncached_write": 0,
+            },
+        )
+
+    def test_json_mapping_resolution_counts_exports_mapping_read(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.READ, "req-json-mapping")
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_req_init_executed(req, 0)
+        recorder.note_mapping_resolution(req, "mapping_read")
+        recorder.note_request_completed(req, 10)
+
+        exported = recorder.export()["requests"][0]
+
+        self.assertEqual(exported["mapping_resolution_counts"]["mapping_read"], 1)
+        self.assertEqual(exported["mapping_resolution_counts"]["cmt_hit"], 0)
+
+    def test_json_mapping_resolution_counts_exports_zeroes_for_compute(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.COMPUTE, "req-json-compute")
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_req_init_executed(req, 0)
+        recorder.note_request_completed(req, 10)
+
+        exported = recorder.export()["requests"][0]
+
+        self.assertEqual(
+            exported["mapping_resolution_counts"],
+            {
+                "cmt_hit": 0,
+                "gmt_hit": 0,
+                "mapping_read": 0,
+                "uncached_write": 0,
+            },
+        )
+
     def test_csv_write_row_uses_host_visible_completion_path(self):
         recorder = RequestLatencyRecorder()
         req = self._make_req(RequestType.WRITE, "req-write-csv")

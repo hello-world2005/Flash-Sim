@@ -323,7 +323,7 @@ class PHY():
     def channel_is_busy(self, channel_id: int) -> bool:
         active = self._active_transfers[channel_id]
         if active is not None:
-            if not active.is_data_out:
+            if active.kind == ChannelTransferKind.COMMAND:
                 return True
             return any(
                 task.kind in DATA_IN_TRANSFER_KINDS or task.kind == ChannelTransferKind.COMMAND
@@ -456,8 +456,8 @@ class PHY():
         channel_id = task.channel_id
         if task.kind == ChannelTransferKind.COMMAND:
             active = self._active_transfers[channel_id]
-            if active is not None and active.is_data_out:
-                self._preempt_active_data_out(active)
+            if active is not None and active.priority > task.priority:
+                self._preempt_active_transfer(active)
         self._pending_transfers[channel_id].append(task)
         if not defer_start:
             self.schedule_next_channel_transfer(channel_id)
@@ -539,8 +539,10 @@ class PHY():
         self._channel_busy[task.channel_id] = False
         return task
 
-    def _preempt_active_data_out(self, task: ChannelTransferTask) -> bool:
+    def _preempt_active_transfer(self, task: ChannelTransferTask) -> bool:
         now = CURRENT_TIME()
+        if task.priority <= CHANNEL_TRANSFER_PRIORITY[ChannelTransferKind.COMMAND]:
+            return False
         if task.finish_time is None or task.finish_time <= now:
             return False
         if task.completion_event is not None:
@@ -556,6 +558,9 @@ class PHY():
         task.sequence = self._next_transfer_sequence()
         self._pending_transfers[task.channel_id].append(task)
         return True
+
+    def _preempt_active_data_out(self, task: ChannelTransferTask) -> bool:
+        return self._preempt_active_transfer(task)
 
     def _enqueue_data_in_transfer(
         self,

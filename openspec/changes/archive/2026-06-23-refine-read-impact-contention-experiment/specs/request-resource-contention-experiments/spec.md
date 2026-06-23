@@ -1,48 +1,4 @@
-# Request Resource Contention Experiments Specification
-
-## Purpose
-
-Define repository-provided experiment tooling for isolated `compute` and `search` request-size latency scans, normalized bar-chart output, and paired read-impact comparisons that measure the effect of compute channel-resource occupancy on otherwise identical read traffic.
-## Requirements
-### Requirement: Experiment tooling generates isolated compute and search size-scan traces
-
-The repository SHALL provide experiment tooling that accepts a list of positive request sizes and generates one engine trace for every `(request_type, size)` pair where `request_type` is `compute` or `search`. Each generated trace MUST contain exactly one request, MUST issue that request alone, and MUST keep the request inside the static-address domain used by event-driven `compute` and `search` requests.
-
-#### Scenario: Single-request trace is generated for each size
-
-- **WHEN** the size-scan experiment is configured with sizes `[1, 2, 4]`
-- **THEN** the tooling MUST generate six traces: one `compute` trace and one `search` trace for each configured size
-- **AND** every generated trace MUST contain exactly one command with fields `type`, `time`, `start_lha`, and `size`
-
-#### Scenario: Invalid scan sizes are rejected
-
-- **WHEN** the size-scan experiment is configured with a zero or negative size
-- **THEN** the tooling MUST reject the configuration before running the simulator
-
-### Requirement: Size-scan experiment records raw and normalized latency results
-
-The size-scan experiment SHALL run the event-driven simulator once for each generated single-request trace and SHALL collect request latency data from the generated request latency JSON report. The aggregate result MUST preserve raw `host_completion_time` and `total_latency` values for every `(request_type, size)` pair. The plotted latency value MUST be normalized per request type by dividing each raw `total_latency` by the maximum raw `total_latency` measured for that same request type; if the maximum is zero, all normalized values for that request type MUST be `0`.
-
-#### Scenario: One simulation is run for each generated trace
-
-- **WHEN** the size-scan experiment is configured with two request sizes
-- **THEN** the tooling MUST invoke the simulator four times, once for each generated `compute` or `search` trace
-
-#### Scenario: Latency normalization preserves raw data
-
-- **WHEN** the size-scan experiment aggregates raw `compute` latencies `[10, 20]` and raw `search` latencies `[5, 10]`
-- **THEN** the aggregate output MUST keep the raw latency values
-- **AND** the normalized values MUST be `[0.5, 1.0]` for `compute` and `[0.5, 1.0]` for `search`
-
-### Requirement: Size-scan experiment emits normalized bar charts
-
-The size-scan experiment SHALL write a bar-chart artifact for `compute` and a bar-chart artifact for `search`. Each chart MUST use request `size` as the x-axis categories and normalized latency as the y-axis values. The chart artifact MUST be written under the experiment output root together with machine-readable aggregate data.
-
-#### Scenario: Charts are written with size labels and normalized values
-
-- **WHEN** the size-scan experiment completes successfully
-- **THEN** the output root MUST contain machine-readable aggregate results
-- **AND** it MUST contain a `compute` bar chart and a `search` bar chart whose bar labels correspond to the scanned sizes
+## MODIFIED Requirements
 
 ### Requirement: Experiment tooling generates paired read-impact traces
 
@@ -123,6 +79,8 @@ The read-impact experiment SHALL ensure every measured `read` request in the bas
 - **WHEN** the baseline simulation and every compute-contention simulation complete and every compared `READ` request reports mapping-resolution counts with `cmt_hit` equal to the total mapping lookups and `mapping_read` equal to `0`
 - **THEN** the read-impact output MUST include one condition-level result row for the baseline and one condition-level result row for each configured scan condition
 
+## ADDED Requirements
+
 ### Requirement: Read-impact experiment emits grouped normalized bar chart
 
 The read-impact experiment SHALL write one grouped bar-chart artifact for normalized average read latency. The chart MUST contain three x-axis groups in this order: baseline, insertion-ratio scan, and request-size scan. The baseline group MUST contain a bar with normalized latency `1.0` and use the default blue color. The insertion-ratio scan group MUST use ratio labels on the x-axis and orange bars. The request-size scan group MUST use compute request size labels on the x-axis and purple bars. Gaps between bars in the same group MUST be smaller than gaps between different groups. The chart MUST label each group below the x-axis and MUST format data labels with exactly two decimal places.
@@ -139,4 +97,3 @@ The read-impact experiment SHALL write one grouped bar-chart artifact for normal
 - **WHEN** the grouped read-impact chart is written
 - **THEN** every bar value label MUST be formatted with exactly two decimal places
 - **AND** the y-axis label MUST indicate normalized latency
-

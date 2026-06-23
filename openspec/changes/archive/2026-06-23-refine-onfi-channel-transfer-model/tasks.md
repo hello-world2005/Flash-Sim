@@ -31,3 +31,13 @@
 - [x] 5.3 Add a data-out preemption test under `test_script/` that verifies a command interrupts active user data-out, the old completion event is ignored, and the resumed data-out completes after the remaining duration.
 - [x] 5.4 Add a request latency report test under `test_script/` proving preempted data-out is reported as split non-overlapping `phy_data_out` intervals.
 - [x] 5.5 Run focused PHY/TSU tests, request latency report tests, and the read-impact experiment or its regression test to observe the changed ONFI contention behavior.
+
+## 6. Command Preemption Generalization
+
+- [x] 6.1 Modify `flash_sim/PHY.py` channel preemption logic to compare active-transfer priority against command priority and allow command to interrupt any active lower-priority ONFI transfer task.
+- [x] 6.2 Modify `flash_sim/PHY.py` interrupted-transfer bookkeeping so completion-event `ignored` handling, remaining-duration calculation, requeueing, and resume work for data-in tasks as well as all data-out task classes.
+- [x] 6.3 Modify `flash_sim/PHY.py` scheduler safeguards so active command transfers are not preempted by other commands and lower-priority transfers never preempt active transfers.
+- [x] 6.4 Modify `flash_sim/PHY.py` latency interval emission so preempted `phy_data_in` and `phy_data_out` intervals are split around interrupting command transfers without counting the preemption gap.
+- [x] 6.5 Add or update tests under `test_script/` proving command preempts active data-in, active mapping/user/static/GC data-out, and does not preempt active command.
+- [x] 6.6 Add or update request-latency report tests under `test_script/` proving preempted data-in and data-out segments are reported as non-overlapping intervals whose summed duration equals completed transfer time.
+- [x] 6.7 Run focused PHY scheduler and request-latency tests that cover both data-in and data-out command preemption.

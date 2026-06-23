@@ -1,16 +1,14 @@
-# 仿真器架构介绍修改
-请根据当前project_report目录下的arch_intro.md文件中的架构介绍，以及spec中的信息，提取引入存算、存内搜索操作的处理需要在传统的读写仿真器上进行的扩展，并按照如下三个子标题进行归类整理。
-
-## SSD后端模型
-该部分主要介绍PHY模块模拟指令自PHY电路下发到阵列执行的过程中，对存算、存内搜索操作的处理与read/write处理的不同。这块的主要不同在于对于阵列操作延时的估计，计算结果传出和指令下发的过程与read/write操作一致。
-
-## SSD前端模型
-这块的不同在AMU, TSU, GC, Block Manager和HIL中均有体现
-- HIL：对于SEARCH和COMPUTE请求的切分粒度不同于read/write，为subplane。
-- AMU：对于SEARCH和COMPUTE请求，直接用lpa计算出物理地址。同时该部分会管理一个一个static和random分区的地址分界，在分配地址时保证读写和存算的物理地址严格分离。
-- Block Manager和GC：对于静态区域不再设里状态管理和垃圾回收机制，节省硬件资源
-
-## SSD仿真初始化
-该部分的不同主要是在初始化的时候需要避免对STATIC分区进行状态的初始化，因为默认初始的权重是已经离线加载完成的
-
-要求：整体整理好之后的字数保证用小四号字体在A4页面上能有2页文字。整理的时候尽量规避使用文件名称、函数名称、变量名称等参与描述，使用定性的语言进行描述即可。生成的报告直接更新在arch_intro.md中即可
+# resource contention实验修改
+当前的request_resource_contention_experiments.py脚本中对于read-impact的实验较为简略，请帮我修改一下这个实验：
+1. 对照组与实验组同时包含CMT初始化时缓存的所有read请求，并且issue的时间、顺序完全相同，每个read req的访问均target一个page
+2. 实验组扫描插入compute操作的两个变量：
+    1. 插入比例：定义`ratio = num_compute_req/num_read_req`，扫描ratio = 0.1 0.2 0.4 0.8时的结果。该组中每个插入的COMPUTE req的size均为128
+    2. req size：固定插入比例为0.2，扫描COMPUTE req的size为8 32 128 512
+3. 统计方式：统计每个实验组的参数条件下read的平均延时
+4. 绘图要求：绘制柱状图，分为三组绘制在同一个chart中，不同组别沿横轴排列，纵轴是normalized latency
+    1. 对照组：设置为归一化的基础，保证其值为1。该组用默认的蓝色绘制
+    2. 插入比例扫描组：横轴为ratio，纵轴为归一化后的latency。该组用橙色绘制
+    3. req size扫描组：横轴为size，纵轴为归一化后的latency。该组用紫色绘制
+    4. 组内的bar间隔小一些，组间的bar之间留多一点空隙
+    5. 在对应组别的横轴下方用文字标出各组名称
+    6. 数据标签保留两位小数

@@ -1,3 +1,5 @@
+import pytest
+
 import flash_sim.PHY as phy_module
 from flash_sim.config import OnfiTimingConfig
 from flash_sim.common import (
@@ -46,6 +48,11 @@ def _prime_read_data_out(phy, transaction):
     chip_bke.No_of_active_dies = 1
     chip_bke._has_data_waiting = True
     phy._transfer_data(chip_id, 0, "read", [transaction])
+
+
+def _prime_data_in(phy, transaction, op_kind="write"):
+    chip_id = (0, transaction.address.chip)
+    phy._enqueue_data_in_transfer(chip_id, 0, op_kind, [transaction], defer_start=False)
 
 
 def test_nvddr2_timing_helpers_scale_with_payload_plane_count_and_width():
@@ -155,6 +162,90 @@ def test_command_preempts_active_user_data_out_and_resumes_remaining_duration(mo
     assert data_transaction.completed is True
 
 
+@pytest.mark.parametrize(
+    ("transaction_type", "cmd_type", "expected_kind"),
+    [
+        (TransactionType.MAPPING_READ, "read", phy_module.ChannelTransferKind.MAPPING_DATA_OUT),
+        (TransactionType.USER_READ, "read", phy_module.ChannelTransferKind.USER_DATA_OUT),
+        (TransactionType.USER_SEARCH, "search", phy_module.ChannelTransferKind.STATIC_RESULT_DATA_OUT),
+        (TransactionType.GC_READ, "read", phy_module.ChannelTransferKind.GC_READ_DATA_OUT),
+    ],
+)
+def test_command_preempts_all_lower_priority_data_out_classes(
+    monkeypatch,
+    transaction_type,
+    cmd_type,
+    expected_kind,
+):
+    state, events = _install_event_hooks(monkeypatch)
+    phy = phy_module.PHY()
+    data_transaction = _make_transaction(transaction_type, chip=0)
+    phy._enqueue_data_out_transfer((0, 0), 0, cmd_type, [data_transaction], defer_start=False)
+
+    old_event = events[-1]
+    state["now"] = 100
+    command_transaction = _make_transaction(TransactionType.USER_READ, chip=1)
+
+    phy.send_command_to_chip((0, 1), [command_transaction], False)
+
+    assert old_event.ignored is True
+    assert phy._active_transfers[0].kind is phy_module.ChannelTransferKind.COMMAND
+    assert any(task.kind is expected_kind for task in phy._pending_transfers[0])
+
+
+def test_command_preempts_active_data_in_and_resumes_remaining_duration(monkeypatch):
+    state, events = _install_event_hooks(monkeypatch)
+    phy = phy_module.PHY()
+    data_transaction = _make_transaction(TransactionType.USER_WRITE, chip=0)
+    _prime_data_in(phy, data_transaction)
+
+    old_data_in_event = events[-1]
+    old_finish = old_data_in_event.time
+    state["now"] = 100
+    command_transaction = _make_transaction(TransactionType.USER_READ, chip=1)
+
+    phy.send_command_to_chip((0, 1), [command_transaction], False)
+
+    assert old_data_in_event.ignored is True
+    remaining = old_finish - state["now"]
+    assert remaining > 0
+    assert phy._active_transfers[0].kind is phy_module.ChannelTransferKind.COMMAND
+
+    stale_event_count = len(events)
+    state["now"] = old_data_in_event.time
+    phy.execute(old_data_in_event)
+    assert len(events) == stale_event_count
+
+    command_event = phy._active_transfers[0].completion_event
+    state["now"] = command_event.time
+    phy.execute(command_event)
+
+    resumed_event = phy._active_transfers[0].completion_event
+    assert resumed_event is not old_data_in_event
+    assert resumed_event.time == state["now"] + remaining
+
+
+def test_active_command_is_not_preempted_by_another_command(monkeypatch):
+    state, events = _install_event_hooks(monkeypatch)
+    phy = phy_module.PHY()
+    first_command = _make_transaction(TransactionType.USER_READ, chip=0)
+    second_command = _make_transaction(TransactionType.USER_READ, chip=1)
+
+    phy.send_command_to_chip((0, 0), [first_command], False)
+    old_command_event = events[-1]
+    state["now"] = 10
+    phy.send_command_to_chip((0, 1), [second_command], False)
+
+    assert old_command_event.ignored is False
+    assert phy._active_transfers[0].transactions == [first_command]
+    assert any(task.transactions == [second_command] for task in phy._pending_transfers[0])
+
+    state["now"] = old_command_event.time
+    phy.execute(old_command_event)
+
+    assert phy._active_transfers[0].transactions == [second_command]
+
+
 def test_request_latency_report_splits_preempted_data_out_intervals(monkeypatch):
     recorder = RequestLatencyRecorder()
     state, _ = _install_event_hooks(monkeypatch, recorder)
@@ -191,3 +282,42 @@ def test_request_latency_report_splits_preempted_data_out_intervals(monkeypatch)
     assert read_intervals[1]["start"] == command_intervals[0]["end"]
     assert read_intervals[0]["end"] <= command_intervals[0]["start"]
     assert command_intervals[0]["end"] <= read_intervals[1]["start"]
+
+
+def test_request_latency_report_splits_preempted_data_in_intervals(monkeypatch):
+    recorder = RequestLatencyRecorder()
+    state, _ = _install_event_hooks(monkeypatch, recorder)
+    phy = phy_module.PHY()
+
+    write_req = Request(type=RequestType.WRITE, lha_start=0, size=64, report_req_id="write-req")
+    command_req = Request(type=RequestType.READ, lha_start=64, size=64, report_req_id="cmd-req")
+    recorder.register_request(write_req, scheduled_time=0)
+    recorder.register_request(command_req, scheduled_time=0)
+
+    data_transaction = _make_transaction(TransactionType.USER_WRITE, chip=0, source_req=write_req)
+    _prime_data_in(phy, data_transaction)
+    old_data_in_event = phy._active_transfers[0].completion_event
+
+    state["now"] = 100
+    command_transaction = _make_transaction(TransactionType.USER_READ, chip=1, source_req=command_req)
+    phy.send_command_to_chip((0, 1), [command_transaction], False)
+
+    command_event = phy._active_transfers[0].completion_event
+    state["now"] = command_event.time
+    phy.execute(command_event)
+
+    resumed_event = phy._active_transfers[0].completion_event
+    state["now"] = resumed_event.time
+    phy.execute(resumed_event)
+
+    data_in_intervals = recorder.requests[write_req.report_req_id].intervals["phy_data_in"]
+    command_intervals = recorder.requests[command_req.report_req_id].intervals["phy_cmd_addr"]
+
+    assert old_data_in_event.ignored is True
+    assert len(data_in_intervals) == 2
+    assert data_in_intervals[0]["start"] == 0
+    assert data_in_intervals[0]["end"] == 100
+    assert data_in_intervals[1]["start"] == command_intervals[0]["end"]
+    assert data_in_intervals[0]["end"] <= command_intervals[0]["start"]
+    assert command_intervals[0]["end"] <= data_in_intervals[1]["start"]
+    assert sum(interval["end"] - interval["start"] for interval in data_in_intervals) == old_data_in_event.time
