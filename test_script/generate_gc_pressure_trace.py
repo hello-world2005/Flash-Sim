@@ -17,15 +17,16 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import random
 import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
-# Allow running the script directly from the repo root.
+# Allow running the script directly from the repo root and importing it from tests.
+_HERE = Path(__file__).resolve().parent
+_REPO_ROOT = _HERE.parent
 if __package__ in (None, ""):
-    _HERE = Path(__file__).resolve().parent
-    _REPO_ROOT = _HERE.parent
     if str(_REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(_REPO_ROOT))
 
@@ -260,8 +261,6 @@ def generate_trace(
     time_step_ns:
         Nanoseconds between consecutive requests.
     """
-    import random
-
     # --- validate target ---
     channel, chip, die, plane = target_plane
     if chip >= _NON_STATIC_CHIPS:
@@ -340,6 +339,114 @@ def generate_trace(
     return commands
 
 
+def generate_low_invalid_trace(*, time_step_ns: int = 2_000_000) -> list[dict[str, Any]]:
+    """Reach the GC watermark with one invalid page in the victim block."""
+    lpas = enumerate_lpas_for_plane((0, 0, 0, 0))
+    fill_count = MIN_WRITES_FOR_GC - 1
+    commands = build_fill_phase(lpas, fill_count, time_step=time_step_ns)
+    commands.append(_make_write(lpas[0], len(commands) * time_step_ns))
+    commands.extend(
+        build_final_read_phase(
+            lpas[:fill_count],
+            random.Random(11),
+            count=8,
+            start_time=len(commands) * time_step_ns,
+            time_step=time_step_ns,
+        )
+    )
+    return commands
+
+
+def generate_concurrent_overwrite_trace() -> list[dict[str, Any]]:
+    """Submit fill and overwrite phases concurrently to stress cache/GC races."""
+    return [
+        command
+        for command in generate_trace(seed=17, time_step_ns=0)
+        if command["type"] == "write"
+    ]
+
+
+def generate_post_flush_sustained_trace(*, time_step_ns: int = 2_000_000) -> list[dict[str, Any]]:
+    """Pause after the fill phase, then sustain overwrites after cache writeback."""
+    commands = generate_trace(seed=23, time_step_ns=time_step_ns)
+    fill_count = (BLOCK_PER_PLANE // 2) * PAGE_PER_BLOCK
+    pause_ns = 50_000_000
+    for command in commands[fill_count:]:
+        command["time"] += pause_ns
+    return commands
+
+
+def generate_gc_reoverwrite_trace(*, time_step_ns: int = 2_000_000) -> list[dict[str, Any]]:
+    """Overwrite a live victim LPA again while its GC relocation is in flight."""
+    lpas = enumerate_lpas_for_plane((0, 0, 0, 0))
+    fill_count = MIN_WRITES_FOR_GC - 1
+    commands = build_fill_phase(lpas, fill_count, time_step=time_step_ns)
+    trigger_time = len(commands) * time_step_ns
+    commands.append(_make_write(lpas[0], trigger_time))
+    commands.append(_make_write(lpas[1], trigger_time + 1_000_000))
+    commands.append(_make_read(lpas[0], trigger_time + 30_000_000))
+    commands.append(_make_read(lpas[1], trigger_time + 32_000_000))
+    return commands
+
+
+def generate_wide_trace(*, time_step_ns: int = 20_000_000) -> list[dict[str, Any]]:
+    """Keep one plane under GC pressure while expanding writes to a second plane."""
+    primary = enumerate_lpas_for_plane((0, 0, 0, 0))
+    secondary = enumerate_lpas_for_plane((0, 0, 0, 1))
+    commands = build_fill_phase(primary, MIN_WRITES_FOR_GC - 1, time_step=time_step_ns)
+    commands.append(_make_write(primary[0], len(commands) * time_step_ns))
+    for lpa in secondary[:32]:
+        commands.append(_make_write(lpa, len(commands) * time_step_ns))
+    commands.extend(
+        build_final_read_phase(
+            primary[: MIN_WRITES_FOR_GC - 1] + secondary[:32],
+            random.Random(29),
+            count=16,
+            start_time=len(commands) * time_step_ns,
+            time_step=time_step_ns,
+        )
+    )
+    return commands
+
+
+def generate_scenario_trace(
+    scenario: str,
+    *,
+    seed: int = 0,
+    target_plane: tuple[int, int, int, int] = (0, 0, 0, 0),
+    fill_count: int | None = None,
+    overwrite_count: int = 64,
+    sustained_cycles: int = 30,
+    writes_per_cycle: int = 8,
+    reads_per_cycle: int = 2,
+    final_reads: int = 16,
+    time_step_ns: int = SAFE_TIME_STEP_NS,
+) -> list[dict[str, Any]]:
+    if scenario == "standard":
+        return generate_trace(
+            seed=seed,
+            target_plane=target_plane,
+            fill_count=fill_count,
+            overwrite_count=overwrite_count,
+            sustained_cycles=sustained_cycles,
+            writes_per_cycle=writes_per_cycle,
+            reads_per_cycle=reads_per_cycle,
+            final_reads=final_reads,
+            time_step_ns=time_step_ns,
+        )
+    if scenario == "low-invalid":
+        return generate_low_invalid_trace(time_step_ns=time_step_ns)
+    if scenario == "concurrent-overwrite":
+        return generate_concurrent_overwrite_trace()
+    if scenario == "post-flush-sustained":
+        return generate_post_flush_sustained_trace(time_step_ns=time_step_ns)
+    if scenario == "gc-reoverwrite":
+        return generate_gc_reoverwrite_trace(time_step_ns=time_step_ns)
+    if scenario == "wide":
+        return generate_wide_trace(time_step_ns=time_step_ns)
+    raise ValueError(f"Unknown GC pressure scenario: {scenario}")
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -353,6 +460,18 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         description="Generate a write-intensive GC pressure trace for Flash-Sim.",
     )
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--scenario",
+        choices=(
+            "standard",
+            "low-invalid",
+            "concurrent-overwrite",
+            "post-flush-sustained",
+            "gc-reoverwrite",
+            "wide",
+        ),
+        default="standard",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH)
     parser.add_argument("--target-channel", type=int, default=0)
     parser.add_argument("--target-chip", type=int, default=0,
@@ -385,7 +504,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    trace = generate_trace(
+    trace = generate_scenario_trace(
+        args.scenario,
         seed=args.seed,
         target_plane=target,
         fill_count=args.fill_count,

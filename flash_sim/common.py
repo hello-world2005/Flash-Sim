@@ -236,6 +236,8 @@ class Transaction:
     gc_old_address: Optional[FlashAddress] = field(default=None)
     invalidate_target: Optional[FlashAddress] = field(default=None)
     cache_flush_generated: bool = False
+    cache_flush_generation: Optional[int] = None
+    maintenance_reason: Optional[str] = None
     report_origin_request_ids: list[str] = field(default_factory=list)
 
     def get_response_from_transaction(self, tr: 'Transaction'):
@@ -246,6 +248,11 @@ class Transaction:
                 self.bitmap[i] = self.bitmap[i] or tr.bitmap[i]
                 if self.payload[i] == INVALID_PPA:
                     self.payload[i] = tr.response.data[i]
+        elif self.type == TransactionType.MAPPING_WRITE and tr.type == TransactionType.MAPPING_WRITE:
+            for i in range(LPA_NO_PER_MAPPING_PAGE):
+                if self.bitmap[i] == 0 and tr.bitmap[i] == 1:
+                    self.bitmap[i] = 1
+                    self.payload[i] = tr.payload[i]
         elif self.type in [TransactionType.USER_READ, TransactionType.USER_WRITE] and tr.type == TransactionType.MAPPING_READ:
             if tr.failed:
                 raise RequestFailure(tr.error_message or "mapping read failed")
@@ -350,6 +357,7 @@ class Request:
     trace_time: Optional[int] = None
     report_req_id: Optional[str] = None
     report_origin_request_ids: list[str] = field(default_factory=list)
+    cache_registration_complete: bool = False
 
     def is_serviced(self) -> bool:
         """是否所有 transaction 已处理完成。"""
@@ -489,16 +497,18 @@ class cmt_entry:
     dirty: bool
 
 class GTDEntry:
-    def __init__(self, address) -> None:
+    def __init__(self, address, written: bool = True) -> None:
         self.address = address
+        self.written = written
     
     def __eq__(self, other: 'GTDEntry') -> bool:
-        return self.address == other.address
+        return self.address == other.address and self.written == other.written
     
     def __str__(self) -> str:
         lines = [
             "GTDEntry:",
             f"  address:       {self.address}",
+            f"  written:       {self.written}",
         ]
         return "\n".join(lines)
         

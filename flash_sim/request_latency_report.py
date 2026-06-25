@@ -14,6 +14,7 @@ from .common import (
     REQUEST_STATUS_SUCCESS,
     Request,
     RequestType,
+    SECTOR_PER_PAGE,
     SECTOR_SIZE_BYTES,
     Transaction,
     TransactionType,
@@ -50,6 +51,12 @@ CSV_COLUMN_NAMES = (
     "PCIe Xfer (Data)",
     "Energy for req (μJ)",
     "Energy for persistant storage (μJ)",
+    "Status",
+    "GC Count",
+    "GC Relocated Pages",
+    "GC Erased Blocks",
+    "Write Amplification",
+    "Backpressure Wait Time",
 )
 
 RESPONSE_DATA_MESSAGE_TYPES = {
@@ -86,6 +93,7 @@ def _empty_mapping_resolution_counts() -> dict[str, int]:
     return {
         "cmt_hit": 0,
         "gmt_hit": 0,
+        "metadata_hit": 0,
         "mapping_read": 0,
         "uncached_write": 0,
     }
@@ -154,6 +162,24 @@ class RequestLatencyRecorder:
         self._mapping_waits: dict[tuple[str, str], int] = {}
         self._tsu_enqueue_times: dict[int, int] = {}
         self._tsu_dispatched: set[int] = set()
+        self._backpressure_enqueue_times: dict[int, int] = {}
+        self.maintenance_stats: dict[str, Any] = {
+            "gc_count": 0,
+            "static_wl_count": 0,
+            "gc_relocated_pages": 0,
+            "gc_erased_blocks": 0,
+            "host_write_pages": 0,
+            "physical_user_write_pages": 0,
+            "physical_gc_write_pages": 0,
+            "min_free_pool": None,
+            "max_wear_skew": 0,
+            "current_waiting_writes": 0,
+            "max_waiting_writes": 0,
+            "backpressure_enqueued": 0,
+            "backpressure_retried": 0,
+            "backpressure_wait_time": 0,
+            "planes": {},
+        }
 
     def attach(self, engine: Any) -> None:
         self.engine = engine
@@ -174,6 +200,8 @@ class RequestLatencyRecorder:
         rec.scheduled_time = scheduled_time
         if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
             rec.persistence_status = "pending_without_flush"
+        if req.type == RequestType.WRITE and req.size is not None and req.size > 0:
+            self.maintenance_stats["host_write_pages"] += ceil(req.size / SECTOR_PER_PAGE)
 
     def note_req_init_executed(self, req: Request, timestamp: int) -> None:
         rec = self._ensure_request(req)
@@ -419,6 +447,96 @@ class RequestLatencyRecorder:
             if rec.persistence_completion_time is None or timestamp > rec.persistence_completion_time:
                 rec.persistence_completion_time = timestamp
 
+    def note_backpressure_enqueue(self, tr: Transaction, plane_id: int, timestamp: int) -> None:
+        self._backpressure_enqueue_times[id(tr)] = timestamp
+        self.maintenance_stats["backpressure_enqueued"] += 1
+        current = int(self.maintenance_stats.get("current_waiting_writes", 0)) + 1
+        self.maintenance_stats["current_waiting_writes"] = current
+        self.maintenance_stats["max_waiting_writes"] = max(
+            int(self.maintenance_stats.get("max_waiting_writes", 0)),
+            current,
+        )
+
+    def note_backpressure_retry(
+        self,
+        tr: Transaction,
+        plane_id: int,
+        timestamp: int,
+        *,
+        submitted: bool,
+    ) -> None:
+        if not submitted:
+            return
+        start = self._backpressure_enqueue_times.pop(id(tr), None)
+        if start is not None and timestamp >= start:
+            self.maintenance_stats["backpressure_wait_time"] += timestamp - start
+        self.maintenance_stats["backpressure_retried"] += 1
+        self.maintenance_stats["current_waiting_writes"] = max(
+            0,
+            int(self.maintenance_stats.get("current_waiting_writes", 0)) - 1,
+        )
+
+    def note_gc_started(
+        self,
+        reason: str,
+        plane_addr: Any,
+        victim_block: int,
+        *,
+        valid_page_count: int,
+        invalid_page_count: int,
+    ) -> None:
+        if reason == "static-wl":
+            self.maintenance_stats["static_wl_count"] += 1
+        else:
+            self.maintenance_stats["gc_count"] += 1
+        self.maintenance_stats["gc_relocated_pages"] += max(0, valid_page_count)
+
+    def note_gc_erase_completed(self, addr: Any, wl_level: int) -> None:
+        self.maintenance_stats["gc_erased_blocks"] += 1
+
+    def note_physical_write(self, tr: Transaction) -> None:
+        if tr.type == TransactionType.GC_WRITE:
+            self.maintenance_stats["physical_gc_write_pages"] += 1
+        elif tr.type in (TransactionType.USER_WRITE, TransactionType.USER_STATIC_WRITE):
+            self.maintenance_stats["physical_user_write_pages"] += 1
+
+    def note_plane_pool_snapshot(
+        self,
+        plane_addr: Any,
+        *,
+        free_pool_count: int,
+        wear_skew: int,
+        waiting_write_count: int,
+    ) -> None:
+        key = (
+            f"ch{plane_addr.channel}.chip{plane_addr.chip}."
+            f"die{plane_addr.die}.plane{plane_addr.plane}"
+        )
+        planes = self.maintenance_stats["planes"]
+        plane_stats = planes.setdefault(
+            key,
+            {
+                "min_free_pool": free_pool_count,
+                "max_wear_skew": wear_skew,
+                "max_waiting_writes": waiting_write_count,
+            },
+        )
+        plane_stats["min_free_pool"] = min(plane_stats["min_free_pool"], free_pool_count)
+        plane_stats["max_wear_skew"] = max(plane_stats["max_wear_skew"], wear_skew)
+        plane_stats["max_waiting_writes"] = max(
+            plane_stats["max_waiting_writes"],
+            waiting_write_count,
+        )
+        min_free_pool = self.maintenance_stats["min_free_pool"]
+        if min_free_pool is None:
+            self.maintenance_stats["min_free_pool"] = free_pool_count
+        else:
+            self.maintenance_stats["min_free_pool"] = min(min_free_pool, free_pool_count)
+        self.maintenance_stats["max_wear_skew"] = max(
+            int(self.maintenance_stats.get("max_wear_skew", 0)),
+            wear_skew,
+        )
+
     def add_energy(self, transactions: list[Transaction], energy_uj: float) -> None:
         """将 PHY 操作的能耗归属到发起该事务的请求。"""
         for tr in transactions:
@@ -487,6 +605,7 @@ class RequestLatencyRecorder:
                 "final_time": int(self.engine.current_time if self.engine is not None else 0),
                 "request_count": len(requests_payload),
                 "stage_names": list(BASE_STAGE_NAMES),
+                "maintenance": self._maintenance_summary(),
             },
             "requests": requests_payload,
         }
@@ -517,6 +636,12 @@ class RequestLatencyRecorder:
                     CSV_COLUMN_NAMES[11]: self._pcie_data_return_time(rec),
                     CSV_COLUMN_NAMES[12]: self._csv_energy_value(rec.energy_uj),
                     CSV_COLUMN_NAMES[13]: self._csv_energy_value(rec.persistence_energy_uj),
+                    CSV_COLUMN_NAMES[14]: rec.status or "",
+                    CSV_COLUMN_NAMES[15]: self.maintenance_stats["gc_count"],
+                    CSV_COLUMN_NAMES[16]: self.maintenance_stats["gc_relocated_pages"],
+                    CSV_COLUMN_NAMES[17]: self.maintenance_stats["gc_erased_blocks"],
+                    CSV_COLUMN_NAMES[18]: self._csv_write_amplification_value(),
+                    CSV_COLUMN_NAMES[19]: self.maintenance_stats["backpressure_wait_time"],
                 }
             )
         return rows
@@ -882,3 +1007,21 @@ class RequestLatencyRecorder:
     @staticmethod
     def _csv_energy_value(value: float) -> str:
         return f"{value:.2f}"
+
+    def _maintenance_summary(self) -> dict[str, Any]:
+        summary = dict(self.maintenance_stats)
+        summary["write_amplification"] = self._write_amplification()
+        if summary["min_free_pool"] is None:
+            summary["min_free_pool"] = 0
+        return summary
+
+    def _write_amplification(self) -> float:
+        host_pages = int(self.maintenance_stats.get("host_write_pages", 0))
+        if host_pages <= 0:
+            return 0.0
+        physical_pages = int(self.maintenance_stats.get("physical_user_write_pages", 0))
+        physical_pages += int(self.maintenance_stats.get("physical_gc_write_pages", 0))
+        return physical_pages / host_pages
+
+    def _csv_write_amplification_value(self) -> str:
+        return f"{self._write_amplification():.4f}"

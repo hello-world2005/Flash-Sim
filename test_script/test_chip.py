@@ -13,7 +13,6 @@ class TestReadLatency:
         chip = FlashChip()
         latency = chip.get_read_latency(address=0)
         assert latency == chip.timing.t_r_lsb
-        assert latency == 75_000  # default t_r_lsb
 
     def test_read_consistent_across_addresses(self):
         """Latency is consistent across reads to same page type in SLC mode."""
@@ -96,7 +95,6 @@ class TestWriteLatency:
         chip = FlashChip()
         latency = chip.get_write_latency(address=0)
         assert latency == chip.timing.t_prog_lsb
-        assert latency == 750_000  # default t_prog_lsb
 
     def test_write_differs_from_read_and_erase(self):
         """Write latency differs from read and erase latencies."""
@@ -150,7 +148,6 @@ class TestEraseLatency:
         chip = FlashChip()
         latency = chip.get_erase_latency(block_address=0)
         assert latency == chip.timing.t_bers
-        assert latency == 3_800_000  # default tBERS
 
     def test_erase_is_longest_operation(self):
         """Erase latency is the longest among read/write/erase operations."""

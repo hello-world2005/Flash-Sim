@@ -111,8 +111,8 @@ JSON array of commands:
 ```
 
 `FlashConfig()` and `FlashGeometry()` use the same default geometry as the JSON
-example above: `layers_per_block=128`, `sub_blocks_per_block=8`,
-`blocks_per_plane=1024`, `planes_per_die=2`, and `dies=1`.
+example above: `layers_per_block=128`, `sub_blocks_per_block=4`,
+`blocks_per_plane=1024`, `planes_per_die=4`, and `dies=4`.
 
 ## Architecture
 

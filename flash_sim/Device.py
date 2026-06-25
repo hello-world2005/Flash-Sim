@@ -13,6 +13,7 @@ class Device:
         self.ftl = FTL()
         self.phy = PHY()
         self.hil.ftl = self.ftl
+        self.ftl.block_manager.cache_manager = self.hil.cache_manager
         self.ftl.tsu.phy = self.phy
         self.phy.connect_channel_idle_signal(self.ftl.tsu._on_channel_idle)
         self.phy.connect_chip_idle_signal(self.ftl.tsu._on_chip_idle)

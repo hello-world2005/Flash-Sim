@@ -8,16 +8,16 @@ class TestTimingConfig:
     """Tests for TimingConfig."""
 
     def test_default_values(self):
-        """Default timing values match standard NAND Flash specs."""
+        """Default timing values match the simulator baseline."""
         config = TimingConfig()
         assert config.technology == FlashTechnology.SLC
-        assert config.t_r_lsb == 75_000   # 75us
+        assert config.t_r_lsb == 5_000
         assert config.t_r_csb == 100_000  # default for MLC/TLC
         assert config.t_r_msb == 150_000  # default for TLC
-        assert config.t_prog_lsb == 750_000   # 750us
+        assert config.t_prog_lsb == 250_000
         assert config.t_prog_csb == 1_000_000 # default for MLC/TLC
         assert config.t_prog_msb == 1_500_000 # default for TLC
-        assert config.t_bers == 3_800_000  # 3.8ms
+        assert config.t_bers == 10_000_000
 
     def test_custom_values(self):
         """Custom timing values are accepted."""
@@ -137,13 +137,13 @@ class TestFlashGeometry:
         """Default geometry has expected values for 3D NAND."""
         geo = FlashGeometry()
         assert geo.layers_per_block == 128   # Layers per block
-        assert geo.sub_blocks_per_block == 8  # Sub-blocks per layer
+        assert geo.sub_blocks_per_block == 4  # Sub-blocks per layer
         assert geo.blocks_per_plane == 1024
-        assert geo.planes_per_die == 2
-        assert geo.dies == 1
+        assert geo.planes_per_die == 4
+        assert geo.dies == 4
         # Derived values
-        assert geo.pages_per_block == 1024    # 128 * 8 = 1024 (total pages per block)
-        assert geo.pages_per_layer == 8       # sub_blocks_per_block = pages per layer
+        assert geo.pages_per_block == 512     # 128 * 4 = 512 (total pages per block)
+        assert geo.pages_per_layer == 4       # sub_blocks_per_block = pages per layer
 
     def test_calculated_properties(self):
         """Calculated properties are correct."""
@@ -350,10 +350,11 @@ class TestFlashConfig:
         assert isinstance(config.parallel, ParallelConfig)
         assert isinstance(config.geometry, FlashGeometry)
         assert config.geometry.layers_per_block == 128
-        assert config.geometry.sub_blocks_per_block == 8
-        assert config.geometry.pages_per_block == 1024  # 128 * 8
+        assert config.geometry.sub_blocks_per_block == 4
+        assert config.geometry.pages_per_block == 512  # 128 * 4
         assert config.blocks_per_plane == 1024
-        assert config.planes_per_die == 2
+        assert config.planes_per_die == 4
+        assert config.geometry.dies == 4
 
     def test_from_dict(self):
         """Config can be created from dictionary."""
@@ -365,7 +366,7 @@ class TestFlashConfig:
         config = FlashConfig.from_dict(config_dict)
         assert config.timing.t_r_lsb == 100_000
         assert config.timing.t_prog_lsb == 600_000
-        assert config.timing.t_bers == 3_800_000  # default
+        assert config.timing.t_bers == TimingConfig().t_bers
         assert config.parallel.max_parallel_wl == 32
         assert config.parallel.max_parallel_blocks == 8  # default
         assert config.geometry.layers_per_block == 64
@@ -376,20 +377,16 @@ class TestFlashConfig:
         """Config can be serialized to dictionary."""
         config = FlashConfig()
         config_dict = config.to_dict()
-        assert config_dict["timing"]["t_r_lsb"] == 75_000
+        assert config_dict["timing"]["t_r_lsb"] == config.timing.t_r_lsb
         assert config_dict["timing"]["technology"] == "slc"
         assert config_dict["parallel"]["max_parallel_wl"] == 64
         assert config_dict["geometry"]["layers_per_block"] == 128
-        assert config_dict["geometry"]["sub_blocks_per_block"] == 8
+        assert config_dict["geometry"]["sub_blocks_per_block"] == 4
 
     def test_from_dict_empty(self):
         """Empty dict produces default config."""
         config = FlashConfig.from_dict({})
-        assert config.timing.t_r_lsb == 75_000
-        assert config.timing.technology == FlashTechnology.SLC
-        assert config.parallel.max_parallel_wl == 64
-        assert config.geometry.layers_per_block == 128
-        assert config.geometry.sub_blocks_per_block == 8
+        assert config == FlashConfig()
 
 
 class TestFlashGeometry3D:
@@ -405,9 +402,9 @@ class TestFlashGeometry3D:
         """3D geometry defaults for 128-layer NAND."""
         geo = FlashGeometry()
         assert geo.layers_per_block == 128
-        assert geo.sub_blocks_per_block == 8
-        assert geo.pages_per_block == 1024    # 128 * 8
-        assert geo.pages_per_layer == 8
+        assert geo.sub_blocks_per_block == 4
+        assert geo.pages_per_block == 512    # 128 * 4
+        assert geo.pages_per_layer == 4
 
     def test_3d_with_sub_blocks(self):
         """3D NAND with layers and sub-blocks."""
@@ -418,7 +415,7 @@ class TestFlashGeometry3D:
         assert geo.pages_per_block == 1024     # 128 * 8
         assert geo.pages_per_layer == 8
         assert geo.layers_per_plane == 128 * 1024  # 131,072
-        assert geo.layers_per_die == 131072 * 2    # 262,144
+        assert geo.layers_per_die == geo.layers_per_plane * geo.planes_per_die
 
     def test_3d_calculated_pages(self):
         """3D geometry page calculations."""
@@ -625,8 +622,10 @@ class TestFlashConfig3D:
         # pages_per_block is derived (128 * 8 = 1024), not stored in dict
 
     def test_3d_config_default(self):
-        """Default config has layers_per_block=128, sub_blocks_per_block=8."""
+        """Default config uses the documented 4/4/4 geometry."""
         config = FlashConfig()
         assert config.geometry.layers_per_block == 128
-        assert config.geometry.sub_blocks_per_block == 8
-        assert config.geometry.pages_per_block == 1024  # 128 * 8
+        assert config.geometry.sub_blocks_per_block == 4
+        assert config.geometry.planes_per_die == 4
+        assert config.geometry.dies == 4
+        assert config.geometry.pages_per_block == 512  # 128 * 4

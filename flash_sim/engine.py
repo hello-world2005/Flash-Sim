@@ -15,6 +15,7 @@ if __package__ in (None, ""):
     from flash_sim import Device
     from flash_sim import common as _common
     from flash_sim.common import EventType, SimEvent, Request, RequestType, format_event_queue
+    from flash_sim.config import FlashConfig
     from flash_sim.parser import parse_trace
     from flash_sim.request_latency_report import RequestLatencyRecorder
 else:
@@ -23,11 +24,12 @@ else:
     from . import Device
     from . import common as _common
     from .common import EventType, SimEvent, Request, RequestType, format_event_queue
+    from .config import FlashConfig
     from .parser import parse_trace
     from .request_latency_report import RequestLatencyRecorder
 
 class Engine:
-    def __init__(self):
+    def __init__(self, config: FlashConfig | None = None):
         print("Initializing simulation engine...")
         self._construction_valid: bool = False
         self.current_time = 0
@@ -43,8 +45,10 @@ class Engine:
         self.last_request_latency_report_path: Path | None = None
         self.last_request_latency_csv_path: Path | None = None
 
+        self.config = config or FlashConfig()
         self.host = Host.Host("Host", num_of_queues=8, depth_of_queues=64)
         self.device = Device.Device(self.host)
+        self.device.ftl.apply_runtime_config(self.config.runtime)
         self.pcie_link = PCIe_link.PCIe_link(self.host, self.device)
         self.host.pcie_link = self.pcie_link
         self.pcie_link.engine = self
@@ -76,7 +80,7 @@ class Engine:
         tsu = self.device.ftl.tsu
         tsu._onfly_schedule_req_no = 0
         tsu.Schedule()
-        for _ in range(100):
+        for _ in range(10000):
             if self.event_queue.empty():
                 break
             self.Execute_event()
@@ -158,5 +162,3 @@ class Engine:
         csv_path = self.request_latency_recorder.derive_csv_report_path(report_dir)
         self.last_request_latency_report_path = self.request_latency_recorder.dump_json(report_path)
         self.last_request_latency_csv_path = self.request_latency_recorder.dump_csv(csv_path)
-
-

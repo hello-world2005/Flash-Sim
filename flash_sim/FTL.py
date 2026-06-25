@@ -5,9 +5,11 @@ from dataclasses import field
 from typing import Any
 import random
 from .common import *
-from .config import make_event_runtime_geometry
+from .config import RuntimeConfig, make_event_runtime_geometry
 from .PHY import PHY, PageType
 from . import utils
+
+PlaneKey = tuple[int, int, int, int]
 
 class CMT:
     def __init__(self):
@@ -26,10 +28,16 @@ class CMT:
     def update_entry(self, lpa: int, address: FlashAddress, dirty: bool) -> FlashAddress:
         entry = self.cache[lpa]
         invalidation_victim_address = entry.address
-        plane_bke = self.address_mapping_unit.block_manager.block_keeping_book[address.channel][address.chip][address.die][address.plane]
-        bke = plane_bke.block_entries[address.sub_plane]
-        if dirty and address.page in bke.valid_pages:
-            self.address_mapping_unit.block_manager._mark_invalid(entry.address)
+        plane_bke = self.address_mapping_unit.block_manager.block_keeping_book[
+            invalidation_victim_address.channel
+        ][invalidation_victim_address.chip][invalidation_victim_address.die][
+            invalidation_victim_address.plane
+        ]
+        bke = plane_bke.block_entries[invalidation_victim_address.sub_plane]
+        if dirty and invalidation_victim_address.page in bke.valid_pages:
+            self.address_mapping_unit.block_manager._mark_invalid(
+                invalidation_victim_address
+            )
         entry.address = address
         debug_info(f"[CMT] <add_entry> updating entry: ({lpa}, {repr(entry)})")
         entry.dirty = dirty
@@ -110,10 +118,12 @@ class Block_Manager:
         self.pages_per_block = pages_per_block
         self._construction_valid = False
         self.lpa_protected_book = dict[int, Transaction]()
+        self.lpa_barrier_waiters: dict[int, list[Transaction]] = {}
         self.mvpn_protected_book = dict[int, Transaction]()
         self.gc_wl_unit: GC_WL_Unit
-        # Write backpressure: per-plane waiting queue for writes blocked by pool shortage
-        self.waiting_writes: dict[int, list] = {}  # plane_id → [Transaction, ...]
+        self.cache_manager = None
+        # Write backpressure: per-physical-plane waiting queues.
+        self.waiting_writes: dict[PlaneKey, list[Transaction]] = {}
         self.STOP_SERVICING_WRITES_THRESHOLD = 1   # reserve ≥1 block for overwrites/GC
         print("Initializing block keeping book...")
         # 结构为：channel -> chip -> die -> plane -> [blockBKE, ...]，与 address 前 5 维一致
@@ -130,6 +140,31 @@ class Block_Manager:
             for _ in range(channel_no)
         ]
         print("Block Manager initialization complete.")
+
+    def apply_runtime_config(self, runtime: RuntimeConfig) -> None:
+        self.STOP_SERVICING_WRITES_THRESHOLD = runtime.stop_servicing_writes_threshold
+
+    @staticmethod
+    def _plane_key(addr: FlashAddress) -> PlaneKey:
+        return (addr.channel, addr.chip, addr.die, addr.plane)
+
+    def _wear_skew_for_plane(self, plane_bke: PlaneBKE) -> int:
+        levels = [entry.wl_level for entry in plane_bke.block_entries]
+        if not levels:
+            return 0
+        return max(levels) - min(levels)
+
+    def _record_plane_snapshot(self, plane_addr: FlashAddress) -> None:
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is None:
+            return
+        plane_bke = self.get_plane_bke(plane_addr)
+        recorder.note_plane_pool_snapshot(
+            plane_addr,
+            free_pool_count=len(plane_bke.free_block_pool),
+            wear_skew=self._wear_skew_for_plane(plane_bke),
+            waiting_write_count=len(self.waiting_writes.get(self._plane_key(plane_addr), [])),
+        )
 
     def get_write_frontier(self, plane_address: FlashAddress) -> FlashAddress:
         channel_id = plane_address.channel
@@ -223,18 +258,40 @@ class Block_Manager:
     
     def _set_barrier(self, tr: Transaction):
         debug_info(f"[Block Manager] <_set_barrier> setting barrier for tr: {repr(tr)}")
-        if tr.type in [TransactionType.USER_WRITE, TransactionType.USER_STATIC_WRITE]:
-            if tr.lpa not in self.lpa_protected_book:
+        if tr.type in [
+            TransactionType.USER_WRITE,
+            TransactionType.USER_STATIC_WRITE,
+            TransactionType.GC_WRITE,
+        ]:
+            owner = self.lpa_protected_book.get(tr.lpa)
+            if owner is None:
                 self.lpa_protected_book[tr.lpa] = tr
-        elif tr.type in [TransactionType.GC_WRITE]:
-            if tr.lpa not in self.lpa_protected_book:
-                self.lpa_protected_book[tr.lpa] = tr
+            elif owner is not tr:
+                waiters = self.lpa_barrier_waiters.setdefault(tr.lpa, [])
+                if not any(waiter is tr for waiter in waiters):
+                    waiters.append(tr)
         elif tr.type == TransactionType.MAPPING_WRITE:
             if tr.mvpn not in self.mvpn_protected_book:
                 self.mvpn_protected_book[tr.mvpn] = tr
         else:
             raise ValueError(f"[Block Manager] <_set_barrier> unknown transaction type: {tr.type}")
-        
+
+    def _release_lpa_barrier(self, tr: Transaction) -> None:
+        """Release only *tr*'s barrier and promote the next same-LPA write."""
+        if self.lpa_protected_book.get(tr.lpa) is not tr:
+            return
+        waiters = self.lpa_barrier_waiters.get(tr.lpa)
+        if waiters:
+            self.lpa_protected_book[tr.lpa] = waiters.pop(0)
+            if not waiters:
+                self.lpa_barrier_waiters.pop(tr.lpa, None)
+            return
+        self.lpa_protected_book.pop(tr.lpa, None)
+
+    def iter_lpa_barrier_transactions(self):
+        yield from self.lpa_protected_book.values()
+        for waiters in self.lpa_barrier_waiters.values():
+            yield from waiters
 
     def _on_transaction_serviced(self, tr: Transaction) -> None:
         """
@@ -244,21 +301,30 @@ class Block_Manager:
         3. update block keeping book
         """
         if tr.type in [TransactionType.USER_WRITE]:
-            self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
+            self._release_lpa_barrier(tr)
             self._mark_valid(tr.address)
+            recorder = REQUEST_LATENCY_RECORDER()
+            if recorder is not None:
+                recorder.note_physical_write(tr)
             if tr.invalidate_target is not None:
                 self._mark_invalid(tr.invalidate_target)
             self.gc_wl_unit.check_gc()
         elif tr.type == TransactionType.USER_STATIC_WRITE:
-            self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
+            self._release_lpa_barrier(tr)
         elif tr.type == TransactionType.GC_WRITE:
-            self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
+            self._release_lpa_barrier(tr)
+            recorder = REQUEST_LATENCY_RECORDER()
+            if recorder is not None:
+                recorder.note_physical_write(tr)
             self.gc_wl_unit.address_mapping_unit.apply_gc_write_complete(tr)
         elif tr.type == TransactionType.MAPPING_WRITE:
             self.mvpn_protected_book.pop(tr.mvpn) if tr.mvpn in self.mvpn_protected_book else None
         elif tr.type == TransactionType.GC_ERASE:
             self.lpa_protected_book.pop(tr.lpa) if tr.lpa in self.lpa_protected_book else None
-            self.finalize_gc_erase(tr.address)
+            self.finalize_gc_erase(
+                tr.address,
+                reason=tr.maintenance_reason or "gc",
+            )
 
     def get_block_bke(self, addr: FlashAddress) -> blockBKE:
         channel_id, chip_id, die_id, plane_id, block_id = addr.channel, addr.chip, addr.die, addr.plane, addr.sub_plane
@@ -306,10 +372,11 @@ class Block_Manager:
         bke.valid_page_count -= 1
         plane_bke.valid_page_count -= 1
 
-    def finalize_gc_erase(self, addr: FlashAddress) -> None:
+    def finalize_gc_erase(self, addr: FlashAddress, *, reason: str = "gc") -> None:
         """After GC_ERASE: reset BKE/plane counts, return block to free pool, clear PHY storage."""
         bke = self.get_block_bke(addr)
         plane_bke = self.get_plane_bke(addr)
+        old_free_page_count = bke.free_page_count
         plane_bke.valid_page_count -= bke.valid_page_count
         plane_bke.invalid_page_count -= bke.invalid_page_count
         bke.valid_pages.clear()
@@ -319,7 +386,7 @@ class Block_Manager:
         bke.free_page_count = PAGE_PER_BLOCK
         bke.write_frontier = 0
         bke.wl_level += 1
-        plane_bke.free_page_count += PAGE_PER_BLOCK
+        plane_bke.free_page_count += PAGE_PER_BLOCK - old_free_page_count
         plane_bke.free_block_pool.add(addr.sub_plane)
         plane_bke.gc_erase_barrier_block_id = None
         plane_bke.gc_wl_barrier_blocks.clear()
@@ -327,9 +394,36 @@ class Block_Manager:
         if phy is not None:
             phy.clear_block_pages(addr)
         print(f"[Block Manager] <finalize_gc_erase> plane {addr.plane} block {addr.sub_plane} erased, free_block_num {len(plane_bke.free_block_pool)}, free_page_num {plane_bke.free_page_count}, valid_page_num {plane_bke.valid_page_count}, invalid_page_num {plane_bke.invalid_page_count}")
-        self.gc_wl_unit.on_erase_complete(addr)
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is not None:
+            recorder.note_gc_erase_completed(addr, bke.wl_level)
+        self._record_plane_snapshot(FlashAddress(
+            channel=addr.channel,
+            chip=addr.chip,
+            die=addr.die,
+            plane=addr.plane,
+            sub_plane=-1,
+            page=-1,
+        ))
         # Wake up writes blocked by backpressure on this plane
-        self._retry_waiting_writes(addr.plane)
+        retried = self._retry_waiting_writes(addr)
+        plane_addr = FlashAddress(
+            channel=addr.channel,
+            chip=addr.chip,
+            die=addr.die,
+            plane=addr.plane,
+            sub_plane=-1,
+            page=-1,
+        )
+        plane_key = self._plane_key(plane_addr)
+        if (
+            retried == 0
+            and self.waiting_writes.get(plane_key)
+            and len(plane_bke.free_block_pool) <= self.gc_wl_unit.gc_low_watermark
+        ):
+            self._record_plane_snapshot(plane_addr)
+            self.gc_wl_unit._trigger_gc(plane_addr)
+        self.gc_wl_unit.on_erase_complete(addr, reason=reason)
 
     # ── Write backpressure helpers ─────────────────────────────────────────
 
@@ -337,61 +431,81 @@ class Block_Manager:
         """Return the number of free blocks in *plane_addr*'s pool."""
         return len(self.get_plane_bke(plane_addr).free_block_pool)
 
-    def enqueue_waiting_write(self, plane_id: int, tr: Transaction) -> None:
+    def enqueue_waiting_write(self, plane_addr: FlashAddress, tr: Transaction) -> None:
         """Put *tr* into the per-plane waiting queue (blocked by backpressure)."""
-        if plane_id not in self.waiting_writes:
-            self.waiting_writes[plane_id] = []
-        self.waiting_writes[plane_id].append(tr)
+        plane_key = self._plane_key(plane_addr)
+        self.waiting_writes.setdefault(plane_key, []).append(tr)
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is not None:
+            recorder.note_backpressure_enqueue(tr, plane_key, CURRENT_TIME())
+        if tr.address.channel >= 0:
+            self._record_plane_snapshot(tr.address)
 
-    def _retry_waiting_writes(self, plane_id: int) -> None:
-        """After GC returns a block to *plane_id*'s free pool, retry queued writes.
+    def _retry_waiting_writes(self, plane_addr: FlashAddress) -> int:
+        """Retry the FIFO prefix for the physical plane that regained capacity.
 
-        Re-runs the PPA-allocation path for each waiting transaction in FIFO order.
-        Stops when the pool falls back to or below the backpressure threshold.
+        Mapping state is re-resolved at retry time. Once the queue head cannot be
+        submitted, its entire suffix remains queued so later overwrites cannot
+        overtake it.
         """
-        if plane_id not in self.waiting_writes or not self.waiting_writes[plane_id]:
-            return
-        pending = self.waiting_writes[plane_id]
+        plane_key = self._plane_key(plane_addr)
+        pending = self.waiting_writes.get(plane_key)
+        if not pending:
+            return 0
         amu = self.gc_wl_unit.address_mapping_unit
         tsu = self.gc_wl_unit.tsu
-        remaining = []
+        submitted_count = 0
         any_submitted = False
         for tr in pending:
             # *tr.address* was set to the plane address by get_plane_address_for_lpa
             # before enqueuing; reuse it as the plane_addr for allocation.
-            plane_addr = tr.address
-            pool_size = self.get_free_pool_count(plane_addr)
-            if pool_size <= self.STOP_SERVICING_WRITES_THRESHOLD:
-                remaining.append(tr)
-                continue
-            ppa = self.get_write_frontier(plane_addr)
+            tr_plane_addr = tr.address
+            if amu is not None:
+                sq_id = getattr(tr, "_mapping_sq_id", None)
+                if sq_id is None and tr.source_req is not None:
+                    sq_id = tr.source_req.sq_id
+                if sq_id is None:
+                    sq_id = 0
+                resolution, old_address = amu._resolve_write_mapping_state(sq_id, tr.lpa)
+            else:
+                resolution, old_address = "unmapped", None
+            is_overwrite = resolution != "unmapped"
+            if not is_overwrite:
+                pool_size = self.get_free_pool_count(tr_plane_addr)
+                if pool_size <= self.STOP_SERVICING_WRITES_THRESHOLD:
+                    break
+            ppa = self.get_write_frontier(tr_plane_addr)
             if ppa is None:
-                remaining.append(tr)
-                continue
+                break
             tr.address = ppa
-            # Update CMT/GMT (mirrors translate_and_submit WRITE path)
-            if amu is not None and tr.source_req is not None:
-                domain = amu.domains[tr.source_req.sq_id]
-                if domain.cmt.is_cached(tr.lpa):
-                    invalidation_victim = domain.cmt.update_entry(tr.lpa, ppa, dirty=True)
-                    tr.invalidate_target = invalidation_victim
-                else:
-                    # GMT hit (CMT miss) or genuinely new LPA
-                    old_entry = amu.gmt.get(tr.lpa)
-                    if old_entry is not None:
-                        tr.invalidate_target = old_entry.address
-                    domain.cmt.add_entry(tr.lpa, ppa, dirty=True)
+            if amu is not None:
+                amu._apply_write_mapping_resolution(
+                    tr.source_req,
+                    tr,
+                    sq_id,
+                    ppa,
+                    resolution,
+                    old_address,
+                )
             self._set_barrier(tr)
             if tsu is not None:
+                recorder = REQUEST_LATENCY_RECORDER()
+                if recorder is not None:
+                    recorder.note_backpressure_retry(tr, plane_key, CURRENT_TIME(), submitted=True)
                 tsu.Submit_trans(tr)
+                if self.cache_manager is not None:
+                    self.cache_manager.on_waiting_flush_submitted(tr)
                 any_submitted = True
-        if remaining:
-            self.waiting_writes[plane_id] = remaining
-        else:
-            self.waiting_writes.pop(plane_id, None)
+            submitted_count += 1
+        if submitted_count:
+            del pending[:submitted_count]
+        if not pending:
+            self.waiting_writes.pop(plane_key, None)
         # Trigger TSU dispatch for any newly submitted transactions
+        self._record_plane_snapshot(plane_addr)
         if any_submitted and tsu is not None:
             tsu.Schedule()
+        return submitted_count
 
     def preconditioning(self, data_path: str = None, phy=None, amu=None) -> None:
         """
@@ -441,6 +555,10 @@ class Block_Manager:
         if not (0.0 < cmt_ratio <= 1.0):
             cmt_ratio = 0.5
 
+        # Keep preconditioning reproducible so GC/metadata regressions can be
+        # compared across runs with the same trace/config inputs.
+        rng = random.Random(0)
+
         # 1. user page赋值（plane分组，排除mapping区域）
         user_lpa_set = set()
         user_lpa_to_ppa = dict()  # lpa -> FlashAddress
@@ -470,7 +588,7 @@ class Block_Manager:
                         # 只传入user page
                         self._precondition_plane_from_data(
                             channel_id, chip_id, die_id, plane_id,
-                            items, valid_invalid_ratio, phy, amu, user_lpa_to_ppa
+                            items, valid_invalid_ratio, phy, amu, user_lpa_to_ppa, rng
                         )
 
         # 2. user page映射写入mapping page（直接写PHY._storage，PageData.function=MAPPING，mvpn）
@@ -498,7 +616,7 @@ class Block_Manager:
 
         # 3. 随机选取部分user lpa-ppa预热CMT
         user_lpa_list = list(user_lpa_to_ppa.keys())
-        random.shuffle(user_lpa_list)
+        rng.shuffle(user_lpa_list)
         cmt_num = int(cmt_capacity * cmt_ratio)
         for lpa in user_lpa_list[:cmt_num]:
             addr = user_lpa_to_ppa[lpa]
@@ -514,7 +632,7 @@ class Block_Manager:
     def _precondition_plane_from_data(
         self,
         channel_id: int, chip_id: int, die_id: int, plane_id: int,
-        items: list, valid_invalid_ratio: float, phy, amu, user_lpa_to_ppa=None
+        items: list, valid_invalid_ratio: float, phy, amu, user_lpa_to_ppa=None, rng=None
     ) -> None:
         """
         对单个 plane 进行数据驱动的预处理。
@@ -539,6 +657,8 @@ class Block_Manager:
         num_invalid_per_full = self.pages_per_block - valid_per_full_block
         num_full_block = num_page // valid_per_full_block
         left_page = num_page % valid_per_full_block
+        if rng is None:
+            rng = random.Random(0)
         # Overfull 检查：full block + GC 阈值不能 >= block_per_plane（还需留 write_frontier_block）
         if num_full_block + GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD >= self.block_no_per_plane:
             raise ValueError(
@@ -549,9 +669,9 @@ class Block_Manager:
                 f"Reduce num_data in precondition_data.json."
             )
         all_blocks = list(range(self.block_no_per_plane))
-        full_blocks = set(random.sample(all_blocks, num_full_block)) if num_full_block > 0 else set()
+        full_blocks = set(rng.sample(all_blocks, num_full_block)) if num_full_block > 0 else set()
         remaining_blocks = set(all_blocks) - full_blocks
-        write_frontier_block_id = random.choice(list(remaining_blocks))
+        write_frontier_block_id = rng.choice(list(remaining_blocks))
         remaining_blocks.remove(write_frontier_block_id)
         plane_bke.free_block_pool = remaining_blocks.copy()
         plane_bke.write_frontier_block = write_frontier_block_id
@@ -561,7 +681,7 @@ class Block_Manager:
             bke.write_frontier = self.pages_per_block
             bke.free_page_count = 0
             all_pages = list(range(self.pages_per_block))
-            random.shuffle(all_pages)
+            rng.shuffle(all_pages)
             valid_positions = all_pages[:valid_per_full_block]
             invalid_positions = all_pages[valid_per_full_block:]
             bke.valid_pages = set(valid_positions)
@@ -602,7 +722,7 @@ class Block_Manager:
             write_frontier_page = min(int(left_page / valid_invalid_ratio), self.pages_per_block)
             num_invalid_in_frontier = write_frontier_page - left_page
             used_positions = list(range(write_frontier_page))
-            valid_positions_f = set(random.sample(used_positions, left_page))
+            valid_positions_f = set(rng.sample(used_positions, left_page))
             invalid_positions_f = set(p for p in used_positions if p not in valid_positions_f)
             frontier_bke.valid_pages = valid_positions_f
             frontier_bke.valid_page_count = left_page
@@ -765,7 +885,21 @@ class TSU:
                 return True
         book_mvpn = bm.mvpn_protected_book.get(tr.mvpn)
         if book_mvpn is not None and book_mvpn is not tr:
-            return True
+            # A mapping write may need to read the old mapping page before it can
+            # merge and program the new page.  That dependency must pass through
+            # the MVPN barrier held by the write itself, otherwise the pair
+            # deadlocks in the TSU queue.
+            if (
+                tr.type == TransactionType.MAPPING_READ
+                and book_mvpn.type == TransactionType.MAPPING_WRITE
+                and (
+                    any(dep is tr for dep in book_mvpn.rely_on_transactions)
+                    or any(dep is book_mvpn for dep in tr.required_by_transactions)
+                )
+            ):
+                pass
+            else:
+                return True
         if tr.type in (
             TransactionType.USER_WRITE,
             TransactionType.MAPPING_WRITE,
@@ -1357,6 +1491,7 @@ class Address_Mapping_Unit:
         self.gmt: dict[int, cmt_entry] = {}
         self.gtd: dict[int, GTDEntry] = {}
         self.block_manager: Block_Manager
+        self.latest_mapping_write: dict[int, Transaction] = {}
         # Random-access region excludes static chips.
         non_static_chip_no = self.flash_geometry.chip_per_channel - self.flash_geometry.static_chip_per_channel
         self.total_random_access_pages = (
@@ -1408,6 +1543,83 @@ class Address_Mapping_Unit:
                     dep for dep in waiting_tr.rely_on_transactions if dep.type != TransactionType.MAPPING_READ
                 ]
             waiting_trs.clear()
+
+    def _resolve_write_mapping_state(
+        self,
+        sq_id: int,
+        lpa: int,
+    ) -> tuple[str, FlashAddress | None]:
+        domain = self.domains[sq_id]
+        if domain.cmt.is_cached(lpa):
+            return "cmt_hit", domain.cmt.cache[lpa].address
+        if lpa in self.gmt:
+            return "gmt_hit", self.gmt[lpa].address
+
+        mvpn = lpa // LPA_NO_PER_MAPPING_PAGE
+        if mvpn not in self.gtd:
+            return "unmapped", None
+
+        phy = getattr(self.tsu, "phy", None)
+        if phy is None:
+            raise ValueError(
+                "[AMU] write mapping lookup requires PHY access for fixed metadata fallback"
+            )
+        entry = self.gtd[mvpn]
+        addr = entry.address
+        page = phy._storage[addr.channel][addr.chip][addr.die][addr.plane][addr.sub_plane][addr.page]
+        if not getattr(entry, "written", True) and page.function is None:
+            return "unmapped", None
+        if page.function is None:
+            raise ValueError(
+                "[AMU] write mapping lookup touched an unwritten metadata page"
+            )
+        if page.function != PageType.MAPPING:
+            raise ValueError(
+                "[AMU] write mapping lookup touched a non-mapping metadata page"
+            )
+        if page.mvpn != mvpn or page.lpa != INVALID_LPA:
+            raise ValueError(
+                "[AMU] write mapping lookup touched a corrupted metadata page"
+            )
+
+        idx = lpa % LPA_NO_PER_MAPPING_PAGE
+        if idx >= len(page.valid_bitmap):
+            raise ValueError(
+                "[AMU] write mapping lookup touched a malformed metadata bitmap"
+            )
+        if page.valid_bitmap[idx] == 0:
+            return "unmapped", None
+        if idx >= len(page.data) or page.data[idx] == INVALID_PPA:
+            raise ValueError(
+                "[AMU] write mapping lookup touched an invalid ppa in metadata page"
+            )
+        return "metadata_hit", utils.translate_ppa_to_address(page.data[idx])
+
+    def _apply_write_mapping_resolution(
+        self,
+        req: Request | None,
+        tr: Transaction,
+        sq_id: int,
+        page_address: FlashAddress,
+        resolution: str,
+        old_address: FlashAddress | None,
+    ) -> None:
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is not None:
+            recorder.note_mapping_resolution(
+                req,
+                "uncached_write" if resolution == "unmapped" else resolution,
+            )
+
+        domain = self.domains[sq_id]
+        tr.invalidate_target = None
+        if resolution == "unmapped":
+            domain.cmt.add_entry(tr.lpa, page_address, dirty=True)
+        elif resolution == "cmt_hit":
+            tr.invalidate_target = domain.cmt.update_entry(tr.lpa, page_address, dirty=True)
+        else:
+            tr.invalidate_target = old_address
+            domain.cmt.add_entry(tr.lpa, page_address, dirty=True)
     
     def _handle_mapping_response(self, tr: Transaction):
         # handle response for tr waiting mapping info
@@ -1505,6 +1717,10 @@ class Address_Mapping_Unit:
             self.tsu.Schedule()
         elif tr.type == TransactionType.MAPPING_WRITE:
             debug_info(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
+            if tr.mvpn not in self.gtd:
+                self.gtd[tr.mvpn] = GTDEntry(address=tr.address, written=True)
+            else:
+                self.gtd[tr.mvpn].written = True
             leaving_lpa = []
             for i in range(len(tr.bitmap)):
                 if tr.bitmap[i] == 0:
@@ -1582,8 +1798,18 @@ class Address_Mapping_Unit:
             """
             for tr in req.transaction_list:
                 plane_addr = self.get_plane_address_for_lpa(tr.lpa)
-                domain = self.domains[req.sq_id]
-                is_overwrite = domain.cmt.is_cached(tr.lpa) or (tr.lpa in self.gmt)
+                tr.address = plane_addr
+                tr._mapping_sq_id = req.sq_id
+                try:
+                    resolution, old_address = self._resolve_write_mapping_state(
+                        req.sq_id,
+                        tr.lpa,
+                    )
+                except ValueError as exc:
+                    if tr.source_req is not None:
+                        raise RequestFailure(str(exc))
+                    raise
+                is_overwrite = resolution != "unmapped"
                 # ── Backpressure check (方案A / MQSim Stop_servicing_writes) ──
                 # Only backpressure FIRST-TIME writes.  Overwrites must be allowed
                 # through because they create invalid pages, which GC needs to
@@ -1591,35 +1817,22 @@ class Address_Mapping_Unit:
                 if not is_overwrite:
                     pool_size = self.block_manager.get_free_pool_count(plane_addr)
                     if pool_size <= self.block_manager.STOP_SERVICING_WRITES_THRESHOLD:
-                        self.block_manager.enqueue_waiting_write(plane_addr.plane, tr)
+                        self.block_manager.enqueue_waiting_write(plane_addr, tr)
                         continue  # skip PPA allocation, CMT update, and TSU submission
                 page_address = self.block_manager.get_write_frontier(plane_addr)
                 if page_address is None:
                     # Pool is genuinely empty — even overwrites must wait
-                    self.block_manager.enqueue_waiting_write(plane_addr.plane, tr)
+                    self.block_manager.enqueue_waiting_write(plane_addr, tr)
                     continue
                 tr.address = page_address
-                if not is_overwrite:
-                    recorder = REQUEST_LATENCY_RECORDER()
-                    if recorder is not None:
-                        recorder.note_mapping_resolution(req, "uncached_write")
-                    domain.cmt.add_entry(tr.lpa, page_address, dirty=True)
-                elif domain.cmt.is_cached(tr.lpa):
-                    recorder = REQUEST_LATENCY_RECORDER()
-                    if recorder is not None:
-                        recorder.note_mapping_resolution(req, "cmt_hit")
-                    invalidation_victim_address = domain.cmt.update_entry(tr.lpa, page_address, dirty=True)
-                    tr.invalidate_target = invalidation_victim_address
-                else:
-                    # GMT hit, CMT miss: old mapping was evicted from CMT.
-                    # Add fresh CMT entry, get old PPA from GMT for invalidation.
-                    recorder = REQUEST_LATENCY_RECORDER()
-                    if recorder is not None:
-                        recorder.note_mapping_resolution(req, "gmt_hit")
-                    old_entry = self.gmt.get(tr.lpa)
-                    if old_entry is not None:
-                        tr.invalidate_target = old_entry.address
-                    domain.cmt.add_entry(tr.lpa, page_address, dirty=True)
+                self._apply_write_mapping_resolution(
+                    req,
+                    tr,
+                    req.sq_id,
+                    page_address,
+                    resolution,
+                    old_address,
+                )
                 self.tsu.Submit_trans(tr)
                 self.block_manager._set_barrier(tr)
         # process search and compute requests, whose transaction ppa is decided in segment step
@@ -1662,7 +1875,7 @@ class Address_Mapping_Unit:
         if mvpn not in self.gtd:
             # writing to a new mapping page, get page address for it
             page_address = self.get_plane_address_for_mvpn(mvpn)
-            self.gtd[mvpn] = GTDEntry(address=page_address)
+            self.gtd[mvpn] = GTDEntry(address=page_address, written=False)
             write_tr = Transaction(
                 source_req=None,
                 type=TransactionType.MAPPING_WRITE,
@@ -1674,6 +1887,7 @@ class Address_Mapping_Unit:
             )
             self.tsu.Submit_trans(write_tr)
             self.block_manager._set_barrier(write_tr)
+            self.latest_mapping_write[mvpn] = write_tr
         else:
             gtd_entry = self.gtd[mvpn]
             write_tr = Transaction(
@@ -1685,43 +1899,59 @@ class Address_Mapping_Unit:
                 bitmap=bitmap,
                 data_ready=True
             )
-            need_read = False
-            _phy = self.tsu.phy
-            _gaddr = gtd_entry.address
-            _gpd = _phy._storage[_gaddr.channel][_gaddr.chip][_gaddr.die][_gaddr.plane][_gaddr.sub_plane][_gaddr.page]
-            _gpd_bitmap = _gpd.valid_bitmap
-            if len(_gpd_bitmap) > 0:  # 空 bitmap 表示该 page 未被写过，无需保留旧数据
-                for i in range(LPA_NO_PER_MAPPING_PAGE):
-                    if i < len(_gpd_bitmap) and _gpd_bitmap[i] == 1 and bitmap[i] == 0:
-                        need_read = True
-                        break
-            # working
-            if need_read:
-                read_tr = self.generate_mapping_read_transaction(write_tr, mvpn)
-                read_tr.required_by_transactions.append(write_tr)
-                write_tr.rely_on_transactions.append(read_tr)
-                self.tsu.Submit_trans(read_tr)
+            previous_write = self.latest_mapping_write.get(mvpn)
+            if previous_write is not None and not previous_write.completed:
+                previous_write.required_by_transactions.append(write_tr)
+                write_tr.rely_on_transactions.append(previous_write)
+            else:
+                carry_over_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
+                _phy = self.tsu.phy
+                _gaddr = gtd_entry.address
+                _gpd = _phy._storage[_gaddr.channel][_gaddr.chip][_gaddr.die][_gaddr.plane][_gaddr.sub_plane][_gaddr.page]
+                _gpd_bitmap = _gpd.valid_bitmap if _gpd.function == PageType.MAPPING else []
+                if len(_gpd_bitmap) > 0:
+                    for i in range(LPA_NO_PER_MAPPING_PAGE):
+                        old_valid = i < len(_gpd_bitmap) and _gpd_bitmap[i] == 1
+                        if old_valid and bitmap[i] == 0:
+                            carry_over_bitmap[i] = 1
+                if any(carry_over_bitmap):
+                    read_tr = self.generate_mapping_read_transaction(
+                        write_tr,
+                        mvpn,
+                        access_bitmap=carry_over_bitmap,
+                    )
+                    read_tr.required_by_transactions.append(write_tr)
+                    write_tr.rely_on_transactions.append(read_tr)
+                    self.tsu.Submit_trans(read_tr)
 
             self.tsu.Submit_trans(write_tr)
             self.block_manager._set_barrier(write_tr)
+            self.latest_mapping_write[mvpn] = write_tr
         self.tsu.Schedule()
         return
-    def generate_mapping_read_transaction(self, trigger_tr: Transaction, mvpn) -> Transaction:
+    def generate_mapping_read_transaction(
+        self,
+        trigger_tr: Transaction,
+        mvpn,
+        access_bitmap: list[int] | None = None,
+    ) -> Transaction:
         mapping_page_address = self.gtd[mvpn].address
-        access_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
-        if trigger_tr.lpa != INVALID_LPA:
-            access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE] = 1
-        else:
-            # For mapping write merge, read old entries that are not overwritten in this write.
-            for i in range(min(LPA_NO_PER_MAPPING_PAGE, len(trigger_tr.bitmap))):
-                if trigger_tr.bitmap[i] == 0:
-                    access_bitmap[i] = 1
+        if access_bitmap is None:
+            access_bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
+            if trigger_tr.lpa != INVALID_LPA:
+                access_bitmap[trigger_tr.lpa % LPA_NO_PER_MAPPING_PAGE] = 1
+            else:
+                # Mapping-write merge reads are now restricted to the specific
+                # valid carry-over slots computed by generate_mapping_write_transaction.
+                for i in range(min(LPA_NO_PER_MAPPING_PAGE, len(trigger_tr.bitmap))):
+                    if trigger_tr.bitmap[i] == 0:
+                        access_bitmap[i] = 1
         read_tr = Transaction(
             source_req=trigger_tr.source_req,
             type=TransactionType.MAPPING_READ,
             mvpn=mvpn,
             address=mapping_page_address,
-            bitmap=access_bitmap
+            bitmap=list(access_bitmap),
         )
         return read_tr
 
@@ -1811,16 +2041,38 @@ class Address_Mapping_Unit:
         lpa = tr.lpa
         old_addr = tr.gc_old_address
         new_addr = tr.address
-        if old_addr is not None:
-            old_bke = bm.get_block_bke(old_addr)
-            if old_addr.page in old_bke.valid_pages:
-                bm._mark_invalid(old_addr)
-        if self.cmt.is_cached(lpa):
+
+        def invalidate_gc_target() -> None:
+            target_bke = bm.get_block_bke(new_addr)
+            if new_addr.page in target_bke.invalid_pages:
+                return
+            if new_addr.page not in target_bke.valid_pages:
+                bm._mark_valid(new_addr, reserved=True)
+            bm._mark_invalid(new_addr)
+
+        try:
+            resolution, current_addr = self._resolve_write_mapping_state(0, lpa)
+        except ValueError:
+            raise
+
+        if resolution == "unmapped" or current_addr is None:
+            invalidate_gc_target()
+            return
+        if old_addr is None or current_addr != old_addr:
+            invalidate_gc_target()
+            return
+
+        old_bke = bm.get_block_bke(old_addr)
+        if old_addr.page in old_bke.valid_pages:
+            bm._mark_invalid(old_addr)
+        if resolution == "cmt_hit":
             ent = self.cmt.cache[lpa]
             ent.address = new_addr
             ent.dirty = True
-        elif lpa in self.gmt:
+        elif resolution == "gmt_hit":
             self.gmt[lpa].address = new_addr
+        else:
+            self.cmt.add_entry(lpa, new_addr, dirty=True)
         bm._mark_valid(new_addr, reserved=True)
 
 class GC_WL_Unit:
@@ -1829,7 +2081,14 @@ class GC_WL_Unit:
         self.block_manager: Block_Manager
         self.tsu: TSU
         self.address_mapping_unit: Address_Mapping_Unit
+        self.gc_low_watermark: int = GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD
+        self.gc_victim_policy: str = "greedy"
         self.static_wl_wear_gap_threshold: int = 2
+
+    def apply_runtime_config(self, runtime: RuntimeConfig) -> None:
+        self.gc_low_watermark = runtime.gc_low_watermark
+        self.gc_victim_policy = runtime.gc_victim_policy
+        self.static_wl_wear_gap_threshold = runtime.static_wl_wear_gap_threshold
     
     def Validate_construction(self):
         if self._construction_valid:
@@ -1866,7 +2125,7 @@ class GC_WL_Unit:
         return min(candidates, key=lambda bid: (plane_bke.block_entries[bid].wl_level, bid))
 
     def _block_has_inflight_user_program(self, plane_address: FlashAddress, block_id: int) -> bool:
-        for tr in self.block_manager.lpa_protected_book.values():
+        for tr in self.block_manager.iter_lpa_barrier_transactions():
             if tr.type not in (TransactionType.USER_WRITE, TransactionType.USER_STATIC_WRITE):
                 continue
             addr = tr.address
@@ -1953,7 +2212,8 @@ class GC_WL_Unit:
                         plane_bke = self.block_manager.get_plane_bke(plane_addr)
                         if plane_bke.gc_wl_barrier_blocks:
                             continue
-                        if len(plane_bke.free_block_pool) <= GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD:
+                        if len(plane_bke.free_block_pool) <= self.gc_low_watermark:
+                            self.block_manager._record_plane_snapshot(plane_addr)
                             self._trigger_gc(plane_addr)
     
     def _trigger_gc(self, addr: FlashAddress):
@@ -2009,15 +2269,25 @@ class GC_WL_Unit:
             print(f"[GC/WL] <{reason}> migrating {n_valid} valid pages from block {erase_target} to block {dest_block}")
         ch, chip, die, pl = addr.channel, addr.chip, addr.die, addr.plane
         plane_addr = FlashAddress(channel=ch, chip=chip, die=die, plane=pl, sub_plane=-1, page=-1)
+        resolved_pages: list[tuple[FlashAddress, int]] = []
+        for page_id in pages_to_move:
+            src = FlashAddress(
+                channel=ch,
+                chip=chip,
+                die=die,
+                plane=pl,
+                sub_plane=erase_target,
+                page=page_id,
+            )
+            resolved_pages.append((src, self._lpa_for_physical_page(src)))
+
         plane_bke.gc_erase_barrier_block_id = erase_target
         plane_bke.gc_wl_barrier_blocks = {erase_target}
         if dest_block >= 0:
             plane_bke.gc_wl_barrier_blocks.add(dest_block)
         self.tsu.Prepare_trans_submission()
         gc_writes: list[Transaction] = []
-        for page_id in pages_to_move:
-            src = FlashAddress(channel=ch, chip=chip, die=die, plane=pl, sub_plane=erase_target, page=page_id)
-            lpa = self._lpa_for_physical_page(src)
+        for src, lpa in resolved_pages:
             sector_bitmap = [1] * SECTOR_PER_PAGE
             gc_read = Transaction(
                 source_req=None,
@@ -2048,12 +2318,22 @@ class GC_WL_Unit:
             type=TransactionType.GC_ERASE,
             lpa=-1,
             address=erase_addr,
+            maintenance_reason=reason,
         )
         if gc_writes:
             for gw in gc_writes:
                 gw.required_by_transactions.append(gc_erase)
                 gc_erase.rely_on_transactions.append(gw)
         self.tsu.Submit_trans(gc_erase)
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is not None:
+            recorder.note_gc_started(
+                reason,
+                addr,
+                erase_target,
+                valid_page_count=n_valid,
+                invalid_page_count=erase_target_block.invalid_page_count,
+            )
         self.tsu.Schedule()
         return True
 
@@ -2070,11 +2350,12 @@ class GC_WL_Unit:
         )
         if dest_block < 0:
             return False
-        if plane_bke.block_entries[dest_block].wl_level <= source_wl:
+        dest_wl = plane_bke.block_entries[dest_block].wl_level
+        if dest_wl - source_wl < self.static_wl_wear_gap_threshold:
             return False
         return self._submit_relocation_chain(addr, source_block, dest_block, "static-wl")
 
-    def on_erase_complete(self, addr: FlashAddress) -> None:
+    def on_erase_complete(self, addr: FlashAddress, *, reason: str = "gc") -> None:
         plane_addr = FlashAddress(
             channel=addr.channel,
             chip=addr.chip,
@@ -2084,7 +2365,13 @@ class GC_WL_Unit:
             page=-1,
         )
         plane_bke = self.block_manager.get_plane_bke(plane_addr)
+        if reason == "static-wl":
+            return
         if plane_bke.gc_wl_barrier_blocks:
+            return
+        if self.block_manager.waiting_writes.get(self.block_manager._plane_key(plane_addr)):
+            return
+        if len(plane_bke.free_block_pool) <= self.gc_low_watermark:
             return
         if not self._wear_skew_requires_static_wl(plane_addr):
             return
@@ -2123,6 +2410,10 @@ class FTL:
         for domain in self.address_mapping_unit.domains:
             domain.tsu = self.tsu
         print("FTL initialization complete.")
+
+    def apply_runtime_config(self, runtime: RuntimeConfig) -> None:
+        self.block_manager.apply_runtime_config(runtime)
+        self.gc_wl_unit.apply_runtime_config(runtime)
 
     def handle_new_req(self, req: Request):
         self.address_mapping_unit.translate_and_submit(req)
