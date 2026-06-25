@@ -8,7 +8,7 @@ Define the request-level latency reports produced by the event-driven simulator,
 
 ### Requirement: Event-driven simulation exports one latency report entry per input request
 
-After an event-driven simulation completes, the system SHALL write request-level latency reports under `report/`. The simulator MUST keep the JSON report as the detailed source of truth and MUST also emit a companion CSV table for the same trace. Both outputs MUST contain one record per input trace request in trace order.
+After an event-driven simulation completes, the system SHALL write request-level latency reports under `report/`. The simulator MUST keep the JSON report as the detailed source of truth and MUST also emit a companion CSV table for the same trace. Both outputs MUST contain one record per input trace request in trace order. The JSON report meta object MUST also expose maintenance-level GC/WL/write-backpressure statistics collected during the run.
 
 #### Scenario: Successful simulation writes per-request JSON and CSV reports
 
@@ -23,6 +23,11 @@ Each JSON request latency record SHALL include a top-level `size` field whose va
 
 - **WHEN** an event-driven simulation completes for a trace containing requests with `size` values
 - **THEN** each entry in the generated JSON report's `requests` array MUST include `size` equal to the corresponding input trace request size
+
+#### Scenario: JSON report includes maintenance summary
+
+- **WHEN** an event-driven simulation completes
+- **THEN** the JSON report `meta.maintenance` object MUST include GC count, static-WL count, relocated page count, erased block count, host write pages, physical user write pages, physical GC write pages, write amplification, minimum observed free pool, maximum observed wear skew, waiting-write counts, and backpressure wait time
 
 ### Requirement: JSON request reports include host, PCIe, AMU, TSU, and PHY stage breakdowns
 
@@ -69,6 +74,8 @@ The CSV report SHALL flatten each request into one row with a fixed column order
 
 For `SEARCH` and `COMPUTE`, `cache_hit` MUST be `/`.
 
+The CSV report MAY append maintenance and status columns after the host-visible latency and energy columns. These appended columns MUST NOT participate in the additive host-visible latency equality.
+
 #### Scenario: Completed read row is additive before payload return
 
 - **WHEN** a completed `READ` request is exported to CSV
@@ -78,6 +85,40 @@ For `SEARCH` and `COMPUTE`, `cache_hit` MUST be `/`.
 
 - **WHEN** a completed request is exported to CSV
 - **THEN** `completion_time` MUST equal the timestamp when the Host receives `REQ_COMP`
+
+#### Scenario: CSV appends machine-readable maintenance columns
+
+- **WHEN** a completed simulation is exported to CSV
+- **THEN** each CSV row MUST include request status and the run-level GC count, relocated page count, erased block count, write amplification, and backpressure wait time in appended columns
+
+### Requirement: Maintenance reporting tracks GC, WL, write amplification, and backpressure
+
+The reporting subsystem SHALL track maintenance events independently from host-visible request latency. `GC_WL_Unit` and `Block_Manager` MUST report successful GC/static-WL relocation starts, GC erase completions, physical user writes, physical GC writes, plane free-pool snapshots, wear-skew snapshots, and write-backpressure enqueue/retry events. Write amplification MUST be calculated as `(physical_user_write_pages + physical_gc_write_pages) / host_write_pages`, with `0.0` when no host write pages exist.
+
+#### Scenario: Aborted relocation setup is not reported as a GC start
+
+- **WHEN** GC or static-WL relocation setup fails before the complete transaction chain is submitted, including failure to resolve a source page LPA
+- **THEN** the reporting subsystem MUST NOT increment the GC/static-WL start count or relocated-page count for that aborted setup
+
+#### Scenario: Backpressure waiting time is accumulated on retry
+
+- **WHEN** a write transaction enters a per-plane waiting queue and later successfully retries into `TSU`
+- **THEN** the report MUST add the elapsed time between enqueue and successful retry to `backpressure_wait_time`
+
+#### Scenario: Physical writes contribute to write amplification
+
+- **WHEN** user writes and GC relocation writes complete at the PHY/block-manager path
+- **THEN** the report MUST count user writes and GC writes separately and use both counts to derive write amplification
+
+#### Scenario: Failed relocation setup is not counted as a started GC
+
+- **WHEN** GC or static-WL candidate selection finds a victim but cannot reserve a valid relocation destination
+- **THEN** the report MUST NOT increment GC/static-WL start counters for that aborted relocation setup
+
+#### Scenario: Completed static WL conserves maintenance events
+
+- **WHEN** one static-WL relocation chain completes through `PHY`
+- **THEN** `static_wl_count` MUST increase once, `gc_relocated_pages` MUST equal the completed physical GC writes for that chain, and `gc_erased_blocks` MUST include its completed source erase
 
 ### Requirement: Mapping time absorbs the full mapping dependency path
 

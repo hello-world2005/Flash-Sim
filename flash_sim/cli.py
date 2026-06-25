@@ -239,8 +239,9 @@ def cmd_interactive(args) -> int:
 
 def cmd_run_engine(args) -> int:
     """Run event-driven engine simulation and optionally generate timeline visualization."""
+    config = load_config_from_args(args)
     recorder = TimelineRecorder()
-    engine = Engine()
+    engine = Engine(config=config)
     recorder.attach(engine)
 
     try:

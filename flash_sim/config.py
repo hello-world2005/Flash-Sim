@@ -580,12 +580,33 @@ class ParallelConfig:
 
 
 @dataclass
+class RuntimeConfig:
+    """Event-driven runtime policy knobs."""
+
+    gc_low_watermark: int = 3
+    stop_servicing_writes_threshold: int = 1
+    gc_victim_policy: str = "greedy"
+    static_wl_wear_gap_threshold: int = 2
+
+    def __post_init__(self):
+        if self.gc_low_watermark < 0:
+            raise ValueError("gc_low_watermark must be non-negative")
+        if self.stop_servicing_writes_threshold < 0:
+            raise ValueError("stop_servicing_writes_threshold must be non-negative")
+        if self.gc_victim_policy != "greedy":
+            raise ValueError("gc_victim_policy currently supports only 'greedy'")
+        if self.static_wl_wear_gap_threshold < 0:
+            raise ValueError("static_wl_wear_gap_threshold must be non-negative")
+
+
+@dataclass
 class FlashConfig:
     """Complete flash simulator configuration."""
     timing: TimingConfig = field(default_factory=TimingConfig)
     onfi: OnfiTimingConfig = field(default_factory=OnfiTimingConfig)
     parallel: ParallelConfig = field(default_factory=ParallelConfig)
     geometry: FlashGeometry = field(default_factory=FlashGeometry)
+    runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
 
     @classmethod
     def from_dict(cls, config_dict: dict) -> "FlashConfig":
@@ -594,6 +615,15 @@ class FlashConfig:
         onfi_dict = config_dict.get("onfi", {})
         parallel_dict = config_dict.get("parallel", {})
         geometry_dict = config_dict.get("geometry", {})
+        runtime_dict = dict(config_dict.get("runtime", config_dict.get("gc", {})))
+        for key in (
+            "gc_low_watermark",
+            "stop_servicing_writes_threshold",
+            "gc_victim_policy",
+            "static_wl_wear_gap_threshold",
+        ):
+            if key in config_dict and key not in runtime_dict:
+                runtime_dict[key] = config_dict[key]
 
         # Parse technology
         tech_str = timing_dict.get("technology", "slc").lower()
@@ -604,15 +634,16 @@ class FlashConfig:
         else:
             technology = FlashTechnology.SLC
 
+        timing_defaults = TimingConfig()
         timing = TimingConfig(
             technology=technology,
-            t_r_lsb=timing_dict.get("t_r_lsb", 75_000),
-            t_r_csb=timing_dict.get("t_r_csb", 100_000),
-            t_r_msb=timing_dict.get("t_r_msb", 150_000),
-            t_prog_lsb=timing_dict.get("t_prog_lsb", 750_000),
-            t_prog_csb=timing_dict.get("t_prog_csb", 1_000_000),
-            t_prog_msb=timing_dict.get("t_prog_msb", 1_500_000),
-            t_bers=timing_dict.get("t_bers", 3_800_000),
+            t_r_lsb=timing_dict.get("t_r_lsb", timing_defaults.t_r_lsb),
+            t_r_csb=timing_dict.get("t_r_csb", timing_defaults.t_r_csb),
+            t_r_msb=timing_dict.get("t_r_msb", timing_defaults.t_r_msb),
+            t_prog_lsb=timing_dict.get("t_prog_lsb", timing_defaults.t_prog_lsb),
+            t_prog_csb=timing_dict.get("t_prog_csb", timing_defaults.t_prog_csb),
+            t_prog_msb=timing_dict.get("t_prog_msb", timing_defaults.t_prog_msb),
+            t_bers=timing_dict.get("t_bers", timing_defaults.t_bers),
         )
 
         onfi = OnfiTimingConfig(
@@ -663,7 +694,24 @@ class FlashConfig:
             ),
         )
 
-        return cls(timing=timing, onfi=onfi, parallel=parallel, geometry=geometry)
+        runtime = RuntimeConfig(
+            gc_low_watermark=runtime_dict.get("gc_low_watermark", 3),
+            stop_servicing_writes_threshold=runtime_dict.get(
+                "stop_servicing_writes_threshold", 1
+            ),
+            gc_victim_policy=runtime_dict.get("gc_victim_policy", "greedy"),
+            static_wl_wear_gap_threshold=runtime_dict.get(
+                "static_wl_wear_gap_threshold", 2
+            ),
+        )
+
+        return cls(
+            timing=timing,
+            onfi=onfi,
+            parallel=parallel,
+            geometry=geometry,
+            runtime=runtime,
+        )
 
     def to_dict(self) -> dict:
         """Convert configuration to a dictionary."""
@@ -714,6 +762,12 @@ class FlashConfig:
                 "compute_max_parallel_sl": self.geometry.compute_max_parallel_sl,
                 "search_max_parallel_wl": self.geometry.search_max_parallel_wl,
                 "static_chip_per_channel": self.geometry.static_chip_per_channel,
+            },
+            "runtime": {
+                "gc_low_watermark": self.runtime.gc_low_watermark,
+                "stop_servicing_writes_threshold": self.runtime.stop_servicing_writes_threshold,
+                "gc_victim_policy": self.runtime.gc_victim_policy,
+                "static_wl_wear_gap_threshold": self.runtime.static_wl_wear_gap_threshold,
             },
         }
 

@@ -380,7 +380,7 @@ class Cache_Manager:
         return bool(self.cache.user_entries or self.cache.static_entries)
 
     def has_flushable_entries(self) -> bool:
-        return any(self._user_entry_is_fully_ready(entry) for entry in self.cache.user_entries.values()) or any(
+        return any(self._user_entry_is_flushable(entry) for entry in self.cache.user_entries.values()) or any(
             entry["ready"] for entry in self.cache.static_entries.values()
         )
 
@@ -394,6 +394,8 @@ class Cache_Manager:
             "ready_bitmap": [0] * SECTOR_PER_PAGE,
             "payload": [INVALID_DATA] * SECTOR_PER_PAGE,
             "origin_request_ids": [None] * SECTOR_PER_PAGE,
+            "generation": 0,
+            "flush_inflight_generation": None,
         }
 
     def _new_static_entry(self, sq_id: int, tr: Transaction) -> dict:
@@ -428,6 +430,12 @@ class Cache_Manager:
             if entry["bitmap"][i] == 1 and entry["ready_bitmap"][i] == 0:
                 return False
         return True
+
+    def _user_entry_is_flushable(self, entry: dict) -> bool:
+        return (
+            self._user_entry_is_fully_ready(entry)
+            and entry["flush_inflight_generation"] is None
+        )
 
     def _wait_key(self, req: Request) -> str:
         return req.report_req_id or f"anon-{id(req)}"
@@ -486,10 +494,13 @@ class Cache_Manager:
         return 0
 
     def register_write_request(self, req: Request):
+        if req.cache_registration_complete:
+            return
         if req.type == RequestType.WRITE:
             self._register_user_write(req)
         elif req.type == RequestType.STATIC_WRITE:
             self._register_static_write(req)
+        req.cache_registration_complete = True
 
     def query_cache(self, req: Request) -> bool:
         recorder = REQUEST_LATENCY_RECORDER()
@@ -555,6 +566,7 @@ class Cache_Manager:
         for tr in req.transaction_list:
             entry = self.cache.user_entries.setdefault(tr.lpa, self._new_user_entry(sq_id))
             entry["sq_id"] = sq_id
+            entry["generation"] += 1
             for i in range(SECTOR_PER_PAGE):
                 if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
                     continue
@@ -605,7 +617,7 @@ class Cache_Manager:
         flushable_user_pages = {
             lpa: entry
             for lpa, entry in self.cache.user_entries.items()
-            if self._user_entry_is_fully_ready(entry)
+            if self._user_entry_is_flushable(entry)
         }
         flushable_static_pages = {
             line_addr: entry
@@ -619,51 +631,61 @@ class Cache_Manager:
         tsu = self.hil.ftl.tsu
 
         user_flush_reqs: dict[int, list[Transaction]] = defaultdict(list)
+        user_flush_transactions: list[Transaction] = []
         flushed_user_count = 0
         for lpa, entry in flushable_user_pages.items():
             origin_ids = sorted({req_id for req_id in entry["origin_request_ids"] if req_id})
-            user_flush_reqs[entry["sq_id"]].append(
-                Transaction(
-                    source_req=None,
-                    type=TransactionType.USER_WRITE,
-                    lpa=lpa,
-                    bitmap=list(entry["bitmap"]),
-                    payload=list(entry["payload"]),
-                    data_ready=True,
-                    cache_flush_generated=True,
-                    report_origin_request_ids=origin_ids,
-                )
+            generation = entry["generation"]
+            tr = Transaction(
+                source_req=None,
+                type=TransactionType.USER_WRITE,
+                lpa=lpa,
+                bitmap=list(entry["bitmap"]),
+                payload=list(entry["payload"]),
+                data_ready=True,
+                cache_flush_generated=True,
+                cache_flush_generation=generation,
+                report_origin_request_ids=origin_ids,
             )
+            entry["flush_inflight_generation"] = generation
+            user_flush_reqs[entry["sq_id"]].append(tr)
+            user_flush_transactions.append(tr)
             flushed_user_count += 1
         if flushed_user_count > 0:
             tsu.start_cache_pressure_drain(flushed_user_count)
-        for sq_id, transaction_list in user_flush_reqs.items():
-            origin_ids = sorted(
-                {
-                    req_id
-                    for tr in transaction_list
-                    for req_id in tr.report_origin_request_ids
-                    if req_id
-                }
-            )
-            amu.translate_and_submit(
-                Request(
-                    type=RequestType.WRITE,
-                    sq_id=sq_id,
-                    transaction_list=transaction_list,
-                    report_origin_request_ids=origin_ids,
+        try:
+            for sq_id, transaction_list in user_flush_reqs.items():
+                origin_ids = sorted(
+                    {
+                        req_id
+                        for tr in transaction_list
+                        for req_id in tr.report_origin_request_ids
+                        if req_id
+                    }
                 )
-            )
-        # Only pop cache entries whose transactions were successfully submitted
-        # to TSU.  Transactions blocked by backpressure remain in
-        # Block_Manager.waiting_writes and must keep their cache data.
-        waiting_lpas: set = set()
-        for plane_waiting in self.hil.ftl.block_manager.waiting_writes.values():
-            for tr in plane_waiting:
-                waiting_lpas.add(tr.lpa)
-        for lpa in flushable_user_pages:
-            if lpa not in waiting_lpas:
-                self.cache.user_entries.pop(lpa, None)
+                amu.translate_and_submit(
+                    Request(
+                        type=RequestType.WRITE,
+                        sq_id=sq_id,
+                        transaction_list=transaction_list,
+                        report_origin_request_ids=origin_ids,
+                    )
+                )
+        except Exception:
+            for tr in user_flush_transactions:
+                self._release_user_flush_entry(tr, submitted=False)
+                tsu.finish_cache_pressure_write()
+            raise
+
+        waiting_transaction_ids: set[int] = set()
+        block_manager = getattr(self.hil.ftl, "block_manager", None)
+        if block_manager is not None:
+            for plane_waiting in block_manager.waiting_writes.values():
+                for tr in plane_waiting:
+                    waiting_transaction_ids.add(id(tr))
+        for tr in user_flush_transactions:
+            if id(tr) not in waiting_transaction_ids:
+                self._release_user_flush_entry(tr, submitted=True)
 
         static_flush_reqs: dict[int, list[Transaction]] = defaultdict(list)
         for entry in flushable_static_pages.values():
@@ -701,6 +723,22 @@ class Cache_Manager:
         for line_addr in flushable_static_pages:
             self.cache.static_entries.pop(line_addr, None)
         return True
+
+    def _release_user_flush_entry(self, tr: Transaction, *, submitted: bool) -> None:
+        if tr.type != TransactionType.USER_WRITE or not tr.cache_flush_generated:
+            return
+        entry = self.cache.user_entries.get(tr.lpa)
+        if entry is None:
+            return
+        generation = tr.cache_flush_generation
+        if entry["flush_inflight_generation"] != generation:
+            return
+        entry["flush_inflight_generation"] = None
+        if submitted and entry["generation"] == generation:
+            self.cache.user_entries.pop(tr.lpa, None)
+
+    def on_waiting_flush_submitted(self, tr: Transaction) -> None:
+        self._release_user_flush_entry(tr, submitted=True)
 
     def on_transaction_serviced(self, tr: Transaction):
         if tr.type in (TransactionType.USER_WRITE, TransactionType.USER_STATIC_WRITE) and tr.cache_flush_generated:

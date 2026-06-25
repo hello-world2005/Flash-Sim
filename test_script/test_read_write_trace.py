@@ -70,7 +70,7 @@ class TestReadWriteTrace(unittest.TestCase):
                     rows = list(csv.DictReader(handle))
                 self.assertEqual(len(rows), 2)
                 self.assertEqual(rows[1][CSV_COLUMN_NAMES[1]], "READ")
-                self.assertEqual(rows[1][CSV_COLUMN_NAMES[5]], "是")
+                self.assertEqual(rows[1][CSV_COLUMN_NAMES[5]], "Yes")
                 self.assertEqual(int(rows[1][CSV_COLUMN_NAMES[6]]), 0)
                 self.assertEqual(int(rows[1][CSV_COLUMN_NAMES[7]]), 0)
                 self.assertEqual(int(rows[1][CSV_COLUMN_NAMES[8]]), 0)

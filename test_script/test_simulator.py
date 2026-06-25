@@ -42,7 +42,7 @@ class TestExecuteCommand:
         result = sim.execute_command({"type": "read", "address": 100})
         assert result["command"] == "read"
         assert result["address"] == 100
-        assert result["latency_ns"] == 75_000
+        assert result["latency_ns"] == sim.config.timing.t_r_lsb
         assert result["status"] == "success"
 
     def test_write_command(self):
@@ -51,7 +51,7 @@ class TestExecuteCommand:
         result = sim.execute_command({"type": "write", "address": 200})
         assert result["command"] == "write"
         assert result["address"] == 200
-        assert result["latency_ns"] == 750_000
+        assert result["latency_ns"] == sim.config.timing.t_prog_lsb
         assert result["status"] == "success"
 
     def test_erase_command(self):
@@ -60,7 +60,7 @@ class TestExecuteCommand:
         result = sim.execute_command({"type": "erase", "block_address": 10})
         assert result["command"] == "erase"
         assert result["block_address"] == 10
-        assert result["latency_ns"] == 3_800_000
+        assert result["latency_ns"] == sim.config.timing.t_bers
         assert result["status"] == "success"
 
     def test_erase_with_address_field(self):
@@ -158,7 +158,11 @@ class TestTotalLatency:
         ]
         results = sim.run_trace(trace)
         total = sim.get_total_latency(results)
-        assert total == 75_000 + 750_000 + 3_800_000
+        assert total == (
+            sim.config.timing.t_r_lsb
+            + sim.config.timing.t_prog_lsb
+            + sim.config.timing.t_bers
+        )
 
     def test_total_latency_ignores_errors(self):
         """Total latency calculation handles errors (0 latency)."""
@@ -170,7 +174,7 @@ class TestTotalLatency:
         ]
         results = sim.run_trace(trace)
         total = sim.get_total_latency(results)
-        assert total == 75_000 * 2
+        assert total == sim.config.timing.t_r_lsb * 2
 
 
 class TestConfiguredLatencies:

@@ -44,12 +44,17 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# project reports
+# project notes
 prompt.md
 arch_intro.md
 note.md
 result_report.md
 
-# logs and reports
+# simulation outputs
 output/
 report/
+
+# Local agent/session files
+.*/
+SESSION_BACKGROUND.md
+run_ng_tests.py

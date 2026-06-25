@@ -38,12 +38,17 @@ Define the baseline tooling layer around the simulator, including trace parsing,
 
 ### Requirement: CLI 必须同时暴露几何检查和事件驱动相关入口
 
-`cli.py` SHALL 提供几何信息查询、LBA/物理地址转换、standalone trace 执行、交互模式、benchmark，以及面向事件驱动时间线导出的入口。
+`cli.py` SHALL 提供几何信息查询、LBA/物理地址转换、standalone trace 执行、交互模式、benchmark，以及面向事件驱动时间线导出的入口。事件驱动入口 MUST accept the same `-c/--config` configuration file argument used by other CLI commands and MUST pass the parsed runtime policy into `Engine`.
 
 #### Scenario: 查询几何或地址信息
 
 - **WHEN** 用户调用 `info`、`lba` 或 `addr` 等 CLI 子命令
 - **THEN** CLI MUST 基于当前配置输出几何参数或地址转换结果，而不要求先运行事件驱动仿真
+
+#### Scenario: run-engine 使用配置化 GC/write-path 策略
+
+- **WHEN** 用户调用 `flash-sim run-engine <trace> -c <config.json>` 且配置文件包含 runtime GC/write-backpressure policy
+- **THEN** CLI MUST construct `Engine` with the parsed `FlashConfig` so that the event-driven FTL uses the configured `gc_low_watermark`, `stop_servicing_writes_threshold`, `gc_victim_policy`, and `static_wl_wear_gap_threshold`
 
 ### Requirement: 时间线记录器必须导出 request 与 transaction 阶段信息
 
@@ -104,3 +109,48 @@ The repository SHALL distinguish between standalone simulator traces and event-d
 - **WHEN** 一个自动化测试在仿真结束后读取请求级报告文件
 - **THEN** 测试 MUST 能够仅通过解析 JSON 结构断言请求数量、阶段字段存在性以及关键延时值，而不需要解析 stdout 或 `output/*.log`
 
+### Requirement: GC pressure matrix runner covers every maintained pressure variant
+
+`python -m flash_sim.gc_pressure_matrix` SHALL run the complete GC pressure validation matrix through the workspace root `.venv` Python when available. By default the matrix MUST include all maintained `gc_pressure_trace*.json` timing/working-set variants, the specialized low-invalid, concurrent-overwrite, post-flush sustained-write, and in-flight-GC re-overwrite regressions, plus the auxiliary `gc_stress_test.json`, `gc_mini_test.json`, and `gc_test.json` regressions. Each trace run MUST write its own request latency JSON/CSV reports and a per-trace log, and the runner MUST aggregate machine-readable results into `report/gc_pressure_matrix_results.json` unless the caller overrides the output path.
+
+#### Scenario: Default matrix includes all pressure traces
+
+- **WHEN** a caller runs `python -m flash_sim.gc_pressure_matrix` without trace filters
+- **THEN** the runner MUST execute `gc_pressure_trace.json`, `gc_pressure_trace_fast.json`, `gc_pressure_trace_slow.json`, `gc_pressure_trace_slow2.json`, `gc_pressure_trace_wide.json`, `gc_pressure_trace_5000000ns.json`, `gc_pressure_trace_10000000ns.json`, `gc_pressure_trace_15000000ns.json`, `gc_pressure_trace_20ms.json`, `gc_pressure_low_invalid.json`, `gc_pressure_concurrent_overwrite.json`, `gc_pressure_post_flush_sustained.json`, and `gc_pressure_gc_reoverwrite.json`
+
+#### Scenario: Wide pressure trace has a distinct physical working set
+
+- **WHEN** the maintained pressure trace assets are validated
+- **THEN** `gc_pressure_trace_wide.json` MUST exercise more unique LPAs and more physical planes than the single-plane `gc_pressure_trace_20ms.json`; it MUST NOT be a byte-for-byte timing alias
+
+#### Scenario: Runaway trace is bounded without hiding later results
+
+- **WHEN** one trace exceeds the configured per-trace wall-clock timeout
+- **THEN** the runner MUST mark that trace failed with a timeout issue and MUST continue executing the remaining traces
+
+#### Scenario: Default matrix includes auxiliary GC regressions
+
+- **WHEN** a caller runs `python -m flash_sim.gc_pressure_matrix` without `--pressure-only`
+- **THEN** the runner MUST also execute `gc_stress_test.json`, `gc_mini_test.json`, and `gc_test.json`
+
+#### Scenario: Static WL has an event-path regression
+
+- **WHEN** the automated test suite validates static wear leveling
+- **THEN** it MUST exercise a complete static-WL relocation through the real `Engine`, `TSU`, and `PHY`, and MUST verify mapping, media data, block erase state, barrier release, and maintenance-event conservation without substituting a fake scheduler or fake media layer
+
+#### Scenario: Matrix summary records per-trace health and maintenance metrics
+
+- **WHEN** a trace finishes or fails inside the matrix runner
+- **THEN** the matrix summary MUST keep a result entry for that trace, including total request count, SUCCESS/ERROR/incomplete counts, final simulation time, request latency report paths, GC/static-WL counts, relocated pages, erased blocks, host/physical-user/physical-GC write page counts, write amplification, minimum free pool, maximum wear skew, current and maximum waiting writes, backpressure wait time, residual waiting queue count, pending cache entry count, and any exception information available
+
+#### Scenario: Matrix distinguishes correctness issues from workload warnings
+
+- **WHEN** a completed trace contains ERROR requests or violates maintenance event conservation between started relocations, completed erases, physical GC writes, and write amplification
+- **THEN** the runner MUST record a correctness issue for that trace
+- **WHEN** a completed trace has write amplification below `1.0` while its reported counters remain internally consistent
+- **THEN** the runner MUST retain that condition as a workload/coalescing warning rather than a correctness issue
+
+#### Scenario: One failing trace does not abort the matrix
+
+- **WHEN** one trace raises an exception or produces incomplete requests
+- **THEN** the runner MUST record the issue for that trace and continue executing the remaining traces

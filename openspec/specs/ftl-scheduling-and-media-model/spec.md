@@ -23,14 +23,49 @@ Define the baseline behavior of the FTL, mapping subsystem, transaction schedule
 - **WHEN** `AMU` 在翻译或处理 `MAPPING_READ` 响应时发现目标 LPA 的 mapping 槽位无效，或者返回的 PPA 为 `INVALID_PPA`
 - **THEN** `AMU` MUST 将相关 Host 读请求标记为请求级错误并附带报错信息，清理该 LPA 的等待读事务，而不得继续提交依赖该映射的 `USER_READ`
 
-### Requirement: 用户页更新采用异地更新
+### Requirement: 用户页采用异地更新，metadata 页采用固定位置更新
 
-当前 FTL 模型 SHALL 对用户数据和 mapping page 都采用 out-of-place update 语义，即新的内容写入新的物理页，再由映射信息指向新的位置，并在适当时机失效旧页。
+当前 FTL 模型 SHALL 对用户数据保持 out-of-place update 语义，即新的 `USER_WRITE` 写入新的物理页，再由映射信息指向新的位置，并在适当时机失效旧页。当前 mapping metadata 页 SHALL 保持 fixed-position 语义：每个 `mvpn` 通过固定规则映射到唯一 metadata 物理页地址，而不是为 metadata 页引入 out-of-place 位置漂移。对于 `USER_WRITE`，当前模型 SHALL 采用 submit-time PPA allocation：`AMU.translate_and_submit(WRITE)` 在事务提交到 `TSU` 前完成目标 plane 计算、PPA 分配、CMT/GMT 更新和 barrier 建立，而不是延迟到 TSU dispatch 阶段才绑定最终 PPA。
 
 #### Scenario: 用户写入覆盖已有 LPA
 
 - **WHEN** 一个 `USER_WRITE` 针对已经存在映射的 LPA 产生新版本数据
 - **THEN** 系统 MUST 为该 LPA 分配新的物理页地址并更新映射，同时把旧物理页标记为后续可失效对象
+
+#### Scenario: CMT miss 但 GMT hit 的覆写仍保留旧 PPA
+
+- **WHEN** 一个 `USER_WRITE` 覆写的 LPA 已经从 CMT 逐出、但旧映射仍存在于 GMT
+- **THEN** `AMU` MUST 将该写识别为覆写，分配新的 PPA，将旧 GMT 地址写入事务的 `invalidate_target`，并把新映射写入 dirty CMT entry
+
+#### Scenario: CMT miss 且 GMT miss 的覆写回落到固定 metadata 页
+
+- **WHEN** 一个 `USER_WRITE` 的目标 LPA 不在 CMT、也不在 GMT，但其 `mvpn` 的 fixed-position metadata 页中该槽位仍保存着有效旧 PPA
+- **THEN** `AMU` MUST 将该写识别为覆写，使用 fixed metadata 页中的旧地址填充 `invalidate_target`，并 MUST NOT 直接把该写当成 first-time write
+
+#### Scenario: 写事务在提交阶段完成 PPA 绑定
+
+- **WHEN** `AMU.translate_and_submit(WRITE)` 接收一个可立即服务的 `USER_WRITE`
+- **THEN** 该事务在进入 `TSU` 前 MUST 已经拥有最终 PPA，且 `Block_Manager` MUST 已经为该事务建立必要的 LPA barrier
+
+#### Scenario: Metadata 页按固定位置执行稀疏写回
+
+- **WHEN** `CMT` 驱逐 dirty 条目并触发 `generate_mapping_write_transaction(...)`
+- **THEN** `AMU` MUST 把对应 `mvpn` 写回到 `get_plane_address_for_mvpn(mvpn)` 返回的固定 metadata 物理页，并保持稀疏 `bitmap + payload` 写回模型
+
+#### Scenario: 新建 mvpn 的固定 metadata 地址可先保留、后 materialize
+
+- **WHEN** 一个此前不存在的 `mvpn` 第一次触发 `MAPPING_WRITE`
+- **THEN** `GTD` MAY 先登记该 `mvpn` 的固定 metadata 地址，再在对应 `MAPPING_WRITE` 完成后把该 metadata 页视为已 materialize；在 materialize 之前，其他写路径对该 fixed metadata 页的 fallback MUST 将其视为 unmapped，而不得误报 metadata corruption
+
+#### Scenario: 稀疏 metadata 写回只补全旧页中真实存在的槽位
+
+- **WHEN** 一个已有 `mvpn` 的 `MAPPING_WRITE` 需要保留旧页中这次未覆盖的部分槽位
+- **THEN** 控制器内部发起的 merge `MAPPING_READ` MUST 只请求 `old_valid_bitmap & ~new_delta_bitmap` 对应的槽位，而不得把“这次没写的所有槽位”都作为读取目标
+
+#### Scenario: 同一 mvpn 的后续 flush 必须串接最新 in-flight metadata 状态
+
+- **WHEN** 同一个 `mvpn` 的下一次 `MAPPING_WRITE` 生成时，前一次该 `mvpn` 的 metadata 写回仍在队列中或尚未完成
+- **THEN** 新的写回 MUST 依赖并继承前一次 `MAPPING_WRITE` 的最终页状态，而不得重新从当前 on-flash fixed page 读取旧镜像并覆盖掉前一次尚未落盘的槽位
 
 ### Requirement: 静态区域请求必须映射到专用 static chip 路径
 
@@ -84,7 +119,7 @@ Define the baseline behavior of the FTL, mapping subsystem, transaction schedule
 
 ### Requirement: Block Manager 和 GC 必须维护块状态并在阈值下触发回收
 
-`Block_Manager` SHALL 维护每个 plane / block 的 `free`、`valid`、`invalid` 页面统计、写前沿与擦写次数；`GC_WL_Unit` MUST 在 free block pool 低于阈值时选择 GC victim block、提交 `GC_READ`、`GC_WRITE` 和 `GC_ERASE` 事务链，并在擦除完成后把该 block 按当前擦写次数放回可分配 free pool，同时继续检查是否需要触发 static wear leveling。
+`Block_Manager` SHALL 维护每个 plane / block 的 `free`、`valid`、`invalid` 页面统计、写前沿与擦写次数；`GC_WL_Unit` MUST 在 free block pool 达到或低于阈值时选择 GC victim block、提交 `GC_READ`、`GC_WRITE` 和 `GC_ERASE` 事务链，并在擦除完成后把该 block 按当前擦写次数放回可分配 free pool。
 
 #### Scenario: Free block 数量低于 GC 阈值
 
@@ -94,7 +129,46 @@ Define the baseline behavior of the FTL, mapping subsystem, transaction schedule
 #### Scenario: GC 擦除完成后块回收到 WL-aware free pool
 
 - **WHEN** 一个 `GC_ERASE` 或 static-WL 擦除事务完成
-- **THEN** `Block_Manager` 和 `GC_WL_Unit` MUST 将被擦除 block 以最新 `wl_level` 重新加入可分配 free pool，并在同一 plane 上继续评估是否需要 follow-up 的 static wear leveling
+- **THEN** `Block_Manager` MUST 将被擦除 block 以最新 `wl_level` 重新加入可分配 free pool；GC erase MAY 在 host waiting writes 获得重试机会后评估一次 static wear leveling，static-WL erase MUST NOT 立即递归触发下一轮 static WL
+
+### Requirement: 写分配背压使用 per-plane waiting queue
+
+当 `AMU.translate_and_submit(WRITE)` 准备为 first-time write 分配 PPA，而目标 plane 的 free block pool 已小于或等于 `stop_servicing_writes_threshold` 时，系统 SHALL 将该事务放入以 `(channel, chip, die, plane)` 标识的物理 plane waiting queue，并暂不分配 PPA、暂不更新 CMT/GMT、暂不提交到 `TSU`。覆写事务 MAY 越过普通 first-time write 背压检查，以便产生 invalid page 支撑后续 GC；若分配时确实无可用 block，覆写也 MUST 进入 waiting queue。GC erase 完成并回收 block 后，`Block_Manager` MUST 按严格 FIFO 重试该物理 plane 的 waiting writes；队首无法提交时 MUST 保留整个队列后缀，不得让后续 overwrite 越过。
+
+#### Scenario: First-time write 因 free pool 阈值进入等待队列
+
+- **WHEN** 一个 first-time `USER_WRITE` 到达，且目标 plane 的 free block pool 数量小于或等于停写阈值
+- **THEN** 该事务 MUST 被加入对应 plane 的 waiting queue，且 MUST NOT 获得最终 PPA、更新映射或进入 TSU 队列
+
+#### Scenario: GC erase 唤醒 waiting writes
+
+- **WHEN** 一个 `GC_ERASE` 完成并把 block 归还到某个 plane 的 free block pool
+- **THEN** `Block_Manager` MUST 仅按 FIFO 重试该 `(channel, chip, die, plane)` waiting queue 中的写事务；其他 die 或 chip 上局部 plane 编号相同的队列 MUST NOT 被唤醒；每个成功重试的事务 MUST 在 submit-time 分配 PPA、更新 CMT/GMT、建立 barrier 并提交到 `TSU`
+
+#### Scenario: 物理 plane 队列隔离不禁用多 die 批次并行
+
+- **WHEN** 同一 chip 上不同 die 的已就绪事务同时进入 `TSU`，即使它们的局部 plane 编号相同
+- **THEN** waiting queue 的物理 plane 隔离 MUST NOT 阻止 `TSU` 在同一调度批次中将这些事务分别下发到对应 die
+
+#### Scenario: waiting retry 复用 submit-time 的 overwrite 判定
+
+- **WHEN** 一个 waiting queue 中的 `USER_WRITE` 被 GC 唤醒后重试，且其旧映射只存在于 fixed-position metadata 页
+- **THEN** retry 路径 MUST 复用 submit-time 的 overwrite 解析规则，将其视为覆写并绕过 first-write free-pool 阈值检查；只有真正 unmapped 的写才允许继续按 first-time write 背压处理
+
+#### Scenario: Cache flush 生成的后台写保持可重试映射上下文
+
+- **WHEN** `Data_Cache.write_flush()` 生成的后台 `USER_WRITE` 因背压进入 waiting queue，且该事务没有 `source_req`
+- **THEN** 系统 MUST 保留足以在 retry 时选择 AMU domain 的映射上下文，并在 retry 成功后正确更新 CMT/GMT 与 `invalidate_target`
+
+#### Scenario: Backpressured cache flush 不得重复生成事务
+
+- **WHEN** 一个 cache entry 已存在 waiting 或 in-flight flush transaction，且后续再次调用 `write_flush()`
+- **THEN** 系统 MUST NOT 为同一 entry generation 再生成 flush transaction；旧 generation 提交后，只有未被更新的 entry 才可删除，期间到达的新 generation MUST 保留并在后续单独 flush
+
+#### Scenario: 保留 block 无法唤醒 first write 时继续 GC
+
+- **WHEN** GC erase 归还一个 block，但 FIFO 队首是 first-time write，且 free pool 仍处于停写保留阈值内而无法提交
+- **THEN** 系统 MUST 保持队列不变并为该 plane 继续触发 GC，不得在没有后续 USER_WRITE completion 的情况下留下永久 waiting writes
 
 ### Requirement: Dynamic wear leveling chooses the lowest-erase eligible free block
 
@@ -107,12 +181,32 @@ Define the baseline behavior of the FTL, mapping subsystem, transaction schedule
 
 ### Requirement: Static wear leveling migrates cold data after erase completion
 
-在任意一次 GC/WL 擦除完成后，`GC_WL_Unit` SHALL 评估当前 plane 的 wear skew；当磨损差距超过策略阈值且存在安全的低磨损冷块时，系统 MUST 迁移该冷块中的有效页到更高磨损的可用块，并对原块提交擦除，完成一次 static wear-leveling 流程。
+在 GC 擦除完成后，`GC_WL_Unit` SHALL 按后台维护策略评估当前 plane 的 wear skew。系统 MUST 仅在该 plane 没有 waiting writes、free block pool 高于 GC low watermark，且实际安全 source/destination 候选的磨损差达到或超过策略阈值时，迁移冷块中的有效页到更高磨损的可用块，并对原块提交擦除。Static-WL 自身的 erase 完成 MUST NOT 同步递归触发下一轮 static wear-leveling。
 
 #### Scenario: 擦除完成后触发 static wear leveling
 
-- **WHEN** 某个 plane 在 GC 擦除完成后检测到磨损差距超过 static-WL 阈值，且存在可迁移的安全冷块
+- **WHEN** 某个 plane 在 GC 擦除完成后没有 waiting writes、容量高于 GC low watermark，且安全 source/destination 候选的磨损差达到或超过 static-WL 阈值
 - **THEN** `GC_WL_Unit` MUST 提交一条与 GC 相同结构的迁移事务链，把冷块中的有效页搬迁出去并擦除原块
+
+#### Scenario: Static WL 让位于 host write 和 GC 容量恢复
+
+- **WHEN** 某个 plane 仍有 waiting writes，或者 free block pool 尚未高于 GC low watermark
+- **THEN** `GC_WL_Unit` MUST NOT 启动 static WL，GC erase 归还的容量 MUST 先用于 FIFO retry 和必要的后续 GC
+
+#### Scenario: Static WL 使用实际候选磨损差
+
+- **WHEN** 全局 wear skew 达到阈值，但实际安全 destination 与 source 的 `wl_level` 差值低于阈值
+- **THEN** `GC_WL_Unit` MUST 跳过该次 static WL，不得仅凭全局最大值与最小值提交无效迁移
+
+#### Scenario: Static WL 通过真实媒体路径完成
+
+- **WHEN** 一个满足条件的低磨损冷数据块被选为 static-WL source
+- **THEN** 系统 MUST 通过 `TSU` 和 `PHY` 完成 `GC_READ -> GC_WRITE -> GC_ERASE`，将 LPA 映射更新到 destination，清除 source/destination barrier，并分别记录一次 static-WL start、对应 relocated page、physical GC write 和 completed erase
+
+#### Scenario: Static-WL erase 不同步递归
+
+- **WHEN** static-WL 事务链中的 `GC_ERASE` 完成
+- **THEN** 系统 MUST 结束当前 maintenance 流程并释放 barrier，且 MUST NOT 在同一完成回调中立即启动下一条 static-WL 迁移链
 
 ### Requirement: GC and static-WL candidates must exclude unsafe blocks
 
@@ -141,6 +235,11 @@ Define the baseline behavior of the FTL, mapping subsystem, transaction schedule
 
 - **WHEN** `PHY` 在执行一个与 Host 请求关联的 `MAPPING_READ` 时发现目标 mapping page 非法，或者所请求的 mapping 槽位无效
 - **THEN** `PHY` MUST 为该事务附带失败状态和报错信息，并继续通过 transaction serviced 回调把该失败广播给 `AMU` 和 `HIL`，以便上层把源请求完成为 `ERROR`
+
+#### Scenario: 内部 metadata merge read 触发 invariant failure
+
+- **WHEN** `PHY` 在执行一个 controller 内部的 `MAPPING_READ`（无 `source_req`）时，发现请求触及了未写入的 metadata 页、invalid mapping slot，或 `INVALID_PPA`
+- **THEN** `PHY` MUST 立即将其视为 controller invariant failure 并显式失败，而不得返回空 metadata 页让后续 merge 静默继续
 
 ### Requirement: Preconditioning callers provide AMU-backed mapping context
 `Block_Manager.preconditioning(...)` SHALL execute with a valid `Address_Mapping_Unit` and `PHY` so it can materialize user-page placement, mapping pages, GTD entries, and any warmed CMT state consistently with the runtime mapping model. Full-engine startup MAY satisfy this contract through injected dependencies, but direct callers and unit-test fixtures MUST provide equivalent mapping context explicitly.

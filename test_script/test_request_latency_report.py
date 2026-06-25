@@ -1,6 +1,7 @@
 import unittest
 
 from flash_sim.common import (
+    FlashAddress,
     MessageType,
     PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS,
     PCIE_PACKET_OVERHEAD_BYTES,
@@ -119,6 +120,74 @@ class TestRequestLatencyRecorder(unittest.TestCase):
         self.assertEqual(breakdown["phy_data_in"], 100)
         self.assertEqual(breakdown["phy_array_exec"], 400)
         self.assertEqual(breakdown["phy_data_out"], 0)
+
+    def test_maintenance_extrema_and_backpressure_match_recorded_events(self):
+        recorder = RequestLatencyRecorder()
+        tr = Transaction(source_req=None, type=TransactionType.USER_WRITE, lpa=9)
+        plane0 = FlashAddress(
+            channel=0,
+            chip=0,
+            die=0,
+            plane=0,
+            sub_plane=-1,
+            page=-1,
+        )
+        plane1 = FlashAddress(
+            channel=0,
+            chip=0,
+            die=1,
+            plane=0,
+            sub_plane=-1,
+            page=-1,
+        )
+
+        recorder.note_backpressure_enqueue(tr, (0, 0, 0, 0), 10)
+        recorder.note_backpressure_retry(
+            tr,
+            (0, 0, 0, 0),
+            35,
+            submitted=True,
+        )
+        recorder.note_plane_pool_snapshot(
+            plane0,
+            free_pool_count=5,
+            wear_skew=2,
+            waiting_write_count=1,
+        )
+        recorder.note_plane_pool_snapshot(
+            plane0,
+            free_pool_count=3,
+            wear_skew=4,
+            waiting_write_count=0,
+        )
+        recorder.note_plane_pool_snapshot(
+            plane1,
+            free_pool_count=7,
+            wear_skew=1,
+            waiting_write_count=2,
+        )
+
+        maintenance = recorder.export()["meta"]["maintenance"]
+
+        self.assertEqual(maintenance["backpressure_enqueued"], 1)
+        self.assertEqual(maintenance["backpressure_retried"], 1)
+        self.assertEqual(maintenance["backpressure_wait_time"], 25)
+        self.assertEqual(maintenance["current_waiting_writes"], 0)
+        self.assertEqual(maintenance["max_waiting_writes"], 1)
+        self.assertEqual(maintenance["min_free_pool"], 3)
+        self.assertEqual(maintenance["max_wear_skew"], 4)
+        self.assertEqual(
+            maintenance["planes"]["ch0.chip0.die0.plane0"],
+            {
+                "min_free_pool": 3,
+                "max_wear_skew": 4,
+                "max_waiting_writes": 1,
+            },
+        )
+        self.assertEqual(
+            maintenance["planes"]["ch0.chip0.die1.plane0"]["max_waiting_writes"],
+            2,
+        )
 
     def test_csv_mapping_miss_read_rows_are_additive_before_data_return(self):
         recorder = RequestLatencyRecorder()
@@ -403,6 +472,16 @@ class TestRequestLatencyRecorder(unittest.TestCase):
         self.assertEqual(row[CSV_COLUMN_NAMES[7]], 0)
         self.assertEqual(row[CSV_COLUMN_NAMES[10]], 20)
         self.assertEqual(row[CSV_COLUMN_NAMES[11]], expected_payload_latency)
+
+    def test_metadata_hit_is_recorded_as_non_cache_hit_mapping_resolution(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.WRITE, "req-write-metadata-hit")
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_mapping_resolution(req, "metadata_hit")
+
+        rec = recorder.requests[req.report_req_id]
+        self.assertEqual(rec.mapping_resolution_counts["metadata_hit"], 1)
+        self.assertEqual(recorder._cache_hit_value(rec), "No")
 
 
 if __name__ == "__main__":

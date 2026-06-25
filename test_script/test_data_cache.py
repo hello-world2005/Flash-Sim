@@ -42,6 +42,7 @@ class _DummyHIL:
             def __init__(self):
                 self.address_mapping_unit = _DummyAMU()
                 self.tsu = _DummyTSU()
+                self.block_manager = type("BlockManager", (), {"waiting_writes": {}})()
 
         self.ftl = _DummyFTL()
 
@@ -203,6 +204,108 @@ class TestDataCache(unittest.TestCase):
         cm.cache_write(req)
         cm.write_flush()
         self.assertTrue(any(r.type == RequestType.STATIC_WRITE for r in hil.ftl.address_mapping_unit.submitted))
+
+    def test_backpressured_flush_entry_is_not_submitted_twice(self):
+        hil = _DummyHIL()
+        cm = Cache_Manager(hil)
+
+        class WaitingAMU:
+            def __init__(self):
+                self.submitted = []
+
+            def translate_and_submit(inner_self, req):
+                inner_self.submitted.append(req)
+                hil.ftl.block_manager.waiting_writes.setdefault((0, 0, 0, 0), []).extend(
+                    req.transaction_list
+                )
+
+        hil.ftl.address_mapping_unit = WaitingAMU()
+        bitmap, payload = _make_user_payload({0: 10})
+        req = Request(
+            type=RequestType.WRITE,
+            sq_id=0,
+            transaction_list=[
+                Transaction(
+                    source_req=None,
+                    type=TransactionType.USER_WRITE,
+                    lpa=7,
+                    bitmap=bitmap,
+                    payload=payload,
+                )
+            ],
+        )
+        cm.cache_write(req)
+
+        self.assertTrue(cm.write_flush())
+        waiting_tr = hil.ftl.block_manager.waiting_writes[(0, 0, 0, 0)][0]
+        self.assertFalse(cm.write_flush())
+
+        self.assertEqual(len(hil.ftl.address_mapping_unit.submitted), 1)
+        self.assertEqual(hil.ftl.tsu.pending_cache_pressure_writes, 1)
+        self.assertEqual(cm.pending_user_pages[7]["flush_inflight_generation"], 1)
+
+        cm.on_waiting_flush_submitted(waiting_tr)
+        self.assertNotIn(7, cm.pending_user_pages)
+
+    def test_newer_cache_generation_survives_old_waiting_flush_submission(self):
+        hil = _DummyHIL()
+        cm = Cache_Manager(hil)
+
+        class WaitingAMU:
+            def __init__(self):
+                self.submitted = []
+
+            def translate_and_submit(inner_self, req):
+                inner_self.submitted.append(req)
+                hil.ftl.block_manager.waiting_writes.setdefault((0, 0, 0, 0), []).extend(
+                    req.transaction_list
+                )
+
+        hil.ftl.address_mapping_unit = WaitingAMU()
+        bitmap, old_payload = _make_user_payload({0: 10})
+        old_req = Request(
+            type=RequestType.WRITE,
+            sq_id=0,
+            transaction_list=[
+                Transaction(
+                    source_req=None,
+                    type=TransactionType.USER_WRITE,
+                    lpa=7,
+                    bitmap=bitmap,
+                    payload=old_payload,
+                )
+            ],
+        )
+        cm.cache_write(old_req)
+        cm.write_flush()
+        old_flush = hil.ftl.block_manager.waiting_writes[(0, 0, 0, 0)][0]
+
+        _, new_payload = _make_user_payload({0: 20})
+        new_req = Request(
+            type=RequestType.WRITE,
+            sq_id=0,
+            transaction_list=[
+                Transaction(
+                    source_req=None,
+                    type=TransactionType.USER_WRITE,
+                    lpa=7,
+                    bitmap=bitmap,
+                    payload=new_payload,
+                )
+            ],
+        )
+        cm.cache_write(new_req)
+        cm.on_waiting_flush_submitted(old_flush)
+
+        entry = cm.pending_user_pages[7]
+        self.assertEqual(entry["generation"], 2)
+        self.assertIsNone(entry["flush_inflight_generation"])
+        self.assertEqual(entry["payload"][0], 20)
+
+        self.assertTrue(cm.write_flush())
+        new_flush = hil.ftl.block_manager.waiting_writes[(0, 0, 0, 0)][-1]
+        self.assertEqual(new_flush.cache_flush_generation, 2)
+        self.assertEqual(new_flush.payload[0], 20)
 
 
 if __name__ == "__main__":
