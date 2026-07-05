@@ -25,8 +25,17 @@ import run_validation as rv  # noqa: E402
 TIMEOUT_S = 300
 SECTOR_BYTES = 64
 MIB = 1024 * 1024
-PUBLIC_FLASH_TRACE = SCRIPT_DIR / "public_traces/exchange/exchange_disk0_page_50000_flashsim.json"
-PUBLIC_MQSIM_TRACE = SCRIPT_DIR / "public_traces/exchange/exchange_disk0_page_50000_mqsim.trace"
+RUN_TEST_TRACE_ROOT = SCRIPT_DIR / "traces/run_test"
+RUN_TEST_TRACE_INPUTS = {
+    "10k": {
+        "flash": RUN_TEST_TRACE_ROOT / "exchange_disk0_page_10k_compact_flashsim.json",
+        "mqsim": RUN_TEST_TRACE_ROOT / "exchange_disk0_page_10k_compact_mqsim.trace",
+    },
+    "30k": {
+        "flash": RUN_TEST_TRACE_ROOT / "exchange_disk0_page_30k_compact_flashsim.json",
+        "mqsim": RUN_TEST_TRACE_ROOT / "exchange_disk0_page_30k_compact_mqsim.trace",
+    },
+}
 OUT_ROOT = SCRIPT_DIR / "out/run_test_matrix_latest"
 RESULT_PATH = REPO_ROOT / "test_result.md"
 
@@ -417,7 +426,7 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
         f"- 运行时间: {datetime.now().isoformat(timespec='seconds')}",
         f"- 输出目录: `{OUT_ROOT / run_id}`",
         f"- Flash-Sim timeout: {TIMEOUT_S}s",
-        "- Trace: Exchange disk0 page trace, compact-normalized, 64B/LHA sector.",
+        "- Trace: `validation/mqsim_flash/traces/run_test` 中固定的 Exchange disk0 compact-normalized traces；Flash-Sim 使用 64B/LHA sector。",
         "- small geometry: `FLASHSIM_EVENT_RUNTIME_BLOCKS_PER_PLANE=64`；modern geometry: `256`。",
         "- cache 模式: `bypass` 表示 `cache_bypass=true`；`cache64` 表示 cache enabled 且 `data_cache_capacity=65536`。",
         "- MQSim 若未生成有效 XML 或 exit code 非 0，则不在成功结果表中汇报，只在失败/跳过表中记录。",
@@ -686,13 +695,14 @@ def main() -> int:
             f"pre{plan['pre_pct']} {plan['cache_mode']}: prepare",
             flush=True,
         )
+        trace_inputs = RUN_TEST_TRACE_INPUTS[plan["trace"]]
         case = rv.build_external_trace_case(
             cache_profile,
-            PUBLIC_FLASH_TRACE,
-            PUBLIC_MQSIM_TRACE,
+            trace_inputs["flash"],
+            trace_inputs["mqsim"],
             name=case_name,
-            max_requests=plan["max_requests"],
-            address_mode="compact",
+            max_requests=None,
+            address_mode="raw",
             precondition_mode="none",
             mqsim_preconditioning=True,
             mqsim_initial_occupancy_percentage=plan["pre_pct"],

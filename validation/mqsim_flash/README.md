@@ -15,6 +15,41 @@ This keeps the first comparison focused on the shared flash-SSD semantics:
 request ingestion, address unit conversion, request completion, basic timing
 constants, and NAND command accounting.
 
+## Local Assets And Dependency Boundary
+
+The validation harness is intended to be reproducible from this Flash-Sim
+checkout plus one MQSim checkout/binary. The expected MQSim location is the
+sibling directory `../MQSim`, and both validation runners default to
+`../MQSim/MQSim`. You can also pass an explicit MQSim binary to
+`run_validation.py` with `--mqsim-bin`.
+
+Everything else needed for the current Flash-Sim-side validation flow lives
+under this repository:
+
+- Fixed run-test traces:
+  `validation/mqsim_flash/traces/run_test/`.
+- Validation scripts:
+  `validation/mqsim_flash/run_validation.py` and
+  `validation/mqsim_flash/run_test_matrix_latest.py`.
+- Generated reports and temporary inputs:
+  `validation/mqsim_flash/out/`, `report/`, and top-level `test_result.md`.
+
+The fixed run-test traces are the actual compact-normalized Exchange disk0
+inputs used for the current 10k/30k matrix:
+
+```text
+validation/mqsim_flash/traces/run_test/exchange_disk0_page_10k_compact_flashsim.json
+validation/mqsim_flash/traces/run_test/exchange_disk0_page_10k_compact_mqsim.trace
+validation/mqsim_flash/traces/run_test/exchange_disk0_page_30k_compact_flashsim.json
+validation/mqsim_flash/traces/run_test/exchange_disk0_page_30k_compact_mqsim.trace
+validation/mqsim_flash/traces/run_test/manifest.json
+```
+
+The `10k` and `30k` labels refer to source Exchange request windows. During
+full-page compact normalization, multi-page requests are split, so the replay
+request counts are 10387 and 33241 respectively. The manifest records the
+request counts and SHA-256 hashes.
+
 ## FAST'18 Workload Sources
 
 The MQSim FAST'18 paper uses three broad workload groups:
@@ -26,7 +61,7 @@ The MQSim FAST'18 paper uses three broad workload groups:
 - QueueFetchSize application studies: filesystem/mail/web/io-style application
   workloads generated with full-system workloads and then replayed by MQSim.
 
-What is present in this local checkout:
+What is present in the sibling MQSim checkout used by this harness:
 
 - `MQSim/fast18/data-cache-contention`
 - `MQSim/fast18/backend-contention`
@@ -35,10 +70,15 @@ What is present in this local checkout:
 - `MQSim/traces/wsrch-small.trace`
 
 The full paper-validation traces (`tpcc`, `tpce`, `exchange`) are not all
-present as full datasets in this checkout. The harness therefore starts with
-small generated traces and can later be pointed at downloaded paper traces.
+present as full datasets in this checkout. For the current Flash-Sim matrix, use
+the fixed compact-normalized traces under `traces/run_test/`; the downloaded
+SNIA archive is only needed if you want to regenerate or extend those traces.
 
 ## Public Exchange Trace Conversion
+
+This section is optional for regenerating public Exchange inputs. The current
+run-test matrix does not require the original tarball because the actual 10k and
+30k compact-normalized traces are stored under `traces/run_test/`.
 
 The SNIA Microsoft Exchange archive can be converted directly from the
 downloaded tarball. The converter reads the gzip-compressed ETW CSV members in
@@ -87,17 +127,18 @@ The sector-exact version keeps 512 B-aligned partial-page requests and should
 not be used as the first correctness gate unless both simulators' partial-page
 semantics are part of the test.
 
-Replay a converted full-page public trace through both simulators:
+Replay the fixed 10k compact-normalized trace through both simulators:
 
 ```bash
 python validation/mqsim_flash/run_validation.py \
   --profile flashsim-event-small \
-  --external-flash-trace validation/mqsim_flash/public_traces/exchange/exchange_disk0_page_50000_flashsim.json \
-  --external-mqsim-trace validation/mqsim_flash/public_traces/exchange/exchange_disk0_page_50000_mqsim.trace \
-  --external-name exchange_disk0_page_20k \
-  --external-max-requests 20000 \
-  --external-address-mode compact \
-  --external-precondition read-pages \
+  --external-flash-trace validation/mqsim_flash/traces/run_test/exchange_disk0_page_10k_compact_flashsim.json \
+  --external-mqsim-trace validation/mqsim_flash/traces/run_test/exchange_disk0_page_10k_compact_mqsim.trace \
+  --external-name exchange_disk0_page_10k_compact \
+  --external-address-mode raw \
+  --external-precondition none \
+  --external-mqsim-preconditioning \
+  --external-mqsim-initial-occupancy 50 \
   --skip-build \
   --timeout 900
 ```
@@ -115,6 +156,11 @@ For external traces with a warmup prefix, MQSim stdout may report fewer
 serviced requests than generated requests even when the XML aggregate and
 Flash-Sim main-trace gates are usable; the harness treats that serviced-count
 mismatch as a diagnostic note instead of a correctness failure.
+
+For the fixed traces under `traces/run_test/`, use `--external-address-mode raw`
+because they are already compact-normalized. The run-test matrix uses Flash-Sim
+runtime `precondition_fill_ratio` and MQSim built-in initial occupancy, rather
+than an explicit Flash-Sim pre-trace.
 
 ## Profiles
 
@@ -180,6 +226,29 @@ python validation/mqsim_flash/run_validation.py --profile flashsim-event-small
 python validation/mqsim_flash/run_validation.py --profile flashsim-event
 python validation/mqsim_flash/run_validation.py --profile flashsim-event-finite-cmt
 python validation/mqsim_flash/run_validation.py --profile fast18-paper
+```
+
+Run the current `run_test.md` matrix:
+
+```bash
+python validation/mqsim_flash/run_test_matrix_latest.py
+```
+
+This matrix uses the fixed `traces/run_test` inputs, runs 10k with 25/50/75%
+precondition and 30k with 25/50% precondition, checks both `cache_bypass=true`
+and 64 KiB write-cache mode, and writes:
+
+```text
+test_result.md
+validation/mqsim_flash/out/run_test_matrix_latest/<run_id>/summary.json
+```
+
+If `../MQSim/MQSim` is missing or a specific MQSim case fails, the matrix still
+reports the Flash-Sim result and records the MQSim failure/skipped row. To
+refresh `test_result.md` from an existing run without rerunning the simulators:
+
+```bash
+python validation/mqsim_flash/run_test_matrix_latest.py --rerender 20260705_160118
 ```
 
 Run the aligned read correctness experiment:

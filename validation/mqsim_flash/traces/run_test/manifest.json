@@ -1,0 +1,35 @@
+{
+  "description": "Canonical compact-normalized Exchange disk0 traces used by validation/mqsim_flash/run_test_matrix_latest.py.",
+  "source": {
+    "base_trace": "validation/mqsim_flash/public_traces/exchange/exchange_disk0_page_50000_*",
+    "matrix_run_id": "20260705_160118",
+    "normalization": "compact page mapping, full-page aligned, 64B Flash-Sim sectors and 512B MQSim sectors",
+    "note": "The labels 10k and 30k refer to the source Exchange request windows. Multi-page requests are split during normalization, so replay request counts are larger."
+  },
+  "traces": {
+    "10k": {
+      "source_request_window": 10000,
+      "replay_request_count": 10387,
+      "flashsim": {
+        "path": "exchange_disk0_page_10k_compact_flashsim.json",
+        "sha256": "4557b34f9ba543b203dd711d236d326dfffadf452e50c86040e52e07f7685973"
+      },
+      "mqsim": {
+        "path": "exchange_disk0_page_10k_compact_mqsim.trace",
+        "sha256": "6902805688899413f7a711a1791de38f33e2fd519485b7558610a77f973f54f7"
+      }
+    },
+    "30k": {
+      "source_request_window": 30000,
+      "replay_request_count": 33241,
+      "flashsim": {
+        "path": "exchange_disk0_page_30k_compact_flashsim.json",
+        "sha256": "911fb48977919786db01f001756e1749df4943a07af145590107a0da0f2c84fd"
+      },
+      "mqsim": {
+        "path": "exchange_disk0_page_30k_compact_mqsim.trace",
+        "sha256": "11d872304d8cb808774beb1d182307b801eeffbd0b851cca88245c269b0e2315"
+      }
+    }
+  }
+}
