@@ -108,7 +108,8 @@ class Host:
             return best_sq_id
 
     def __init__(self, name="Host", num_of_queues=8, depth_of_queues=64):
-        print("Initializing Host...")
+        if not QUIET:
+            print("Initializing Host...")
         self.name = name
         self.num_of_queues = num_of_queues
         self.memory = self.Memory(
@@ -124,12 +125,14 @@ class Host:
         self.io_flow_manager = self.IO_Flow_Manager(self.io_flows, self.queue_ptrs)
         self.waiting_req = Queue()
         self._construction_valid: bool = False
-        print("Host initialization complete.")
+        if not QUIET:
+            print("Host initialization complete.")
 
     def Validate_construction(self):
         if self._construction_valid:
             return
-        print("Validating Host construction...")
+        if not QUIET:
+            print("Validating Host construction...")
         assert self.pcie_link is not None, "PCIe link is not set for Host"
         assert self.io_flow_manager is not None, "IO flow manager is not set for Host"
         assert self.waiting_req is not None, "Waiting request queue is not set for Host"
@@ -137,7 +140,8 @@ class Host:
         assert self.queue_ptrs is not None, "Queue pointers are not set for Host"
         assert self.io_flows is not None, "IO flows are not set for Host"
         self._construction_valid = True
-        print("Host construction validation complete.")
+        if not QUIET:
+            print("Host construction validation complete.")
 
     def execute(self, event):
         log_execute_event(self.__class__.__name__, event)
@@ -171,9 +175,11 @@ class Host:
                 recorder = REQUEST_LATENCY_RECORDER()
                 if recorder is not None:
                     recorder.note_request_completed(req, CURRENT_TIME())
-                print(
-                    "\n[Host] Received REQ_COMP: "
-                    f"status={req.status} error_message={req.error_message!r} req={req}\n"
+                debug_info(
+                    "[Host] Received REQ_COMP: "
+                    f"status={req.status} error_message={req.error_message!r} "
+                    f"type={req.type.value} sq_id={req.sq_id} "
+                    f"lha_start={req.lha_start} size={req.size}"
                 )
                 self.queue_ptrs.cq_tails[req.sq_id] += 1
             else:

@@ -1,8 +1,19 @@
 """Configuration classes for flash timing and parallelism parameters."""
 
+import os
 from dataclasses import dataclass, field
 from typing import Optional, NamedTuple, Dict, Set, List
 from enum import Enum
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be an integer, got {raw!r}") from exc
 
 
 DEFAULT_CHANNEL_NO = 8
@@ -18,13 +29,14 @@ DEFAULT_SECTOR_PER_PAGE = 16
 DEFAULT_COMPUTE_MAX_PARALLEL_SL = 256
 DEFAULT_SEARCH_MAX_PARALLEL_WL = 256
 DEFAULT_STATIC_CHIP_PER_CHANNEL = 1
+DEFAULT_DATA_CACHE_CAPACITY = 262144
 
-EVENT_RUNTIME_DIES = 4
-EVENT_RUNTIME_PLANES_PER_DIE = 4
-EVENT_RUNTIME_BLOCKS_PER_PLANE = 64
-EVENT_RUNTIME_LAYERS_PER_BLOCK = 1
-EVENT_RUNTIME_SL_PER_BLOCK = 2
-EVENT_RUNTIME_SSL_PER_SL = 4
+EVENT_RUNTIME_DIES = _env_int("FLASHSIM_EVENT_RUNTIME_DIES", 4)
+EVENT_RUNTIME_PLANES_PER_DIE = _env_int("FLASHSIM_EVENT_RUNTIME_PLANES_PER_DIE", 4)
+EVENT_RUNTIME_BLOCKS_PER_PLANE = _env_int("FLASHSIM_EVENT_RUNTIME_BLOCKS_PER_PLANE", 64)
+EVENT_RUNTIME_LAYERS_PER_BLOCK = _env_int("FLASHSIM_EVENT_RUNTIME_LAYERS_PER_BLOCK", 1)
+EVENT_RUNTIME_SL_PER_BLOCK = _env_int("FLASHSIM_EVENT_RUNTIME_SL_PER_BLOCK", 2)
+EVENT_RUNTIME_SSL_PER_SL = _env_int("FLASHSIM_EVENT_RUNTIME_SSL_PER_SL", 4)
 EVENT_RUNTIME_SUB_BLOCKS_PER_BLOCK = EVENT_RUNTIME_SL_PER_BLOCK * EVENT_RUNTIME_SSL_PER_SL
 
 
@@ -173,7 +185,7 @@ class FlashGeometry:
     static_chip_per_channel: int = DEFAULT_STATIC_CHIP_PER_CHANNEL
     
     # ----- Preconditioning 参数 -----
-    valid_invalid_ratio: float = 0.5  # 已写满 block 中 valid_page 与 invalid_page 的比例（0.0 ~ 1.0）
+    valid_invalid_ratio: float = 1.0  # 预条件时每个 block 中有效页占比（1.0=全有效, 0.5=半有效）
     preconditioning_full_block_ratio: float = 0.5  # write_frontier 之外的剩余 block 中，写满 block 的比例（0.0 ~ 1.0）
 
     def __post_init__(self):
@@ -585,18 +597,50 @@ class RuntimeConfig:
 
     gc_low_watermark: int = 3
     stop_servicing_writes_threshold: int = 1
+    gc_reserve_blocks: int = 1
+    gc_min_invalid_pages: int = 1
+    gc_emergency_watermark: int = 1
     gc_victim_policy: str = "greedy"
+    static_wl_enabled: bool = True
     static_wl_wear_gap_threshold: int = 2
+    cache_bypass: bool = False
+    data_cache_capacity: int = DEFAULT_DATA_CACHE_CAPACITY
+    precondition_fill_ratio: float | None = None
+    precondition_mode: str = "capacity-fill"
+    precondition_seed: int = 42
+    plane_allocation: str = "PAGE_LEVEL"  # "PAGE_LEVEL" or "CWDP"
+
+    @property
+    def plane_allocation_scheme(self) -> str:
+        return self.plane_allocation
+
+    @plane_allocation_scheme.setter
+    def plane_allocation_scheme(self, value: str) -> None:
+        self.plane_allocation = value
 
     def __post_init__(self):
         if self.gc_low_watermark < 0:
             raise ValueError("gc_low_watermark must be non-negative")
         if self.stop_servicing_writes_threshold < 0:
             raise ValueError("stop_servicing_writes_threshold must be non-negative")
+        if self.gc_reserve_blocks < 0:
+            raise ValueError("gc_reserve_blocks must be non-negative")
+        if self.gc_min_invalid_pages < 0:
+            raise ValueError("gc_min_invalid_pages must be non-negative")
+        if self.gc_emergency_watermark < 0:
+            raise ValueError("gc_emergency_watermark must be non-negative")
         if self.gc_victim_policy != "greedy":
             raise ValueError("gc_victim_policy currently supports only 'greedy'")
         if self.static_wl_wear_gap_threshold < 0:
             raise ValueError("static_wl_wear_gap_threshold must be non-negative")
+        if self.data_cache_capacity <= 0:
+            raise ValueError("data_cache_capacity must be positive")
+        if self.precondition_fill_ratio is not None and not (0.0 <= self.precondition_fill_ratio <= 1.0):
+            raise ValueError("precondition_fill_ratio must be between 0.0 and 1.0")
+        if self.precondition_mode not in ("capacity-fill", "trace-cover"):
+            raise ValueError("precondition_mode must be capacity-fill or trace-cover")
+        if self.plane_allocation not in ("PAGE_LEVEL", "CWDP"):
+            raise ValueError("plane_allocation must be PAGE_LEVEL or CWDP")
 
 
 @dataclass
@@ -619,8 +663,21 @@ class FlashConfig:
         for key in (
             "gc_low_watermark",
             "stop_servicing_writes_threshold",
+            "gc_reserve_blocks",
+            "gc_min_invalid_pages",
+            "gc_emergency_watermark",
             "gc_victim_policy",
+            "static_wl_enabled",
             "static_wl_wear_gap_threshold",
+            "cache_bypass",
+            "cache_cap",
+            "cache_capacity",
+            "data_cache_capacity",
+            "precondition_fill_ratio",
+            "precondition_mode",
+            "precondition_seed",
+            "plane_allocation",
+            "plane_allocation_scheme",
         ):
             if key in config_dict and key not in runtime_dict:
                 runtime_dict[key] = config_dict[key]
@@ -699,9 +756,31 @@ class FlashConfig:
             stop_servicing_writes_threshold=runtime_dict.get(
                 "stop_servicing_writes_threshold", 1
             ),
+            gc_reserve_blocks=runtime_dict.get("gc_reserve_blocks", 1),
+            gc_min_invalid_pages=runtime_dict.get("gc_min_invalid_pages", 1),
+            gc_emergency_watermark=runtime_dict.get(
+                "gc_emergency_watermark",
+                runtime_dict.get("stop_servicing_writes_threshold", 1),
+            ),
             gc_victim_policy=runtime_dict.get("gc_victim_policy", "greedy"),
+            static_wl_enabled=runtime_dict.get("static_wl_enabled", True),
             static_wl_wear_gap_threshold=runtime_dict.get(
                 "static_wl_wear_gap_threshold", 2
+            ),
+            cache_bypass=runtime_dict.get("cache_bypass", False),
+            data_cache_capacity=runtime_dict.get(
+                "data_cache_capacity",
+                runtime_dict.get(
+                    "cache_capacity",
+                    runtime_dict.get("cache_cap", DEFAULT_DATA_CACHE_CAPACITY),
+                ),
+            ),
+            precondition_fill_ratio=runtime_dict.get("precondition_fill_ratio"),
+            precondition_mode=runtime_dict.get("precondition_mode", "capacity-fill"),
+            precondition_seed=runtime_dict.get("precondition_seed", 42),
+            plane_allocation=runtime_dict.get(
+                "plane_allocation",
+                runtime_dict.get("plane_allocation_scheme", "PAGE_LEVEL"),
             ),
         )
 
@@ -766,8 +845,19 @@ class FlashConfig:
             "runtime": {
                 "gc_low_watermark": self.runtime.gc_low_watermark,
                 "stop_servicing_writes_threshold": self.runtime.stop_servicing_writes_threshold,
+                "gc_reserve_blocks": self.runtime.gc_reserve_blocks,
+                "gc_min_invalid_pages": self.runtime.gc_min_invalid_pages,
+                "gc_emergency_watermark": self.runtime.gc_emergency_watermark,
                 "gc_victim_policy": self.runtime.gc_victim_policy,
+                "static_wl_enabled": self.runtime.static_wl_enabled,
                 "static_wl_wear_gap_threshold": self.runtime.static_wl_wear_gap_threshold,
+                "cache_bypass": self.runtime.cache_bypass,
+                "data_cache_capacity": self.runtime.data_cache_capacity,
+                "precondition_fill_ratio": self.runtime.precondition_fill_ratio,
+                "precondition_mode": self.runtime.precondition_mode,
+                "precondition_seed": self.runtime.precondition_seed,
+                "plane_allocation": self.runtime.plane_allocation,
+                "plane_allocation_scheme": self.runtime.plane_allocation_scheme,
             },
         }
 

@@ -428,7 +428,7 @@ def test_read_impact_grouped_chart_uses_labels_colors_and_two_decimal_values(tmp
 
     assert "Normalized latency" in svg_text
     assert "Control" in svg_text
-    assert "Average READ Latency under READ/COMPUTE Resource competetion" in svg_text
+    assert "Average READ Latency under READ/CIM Resource competetion" in svg_text
     assert "Insertion ratio (req size = 128)" in svg_text
     assert "Req size (insertion ratio = 0.2)" in svg_text
     assert exp.READ_IMPACT_GROUP_COLORS[exp.READ_IMPACT_BASELINE_GROUP] in svg_text

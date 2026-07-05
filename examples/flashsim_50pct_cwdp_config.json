@@ -1,0 +1,12 @@
+{
+  "runtime": {
+    "precondition_fill_ratio": 0.5,
+    "precondition_mode": "capacity-fill",
+    "precondition_seed": 42,
+    "cache_bypass": true,
+    "plane_allocation": "CWDP",
+    "gc_low_watermark": 3,
+    "stop_servicing_writes_threshold": 1,
+    "gc_reserve_blocks": 1
+  }
+}

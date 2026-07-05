@@ -58,7 +58,7 @@ def _completion_path_sum(csv_row):
 
 
 class TestRequestLatencyReportEndToEnd(unittest.TestCase):
-    def test_mapping_miss_read_exports_additive_completion_path(self):
+    def test_preconditioned_read_exports_additive_completion_path(self):
         trace_content = json.loads((TEST_CASE_DIR / "test_read.json").read_text(encoding="utf-8"))
         report, csv_rows, output = _run_engine_and_load_report(trace_content, "single_read_trace.json")
 
@@ -70,15 +70,16 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertEqual(req["type"], "READ")
         self.assertEqual(req["size"], trace_content[0]["size"])
         self.assertEqual(req["persistence_status"], "not_applicable")
+        self.assertEqual(req["mapping_resolution_counts"]["cmt_hit"], 1)
         self.assertGreater(req["breakdown"]["pcie_host_to_device"], 0)
         self.assertGreater(req["breakdown"]["pcie_device_to_host"], 0)
-        self.assertGreater(req["breakdown"]["amu_mapping_wait"], 0)
+        self.assertEqual(req["breakdown"]["amu_mapping_wait"], 0)
         self.assertGreater(req["breakdown"]["phy_cmd_addr"], 0)
         self.assertGreater(req["breakdown"]["phy_array_exec"], 0)
         self.assertGreater(req["breakdown"]["phy_data_out"], 0)
         self.assertEqual(csv_row[CSV_COLUMN_NAMES[1]], "READ")
-        self.assertEqual(csv_row[CSV_COLUMN_NAMES[5]], "No")
-        self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[6]]), 0)
+        self.assertEqual(csv_row[CSV_COLUMN_NAMES[5]], "Yes")
+        self.assertEqual(int(csv_row[CSV_COLUMN_NAMES[6]]), 0)
         self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[8]]), 0)
         self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[9]]), 0)
         self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[10]]), 0)
@@ -88,7 +89,7 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
             _completion_path_sum(csv_row),
         )
 
-    def test_mapping_dependency_queue_is_absorbed_into_mapping_column(self):
+    def test_cmt_hit_read_queue_reports_tsu_contention_without_mapping_wait(self):
         trace_content = [
             {"type": "read", "time": 0, "start_lha": 4508800, "size": 1},
             {"type": "read", "time": 0, "start_lha": 4508800, "size": 1},
@@ -98,7 +99,10 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertNotIn("Traceback", output)
         self.assertEqual(report["meta"]["request_count"], 2)
         self.assertTrue(
-            any(req["breakdown"]["amu_mapping_wait"] > 0 for req in report["requests"])
+            all(req["breakdown"]["amu_mapping_wait"] == 0 for req in report["requests"])
+        )
+        self.assertTrue(
+            all(req["mapping_resolution_counts"]["cmt_hit"] == 1 for req in report["requests"])
         )
         self.assertTrue(
             any(req["breakdown"]["tsu_queue_wait"] > 0 for req in report["requests"])
@@ -110,8 +114,9 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertEqual(second_req["type"], "READ")
         self.assertEqual(second_req["breakdown"]["amu_mapping_wait"], 0)
         self.assertGreater(second_req["breakdown"]["tsu_queue_wait"], 0)
-        self.assertGreater(int(second_row[CSV_COLUMN_NAMES[6]]), int(first_row[CSV_COLUMN_NAMES[6]]))
-        self.assertEqual(int(second_row[CSV_COLUMN_NAMES[7]]), 0)
+        self.assertEqual(int(first_row[CSV_COLUMN_NAMES[6]]), 0)
+        self.assertEqual(int(second_row[CSV_COLUMN_NAMES[6]]), 0)
+        self.assertGreater(int(second_row[CSV_COLUMN_NAMES[7]]), int(first_row[CSV_COLUMN_NAMES[7]]))
         self.assertTrue(
             all(
                 int(row[CSV_COLUMN_NAMES[2]]) - int(row[CSV_COLUMN_NAMES[0]]) == _completion_path_sum(row)

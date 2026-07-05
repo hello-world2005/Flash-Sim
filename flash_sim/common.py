@@ -2,6 +2,7 @@
 """公共定义：sim_object、事件类型常量、Request、Event。"""
 from __future__ import annotations
 from dataclasses import dataclass, field, fields
+import os
 import time
 from typing import Any, List, Optional
 from enum import Enum
@@ -142,7 +143,7 @@ INVALID_DATA = -1
 INVALID_PPA = -1
 SECTOR_SIZE_BYTES = 64
 DATA_CACHE_LINE_SIZE = 64
-DATA_CACHE_CAP = 4096
+DATA_CACHE_CAP = 262144
 
 # PCIe timing config
 # Units:
@@ -151,9 +152,18 @@ DATA_CACHE_CAP = 4096
 PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS = 4
 PCIE_PACKET_OVERHEAD_BYTES = 400
 
-# debug_info = print
+class _QuietFlag:
+    value: bool = False
+
+    def __bool__(self) -> bool:
+        return self.value
+
+QUIET = _QuietFlag()
+
 def debug_info(*args, **kwargs):
-    pass
+    if QUIET or os.environ.get("FLASHSIM_DEBUG", "").lower() not in ("1", "true", "yes", "on"):
+        return
+    print(*args, **kwargs)
 
 # ── Flash timing constants (nanoseconds) ────────────────────────────────────
 PHY_CMD_ADDR_TIME = 100          # command + address bus transfer time
@@ -303,24 +313,29 @@ class Transaction:
     
     def __repr__(self) -> str:
         req = self.source_req
-        source_req_brief = f"Request(type={req.type if req is not None else 'None'}, lha_start={req.lha_start if req is not None else 'None'}, size={req.size if req is not None else 'None'})"
-        rely_on_transactions_brief = f"{len(self.rely_on_transactions)} transaction(s)" if self.rely_on_transactions else "[]"
-        required_by_transactions_brief = f"{len(self.required_by_transactions)} transaction(s)" if self.required_by_transactions else "[]"
+        source_req_brief = (
+            "None"
+            if req is None
+            else (
+                f"Request(type={req.type.name}, sq_id={req.sq_id}, "
+                f"lha_start={req.lha_start}, size={req.size}, trace_index={req.trace_index})"
+            )
+        )
         items = [
-            f"type={self.type},",
+            f"type={self.type.name},",
             f"lpa={self.lpa},",
             f"mvpn={self.mvpn},",
             f"address={repr(self.address)},",
-            f"Transaction source_req={source_req_brief},",
-            f"bitmap={repr(self.bitmap)},",
-            f"payload={repr(self.payload)},",
-            f"response={repr(self.response)},",
+            f"source_req={source_req_brief},",
+            f"bitmap_len={len(self.bitmap)},",
+            f"payload_len={len(self.payload)},",
+            f"has_response={self.response is not None},",
             f"failed={self.failed},",
             f"error_message={repr(self.error_message)},",
-            f"rely_on_transactions={repr(self.rely_on_transactions)},",
-            f"required_by_transactions={required_by_transactions_brief},",
+            f"rely_on={len(self.rely_on_transactions)},",
+            f"required_by={len(self.required_by_transactions)},",
             f"completed={self.completed},",
-            f"exec_event={repr(self.exec_event)}",
+            f"has_exec_event={self.exec_event is not None}",
         ]
         return "<" + " ".join(items) + ">"
     
@@ -358,6 +373,7 @@ class Request:
     report_req_id: Optional[str] = None
     report_origin_request_ids: list[str] = field(default_factory=list)
     cache_registration_complete: bool = False
+    cache_forced_bypass: bool = False
 
     def is_serviced(self) -> bool:
         """是否所有 transaction 已处理完成。"""
@@ -385,9 +401,9 @@ class Request:
     
     def __repr__(self) -> str:
         items = [
-            f"Request type={self.type},",
+            f"Request type={self.type.name},",
             f"sq_id={self.sq_id},",
-            f"transaction_list={self.transaction_list},",
+            f"transaction_count={len(self.transaction_list)},",
             f"lha_start={self.lha_start},",
             f"size={self.size},",
             f"issue_time={self.issue_time},",

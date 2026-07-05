@@ -4,12 +4,24 @@
 from .HIL import HIL
 from .FTL import FTL
 from .PHY import PHY
+from .common import QUIET
 
 class Device:
-    def __init__(self, host):
+    def __init__(
+        self,
+        host,
+        cache_bypass: bool = False,
+        data_cache_capacity: int | None = None,
+    ):
         self._construction_valid: bool = False
         self.host = host
-        self.hil = HIL(name="HIL", host=host, device=self)
+        self.hil = HIL(
+            name="HIL",
+            host=host,
+            device=self,
+            cache_bypass=cache_bypass,
+            data_cache_capacity=data_cache_capacity,
+        )
         self.ftl = FTL()
         self.phy = PHY()
         self.hil.ftl = self.ftl
@@ -34,7 +46,8 @@ class Device:
     def Validate_construction(self):
         if self._construction_valid:
             return
-        print("Validating Device construction...")
+        if not QUIET:
+            print("Validating Device construction...")
         assert self.host is not None, "Device host is not set"
         assert self.hil is not None, "Device hil is not set"
         assert self.ftl is not None, "Device ftl is not set"
@@ -43,4 +56,5 @@ class Device:
         self.ftl.Validate_construction()
         self.phy.Validate_construction()
         self.hil.Validate_construction()
-        print("Device construction validation complete.")
+        if not QUIET:
+            print("Device construction validation complete.")

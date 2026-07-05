@@ -261,7 +261,18 @@ class PageData:
     lpa: int = INVALID_LPA
     mvpn: int = INVALID_MVPN
     function: Optional[PageType] = None
-    
+
+    def __repr__(self) -> str:
+        return (
+            "<PageData "
+            f"valid_bitmap_len={len(self.valid_bitmap)} "
+            f"data_len={len(self.data)} "
+            f"lpa={self.lpa} "
+            f"mvpn={self.mvpn} "
+            f"function={self.function.name if self.function is not None else None}"
+            ">"
+        )
+
 
 # ── PHY class ─────────────────────────────────────────────────────────────────
 
@@ -269,7 +280,8 @@ class PHY():
     """Flash 物理层。接收 TSU 下发的命令（send_command_to_chip），通过仿真事件驱动 chip/channel 状态机，事务完成时通过回调通知 TSU 及上层。
     """
     def __init__(self, onfi_timing: Optional[OnfiTimingConfig] = None):
-        print("Initializing PHY...")
+        if not QUIET:
+            print("Initializing PHY...")
         self._construction_valid: bool = False
         self.onfi_timing: OnfiTimingConfig = onfi_timing or DEFAULT_ONFI_TIMING
         self._channel_busy: List[bool] = [False] * CHANNEL_NO
@@ -302,7 +314,8 @@ class PHY():
             for _ in range(CHANNEL_NO)
         ]
 
-        print("PHY initialization complete.")
+        if not QUIET:
+            print("PHY initialization complete.")
 
     def Validate_construction(self):
         if self._construction_valid:
@@ -478,6 +491,20 @@ class PHY():
         self._start_channel_transfer(task)
         return True
 
+    def kick_channel_transfer(self, channel_id: int) -> bool:
+        if self._active_transfers[channel_id] is not None:
+            return False
+        if not self._pending_transfers[channel_id]:
+            return False
+        return self.schedule_next_channel_transfer(channel_id)
+
+    def kick_all_channel_transfers(self) -> bool:
+        progressed = False
+        for channel_id in range(CHANNEL_NO):
+            if self.kick_channel_transfer(channel_id):
+                progressed = True
+        return progressed
+
     def _start_channel_transfer(self, task: ChannelTransferTask) -> None:
         now = CURRENT_TIME()
         duration = max(0, task.remaining_duration)
@@ -630,7 +657,10 @@ class PHY():
 
         # 1. Suspend the currently running operation if requested
         if suspension_required and chip_bke.status != ChipStatus.IDLE:
+            had_active_command = die_bke.active_command is not None
             die_bke.prepare_suspend(now)
+            if had_active_command:
+                chip_bke.No_of_active_dies = max(0, chip_bke.No_of_active_dies - 1)
             chip_bke.HasSuspendedCommands = True
 
         # 2. Register new command on the die
@@ -874,7 +904,7 @@ class PHY():
             chip_bke = self.get_chip_bke(chip_id)
             die_bke = chip_bke.get_die_bke(die_id)
             channel_id = chip_id[0]
-            chip_bke.No_of_active_dies -= 1
+            chip_bke.No_of_active_dies = max(0, chip_bke.No_of_active_dies - 1)
             chip_bke._has_data_waiting = False
             die_bke.active_command = None
             # Data DMA'd from chip to controller; complete all waiting read transactions.
@@ -886,7 +916,8 @@ class PHY():
                     tr.failed = True
                     tr.error_message = str(exc)
                     tr.response = None
-                    debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED failed tr: {tr}")
+                    if not QUIET:
+                        debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED failed tr: {tr}")
                     for required_by_tr in tr.required_by_transactions:
                         if tr in required_by_tr.rely_on_transactions:
                             required_by_tr.rely_on_transactions.remove(tr)
@@ -895,17 +926,21 @@ class PHY():
                         required_by_tr.failed = True
                     self._broadcast_transaction_serviced(tr)
                     continue
-                debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, tr: {tr}")
+                if not QUIET:
+                    debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, tr: {tr}")
                 for required_by_tr in tr.required_by_transactions:
-                    required_by_tr.rely_on_transactions.remove(tr)
+                    if tr in required_by_tr.rely_on_transactions:
+                        required_by_tr.rely_on_transactions.remove(tr)
                     required_by_tr.get_response_from_transaction(tr)
-                    debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, required_by_tr: {required_by_tr}")
+                    if not QUIET:
+                        debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, required_by_tr: {required_by_tr}")
                 self._broadcast_transaction_serviced(tr)
             if chip_bke.HasSuspendedCommands:
                 debug_info(f"[PHY] PHY_READ_DATA_TRANSFERRED, sending resume command")
                 self._send_resume_command(chip_id)
             else:
-                if chip_bke.No_of_active_dies == 0:
+                if chip_bke.No_of_active_dies <= 0:
+                    chip_bke.No_of_active_dies = 0
                     chip_bke.status = ChipStatus.IDLE
                 self._broadcast_channel_idle(channel_id)
         
@@ -918,16 +953,18 @@ class PHY():
             channel_id = chip_id[0]
             chip_bke._has_data_waiting = False
             die_bke.active_command = None
-            chip_bke.No_of_active_dies -= 1
+            chip_bke.No_of_active_dies = max(0, chip_bke.No_of_active_dies - 1)
             for tr in transactions:
                 tr.completed = True
                 for required_by_tr in tr.required_by_transactions:
-                    required_by_tr.rely_on_transactions.remove(tr)
+                    if tr in required_by_tr.rely_on_transactions:
+                        required_by_tr.rely_on_transactions.remove(tr)
                 self._broadcast_transaction_serviced(tr)
             if chip_bke.HasSuspendedCommands:
                 self._send_resume_command(chip_id)
             else:
-                if chip_bke.No_of_active_dies == 0:
+                if chip_bke.No_of_active_dies <= 0:
+                    chip_bke.No_of_active_dies = 0
                     chip_bke.status = ChipStatus.IDLE
                 self._broadcast_channel_idle(channel_id)
         
@@ -940,16 +977,18 @@ class PHY():
             channel_id = chip_id[0]
             chip_bke._has_data_waiting = False
             die_bke.active_command = None
-            chip_bke.No_of_active_dies -= 1
+            chip_bke.No_of_active_dies = max(0, chip_bke.No_of_active_dies - 1)
             for tr in transactions:
                 tr.completed = True
                 for required_by_tr in tr.required_by_transactions:
-                    required_by_tr.rely_on_transactions.remove(tr)
+                    if tr in required_by_tr.rely_on_transactions:
+                        required_by_tr.rely_on_transactions.remove(tr)
                 self._broadcast_transaction_serviced(tr)
             if chip_bke.HasSuspendedCommands:
                 self._send_resume_command(chip_id)
             else:
-                if chip_bke.No_of_active_dies == 0:
+                if chip_bke.No_of_active_dies <= 0:
+                    chip_bke.No_of_active_dies = 0
                     chip_bke.status = ChipStatus.IDLE
                 self._broadcast_channel_idle(channel_id)
         else:
@@ -983,26 +1022,40 @@ class PHY():
             # check, the data will stay in _waiting_data_out until the next idle event.
 
         elif cmd_type == "write" or cmd_type == "erase":  # write or erase
-            if die_bke.active_command:
-                for tr in transactions:
-                    tr.completed = True
-                    if tr.type in (
-                        TransactionType.MAPPING_WRITE,
-                        TransactionType.USER_WRITE,
-                        TransactionType.USER_STATIC_WRITE,
-                        TransactionType.GC_WRITE,
-                    ):
-                        self._write_to_storage(tr)
+            active_matches = (
+                die_bke.active_command is not None
+                and die_bke.active_command.transactions is transactions
+            )
+            for tr in transactions:
+                if tr.completed:
+                    continue
+                tr.completed = True
+                if tr.type in (
+                    TransactionType.MAPPING_WRITE,
+                    TransactionType.USER_WRITE,
+                    TransactionType.USER_STATIC_WRITE,
+                    TransactionType.GC_WRITE,
+                ):
+                    self._write_to_storage(tr)
+                if not QUIET:
                     debug_info(f"[PHY] following tr completed: {tr}")
-                    recorder = REQUEST_LATENCY_RECORDER()
-                    if recorder is not None:
-                        recorder.note_persistence_completed(tr, CURRENT_TIME())
-                    for required_by_tr in tr.required_by_transactions:
+                recorder = REQUEST_LATENCY_RECORDER()
+                if recorder is not None:
+                    recorder.note_persistence_completed(tr, CURRENT_TIME())
+                for required_by_tr in tr.required_by_transactions:
+                    if (
+                        required_by_tr.type == TransactionType.MAPPING_WRITE
+                        and tr.type == TransactionType.MAPPING_WRITE
+                    ):
+                        required_by_tr.get_response_from_transaction(tr)
+                    if tr in required_by_tr.rely_on_transactions:
                         required_by_tr.rely_on_transactions.remove(tr) # remove reliance
+                    if not QUIET:
                         debug_info(f"[PHY] removed reliance by {required_by_tr}")
-                    self._broadcast_transaction_serviced(tr)
-            die_bke.active_command = None
-            chip_bke.No_of_active_dies -= 1
+                self._broadcast_transaction_serviced(tr)
+            if active_matches:
+                die_bke.active_command = None
+            chip_bke.No_of_active_dies = max(0, chip_bke.No_of_active_dies - 1)
 
             if chip_bke.No_of_active_dies == 0:
                 if chip_bke.HasSuspendedCommands:
@@ -1034,12 +1087,31 @@ class PHY():
             if die_bke.suspended_command is None:
                 continue
             remaining = die_bke.prepare_resume()
+            chip_bke.No_of_active_dies += 1
             if remaining <= 0:
-                raise ValueError("Remaining time is less than 0!")
+                # Same-time event ordering can suspend an operation whose finish
+                # event is already due. Complete it just after resume instead of
+                # aborting the whole replay.
+                remaining = 1
             cmd_type = die_bke.active_command.cmd_type
             transactions = die_bke.active_command.transactions
 
-            if cmd_type == "write":
+            if cmd_type == "read":
+                chip_bke.status = ChipStatus.READ
+                finish = now + remaining
+                die_bke.expected_finish_time = finish
+                chip_bke.Expected_Finish_Time = finish
+                Register_event(
+                    EventType.PHY_CHIP_READ_COMPLETE,
+                    self,
+                    {
+                        "chip_id": chip_id,
+                        "die_id": die_bke.die_id,
+                        "transactions": transactions,
+                    },
+                    finish,
+                )
+            elif cmd_type == "write":
                 is_gc = "gc" in transactions[0].type.value.lower()
                 chip_bke.status = ChipStatus.GC_WRITE if is_gc else ChipStatus.WRITE
                 finish = now + remaining
