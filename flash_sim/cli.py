@@ -18,12 +18,14 @@ if __package__ in (None, ""):
     from flash_sim.parser import parse_trace, format_results, load_config, ParseError, ValidationError
     from flash_sim.engine import Engine
     from flash_sim.timeline_recorder import TimelineRecorder
+    import flash_sim.common as _common
 else:
     from .config import FlashConfig, FlashGeometry, FlashAddress
     from .simulator import FlashSimulator
     from .parser import parse_trace, format_results, load_config, ParseError, ValidationError
     from .engine import Engine
     from .timeline_recorder import TimelineRecorder
+    from . import common as _common
 
 
 def print_geometry(geo: FlashGeometry) -> None:
@@ -239,10 +241,24 @@ def cmd_interactive(args) -> int:
 
 def cmd_run_engine(args) -> int:
     """Run event-driven engine simulation and optionally generate timeline visualization."""
+    if getattr(args, "quiet", False):
+        _common.QUIET.value = True
+    if getattr(args, "fast_report", False):
+        os.environ["FLASHSIM_FAST_REPORT"] = "1"
     config = load_config_from_args(args)
-    recorder = TimelineRecorder()
+    if getattr(args, "cache_bypass", False):
+        config.runtime.cache_bypass = True
+    if getattr(args, "plane_allocation", None):
+        config.runtime.plane_allocation = args.plane_allocation
+    if getattr(args, "static_wl", None) is not None:
+        config.runtime.static_wl_enabled = args.static_wl == "on"
+    if getattr(args, "static_wl_threshold", None) is not None:
+        config.runtime.static_wl_wear_gap_threshold = args.static_wl_threshold
+
+    recorder = None if getattr(args, "no_timeline", False) else TimelineRecorder()
     engine = Engine(config=config)
-    recorder.attach(engine)
+    if recorder is not None:
+        recorder.attach(engine)
 
     try:
         engine.Start_simulation(args.trace, pre_trace=args.pre_trace)
@@ -250,8 +266,14 @@ def cmd_run_engine(args) -> int:
         print(f"Engine simulation failed: {e}", file=sys.stderr)
         return 1
 
+    if recorder is None:
+        if not _common.QUIET:
+            print("Timeline recording disabled.")
+        return 0
+
     events_path = recorder.dump_json(args.events)
-    print(f"Timeline events written to {events_path}")
+    if not _common.QUIET:
+        print(f"Timeline events written to {events_path}")
 
     if args.no_viz:
         return 0
@@ -374,6 +396,13 @@ Examples:
     run_engine_parser.add_argument("--viz-output", default="timeline.html", help="Output path for timeline html")
     run_engine_parser.add_argument("--no-viz", action="store_true", help="Only export timeline events, do not generate html")
     run_engine_parser.add_argument("--no-open", action="store_true", help="Generate html but do not open browser")
+    run_engine_parser.add_argument("--quiet", action="store_true", help="Suppress non-error engine output")
+    run_engine_parser.add_argument("--cache-bypass", action="store_true", help="Bypass the host-visible write cache")
+    run_engine_parser.add_argument("--plane-allocation", choices=["PAGE_LEVEL", "CWDP"], default=None, help="Plane allocation scheme for user writes")
+    run_engine_parser.add_argument("--no-timeline", action="store_true", help="Disable timeline recording")
+    run_engine_parser.add_argument("--fast-report", action="store_true", help="Compatibility flag for large validation runs")
+    run_engine_parser.add_argument("--static-wl", choices=["on", "off"], default=None, help="Enable or disable static wear leveling")
+    run_engine_parser.add_argument("--static-wl-threshold", type=int, default=None, help="Static wear-leveling wear-gap threshold")
     run_engine_parser.set_defaults(func=cmd_run_engine)
 
     # interactive command

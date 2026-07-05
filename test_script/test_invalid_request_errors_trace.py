@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 READ_ERROR_LHA = 106688
 
 
-def _run_engine_with_trace(trace_path: Path, mutate_after_preconditioning=None) -> str:
+def _run_engine_with_trace(trace_path: Path, mutate_after_preconditioning=None):
     buf = io.StringIO()
     with redirect_stdout(buf), redirect_stderr(buf):
         engine = Engine()
@@ -25,7 +25,7 @@ def _run_engine_with_trace(trace_path: Path, mutate_after_preconditioning=None) 
             mutate_after_preconditioning(engine)
         engine.Initialize_event_queue(str(trace_path))
         engine.Run()
-    return buf.getvalue()
+    return buf.getvalue(), engine.request_latency_recorder.export()
 
 
 def _corrupt_mapped_sector(engine: Engine, target_lha: int) -> None:
@@ -45,30 +45,36 @@ def _corrupt_mapped_sector(engine: Engine, target_lha: int) -> None:
 
 class TestInvalidRequestErrorsTrace(unittest.TestCase):
     def test_invalid_domain_requests_complete_with_error_logs(self):
-        output = _run_engine_with_trace(
+        output, report = _run_engine_with_trace(
             REPO_ROOT / "test_case" / "test_invalid_domain_requests.json"
         )
 
         self.assertNotIn("Traceback", output)
-        self.assertIn("SEARCH request must stay in static area", output)
-        self.assertIn("COMPUTE request must stay in static area", output)
-        self.assertIn(
-            "WRITE request must stay in random-access area; use STATIC_WRITE for static-area writes",
-            output,
+        requests = report["requests"]
+        self.assertEqual([req["status"] for req in requests], ["ERROR"] * 3)
+        self.assertEqual(
+            [req["error_message"] for req in requests],
+            [
+                "SEARCH request must stay in static area",
+                "COMPUTE request must stay in static area",
+                "WRITE request must stay in random-access area; use STATIC_WRITE for static-area writes",
+            ],
         )
-        self.assertGreaterEqual(output.count("status=ERROR"), 3)
 
     def test_unmapped_read_completes_with_error_log(self):
-        output = _run_engine_with_trace(
+        output, report = _run_engine_with_trace(
             REPO_ROOT / "test_case" / "test_unmapped_read_error.json",
         )
 
         self.assertNotIn("Traceback", output)
-        self.assertIn("Read request accessing non-existing mapping page", output)
-        self.assertGreaterEqual(output.count("status=ERROR"), 1)
+        self.assertEqual(report["requests"][0]["status"], "ERROR")
+        self.assertEqual(
+            report["requests"][0]["error_message"],
+            "Read request accessing non-existing mapping page",
+        )
 
     def test_invalid_sector_read_completes_with_error_log(self):
-        output = _run_engine_with_trace(
+        output, report = _run_engine_with_trace(
             REPO_ROOT / "test_case" / "test_invalid_sector_read_error.json",
             mutate_after_preconditioning=lambda engine: _corrupt_mapped_sector(
                 engine, READ_ERROR_LHA
@@ -76,8 +82,11 @@ class TestInvalidRequestErrorsTrace(unittest.TestCase):
         )
 
         self.assertNotIn("Traceback", output)
-        self.assertIn("[PHY] <_read_from_storage> accessing invalid sector in user page!", output)
-        self.assertGreaterEqual(output.count("status=ERROR"), 1)
+        self.assertEqual(report["requests"][0]["status"], "ERROR")
+        self.assertEqual(
+            report["requests"][0]["error_message"],
+            "[PHY] <_read_from_storage> accessing invalid sector in user page!",
+        )
 
 
 if __name__ == "__main__":

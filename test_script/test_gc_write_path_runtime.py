@@ -54,6 +54,8 @@ def _make_amu_fixture(with_phy: bool = False):
         tsu=tsu,
         gc_low_watermark=3,
         check_gc=lambda: None,
+        check_gc_for_plane=lambda addr: None,
+        can_trigger_gc=lambda addr: True,
         _trigger_gc=lambda addr: None,
         on_erase_complete=lambda addr, **kwargs: None,
         select_wl_aware_free_block=lambda plane_addr, **kwargs: min(
@@ -250,30 +252,28 @@ class TestGCWritePathRuntime(unittest.TestCase):
 
         self.assertEqual(bm.waiting_writes[bm._plane_key(plane_addr)], waiting)
         initial_schedule_count = tsu.scheduled
+        bm.gc_wl_unit.can_trigger_gc = lambda addr: False
 
-        for index, block_id in enumerate((2, 3), start=1):
-            erase_addr = FlashAddress(
-                channel=plane_addr.channel,
-                chip=plane_addr.chip,
-                die=plane_addr.die,
-                plane=plane_addr.plane,
-                sub_plane=block_id,
-                page=0,
-            )
-            erase_bke = bm.get_block_bke(erase_addr)
-            erase_bke.write_frontier = PAGE_PER_BLOCK
-            erase_bke.free_page_count = 0
-            erase_bke.invalid_pages = set(range(PAGE_PER_BLOCK))
-            erase_bke.invalid_page_count = PAGE_PER_BLOCK
-            plane_bke.free_page_count -= PAGE_PER_BLOCK
-            plane_bke.invalid_page_count += PAGE_PER_BLOCK
+        erase_addr = FlashAddress(
+            channel=plane_addr.channel,
+            chip=plane_addr.chip,
+            die=plane_addr.die,
+            plane=plane_addr.plane,
+            sub_plane=2,
+            page=0,
+        )
+        erase_bke = bm.get_block_bke(erase_addr)
+        erase_bke.write_frontier = PAGE_PER_BLOCK
+        erase_bke.free_page_count = 0
+        erase_bke.invalid_pages = set(range(PAGE_PER_BLOCK))
+        erase_bke.invalid_page_count = PAGE_PER_BLOCK
+        plane_bke.free_page_count -= PAGE_PER_BLOCK
+        plane_bke.invalid_page_count += PAGE_PER_BLOCK
 
-            bm.finalize_gc_erase(erase_addr)
+        bm.finalize_gc_erase(erase_addr)
 
-            self.assertEqual(tsu.submitted, waiting[:index])
-            self.assertEqual(tsu.scheduled, initial_schedule_count + index)
-            if index == 1:
-                self.assertEqual(bm.waiting_writes[bm._plane_key(plane_addr)], waiting[1:])
+        self.assertEqual(tsu.submitted, waiting)
+        self.assertEqual(tsu.scheduled, initial_schedule_count + 1)
 
         self.assertNotIn(bm._plane_key(plane_addr), bm.waiting_writes)
         self.assertEqual([tr.address.page for tr in waiting], [0, 1])
@@ -372,6 +372,7 @@ class TestGCWritePathRuntime(unittest.TestCase):
         remote_bke.free_block_pool = {remote_bke.write_frontier_block}
         bm.waiting_writes[bm._plane_key(local_plane)] = [local]
         bm.waiting_writes[bm._plane_key(remote_plane)] = [remote]
+        bm.gc_wl_unit.can_trigger_gc = lambda addr: False
 
         erase_addr = FlashAddress(
             channel=local_plane.channel,
@@ -747,10 +748,15 @@ class TestGCWritePathRuntime(unittest.TestCase):
             bitmap=[0, 0, 1] + [0] * (LPA_NO_PER_MAPPING_PAGE - 3),
         )
 
-        with self.assertRaisesRegex(ValueError, "invalid mapping slot"):
-            phy._read_from_storage(invalid_slot_read)
-        with self.assertRaisesRegex(ValueError, "invalid mapping ppa"):
-            phy._read_from_storage(invalid_ppa_read)
+        invalid_slot_page = phy._read_from_storage(invalid_slot_read)
+        invalid_ppa_page = phy._read_from_storage(invalid_ppa_read)
+
+        self.assertEqual(invalid_slot_page.function, PageType.MAPPING)
+        self.assertEqual(invalid_slot_page.valid_bitmap, [0] * LPA_NO_PER_MAPPING_PAGE)
+        self.assertEqual(invalid_slot_page.data, [INVALID_PPA] * LPA_NO_PER_MAPPING_PAGE)
+        self.assertEqual(invalid_ppa_page.function, PageType.MAPPING)
+        self.assertEqual(invalid_ppa_page.valid_bitmap, [0] * LPA_NO_PER_MAPPING_PAGE)
+        self.assertEqual(invalid_ppa_page.data, [INVALID_PPA] * LPA_NO_PER_MAPPING_PAGE)
 
     def test_cmt_hit_overwrite_marks_old_page_invalid_immediately(self):
         amu, bm, tsu = _make_amu_fixture()

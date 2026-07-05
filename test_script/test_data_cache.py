@@ -64,6 +64,7 @@ class TestDataCache(unittest.TestCase):
     def test_register_write_request_creates_logical_entry_before_payload_arrives(self):
         hil = _DummyHIL()
         cm = Cache_Manager(hil)
+        cm.cache = Data_Cache(cache_line_size=64, capacity=128)
         bitmap, _ = _make_user_payload({0: 11, 1: 22})
         write_req = Request(
             type=RequestType.WRITE,
@@ -78,6 +79,7 @@ class TestDataCache(unittest.TestCase):
         self.assertEqual(entry["bitmap"][1], 1)
         self.assertEqual(entry["ready_bitmap"][0], 0)
         self.assertEqual(entry["ready_bitmap"][1], 0)
+        self.assertEqual(cm.cache.free_lines(), 2)
 
         read_tr = Transaction(source_req=None, type=TransactionType.USER_READ, lpa=5, bitmap=bitmap)
         read_req = Request(type=RequestType.READ, transaction_list=[read_tr])

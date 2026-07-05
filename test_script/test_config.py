@@ -373,6 +373,27 @@ class TestFlashConfig:
         assert config.geometry.sub_blocks_per_block == 4
         assert config.geometry.pages_per_block == 256  # 64 * 4
 
+    def test_runtime_cache_capacity_aliases(self):
+        """Runtime cache capacity can be configured with compatibility aliases."""
+        assert (
+            FlashConfig.from_dict({"runtime": {"data_cache_capacity": 64 * 1024}})
+            .runtime
+            .data_cache_capacity
+            == 64 * 1024
+        )
+        assert (
+            FlashConfig.from_dict({"runtime": {"cache_capacity": 128 * 1024}})
+            .runtime
+            .data_cache_capacity
+            == 128 * 1024
+        )
+        assert (
+            FlashConfig.from_dict({"runtime": {"cache_cap": 32 * 1024}})
+            .runtime
+            .data_cache_capacity
+            == 32 * 1024
+        )
+
     def test_to_dict(self):
         """Config can be serialized to dictionary."""
         config = FlashConfig()

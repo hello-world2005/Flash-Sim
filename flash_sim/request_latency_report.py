@@ -147,6 +147,7 @@ class RequestLatencyState:
     )
     persistence_status: str = "not_applicable"
     persistence_completion_time: Optional[int] = None
+    direct_media_write: bool = False
     mapping_resolution_counts: dict[str, int] = field(default_factory=_empty_mapping_resolution_counts)
     data_cache_status: str = "not_checked"
     energy_uj: float = 0.0          # per-request total energy (μJ), attributed via source_req
@@ -178,6 +179,7 @@ class RequestLatencyRecorder:
             "backpressure_enqueued": 0,
             "backpressure_retried": 0,
             "backpressure_wait_time": 0,
+            "precondition": {},
             "planes": {},
         }
 
@@ -434,6 +436,11 @@ class RequestLatencyRecorder:
         rec.host_completion_time = timestamp
         rec.status = req.status
         rec.error_message = req.error_message
+        req_type = req.type.value if hasattr(req.type, "value") else str(req.type)
+        if req_type in WRITE_LIKE_REQUEST_TYPES and self._is_direct_media_write(req):
+            rec.direct_media_write = True
+            rec.persistence_status = "persisted"
+            rec.persistence_completion_time = timestamp
 
     def note_persistence_completed(self, tr: Transaction, timestamp: int) -> None:
         request_ids, scope = self._request_ids_from_transaction(tr)
@@ -558,15 +565,25 @@ class RequestLatencyRecorder:
             persistence_total = self._total_latency(rec.req_init_time, rec.persistence_completion_time)
             persistence_breakdown = self._summarize_breakdown(rec.persistence_intervals, persistence_total)
             persistence_status = rec.persistence_status
+            persistence_origin = "not_applicable"
+            if rec.direct_media_write and rec.req_type in WRITE_LIKE_REQUEST_TYPES:
+                persistence_status = "persisted"
+                persistence_total = total_latency
+                persistence_breakdown = dict(host_breakdown)
+                persistence_origin = "host_media_path"
+            elif persistence_status == "persisted":
+                persistence_origin = "cache_flush"
             if rec.req_type in (RequestType.WRITE.value, RequestType.STATIC_WRITE.value):
                 if rec.persistence_completion_time is None and persistence_status != "persisted":
                     persistence_status = "superseded_in_cache"
                     persistence_total = 0
                     persistence_breakdown = _zero_breakdown()
+                    persistence_origin = "cache_superseded"
             else:
                 persistence_status = "not_applicable"
                 persistence_total = 0
                 persistence_breakdown = _zero_breakdown()
+                persistence_origin = "not_applicable"
 
             requests_payload.append(
                 {
@@ -592,6 +609,7 @@ class RequestLatencyRecorder:
                     "persistence_energy_uj": rec.persistence_energy_uj,
                     "data_cache_status": rec.data_cache_status,
                     "persistence_status": persistence_status,
+                    "persistence_origin": persistence_origin,
                     "persistence_completion_time": rec.persistence_completion_time,
                     "persistence_total_latency": persistence_total,
                     "persistence_breakdown": persistence_breakdown,
@@ -715,6 +733,12 @@ class RequestLatencyRecorder:
         if origin_ids:
             return origin_ids, "persistence"
         return set(), "host"
+
+    def _is_direct_media_write(self, req: Request) -> bool:
+        if getattr(req, "cache_forced_bypass", False):
+            return True
+        runtime = getattr(getattr(self.engine, "config", None), "runtime", None)
+        return bool(getattr(runtime, "cache_bypass", False))
 
     def _append_interval(
         self,

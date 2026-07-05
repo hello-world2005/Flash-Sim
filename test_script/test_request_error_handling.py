@@ -130,6 +130,7 @@ class TestRequestErrorHandling(unittest.TestCase):
     def test_amu_unmapped_read_raises_request_failure_without_queueing_waiter(self):
         amu = Address_Mapping_Unit()
         amu.tsu = _RecordingTSU()
+        amu.block_manager = SimpleNamespace(has_pending_host_write=lambda lpa: False)
         req = Request(type=RequestType.READ, sq_id=0)
         tr = Transaction(
             source_req=req,

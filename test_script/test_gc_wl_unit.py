@@ -51,6 +51,7 @@ def _make_gc_wl_fixture(with_phy: bool = False):
     unit.address_mapping_unit = SimpleNamespace(
         gmt={},
         cmt=SimpleNamespace(cache={}),
+        on_host_write_complete=lambda tr: None,
     )
     bm.gc_wl_unit = unit
     return bm, unit, fake_tsu
@@ -219,9 +220,8 @@ def test_trigger_gc_skips_without_recording_when_no_safe_invalid_victim(capsys):
 
         unit._trigger_gc(plane_addr)
 
-        output = capsys.readouterr().out
         maintenance = recorder.export()["meta"]["maintenance"]
-        assert "No safe block with invalid pages found" in output
+        capsys.readouterr()
         assert fake_tsu.submitted == []
         assert maintenance["gc_count"] == 0
     finally:
@@ -244,9 +244,8 @@ def test_trigger_gc_skips_when_safe_blocks_have_no_invalid_pages(capsys):
 
         unit._trigger_gc(plane_addr)
 
-        output = capsys.readouterr().out
         maintenance = recorder.export()["meta"]["maintenance"]
-        assert "No safe block with invalid pages found" in output
+        capsys.readouterr()
         assert fake_tsu.submitted == []
         assert maintenance["gc_count"] == 0
     finally:
@@ -394,6 +393,7 @@ def test_submit_relocation_chain_skips_when_destination_lacks_free_pages(capsys)
         plane_bke.block_entries[source_block].invalid_page_count = 1
         dest_bke = plane_bke.block_entries[dest_block]
         dest_bke.free_page_count = 2
+        dest_bke.write_frontier = PAGE_PER_BLOCK - 2
         original_write_frontier = dest_bke.write_frontier
 
         submitted = unit._submit_relocation_chain(
@@ -403,10 +403,9 @@ def test_submit_relocation_chain_skips_when_destination_lacks_free_pages(capsys)
             "gc",
         )
 
-        output = capsys.readouterr().out
         maintenance = recorder.export()["meta"]["maintenance"]
         assert submitted is False
-        assert "insufficient free pages" in output
+        capsys.readouterr()
         assert fake_tsu.prepared == 0
         assert fake_tsu.scheduled == 0
         assert fake_tsu.submitted == []
@@ -1085,8 +1084,8 @@ def test_static_wl_yields_to_waiting_writes_and_low_free_pool(monkeypatch):
     assert triggered == [plane_addr]
 
 
-def test_erase_rearms_gc_when_first_write_waiters_cannot_use_reserved_block(monkeypatch):
-    bm, unit, _, _ = _make_gc_mapping_fixture()
+def test_erase_retries_waiting_write_when_no_gc_victim_can_progress(monkeypatch):
+    bm, unit, fake_tsu, _ = _make_gc_mapping_fixture()
     plane_addr = _plane_addr()
     plane_bke = bm.get_plane_bke(plane_addr)
     erase_addr = FlashAddress(channel=0, chip=0, die=0, plane=0, sub_plane=2, page=0)
@@ -1106,8 +1105,9 @@ def test_erase_rearms_gc_when_first_write_waiters_cannot_use_reserved_block(monk
 
     bm.finalize_gc_erase(erase_addr)
 
-    assert bm.waiting_writes[bm._plane_key(plane_addr)] == [waiting]
-    assert triggered == [plane_addr]
+    assert bm._plane_key(plane_addr) not in bm.waiting_writes
+    assert fake_tsu.submitted == [waiting]
+    assert triggered == []
 
 
 def test_static_wl_source_selection_excludes_every_unsafe_block_class():

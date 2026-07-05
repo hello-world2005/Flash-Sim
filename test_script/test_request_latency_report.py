@@ -80,6 +80,41 @@ class TestRequestLatencyRecorder(unittest.TestCase):
             all(value == 0 for value in exported["persistence_breakdown"].values())
         )
 
+    def test_direct_media_write_uses_host_completion_as_persistence(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.WRITE, "req-direct")
+        req.cache_forced_bypass = True
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_req_init_executed(req, 0)
+
+        rec = recorder.requests[req.report_req_id]
+        recorder._append_interval(rec, "intervals", "tsu_queue_wait", 10, 30)
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "phy_cmd_addr",
+            30,
+            40,
+            {"transaction_type": TransactionType.USER_WRITE.value},
+        )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "phy_array_exec",
+            40,
+            90,
+            {"transaction_type": TransactionType.USER_WRITE.value},
+        )
+        recorder.note_request_completed(req, 100)
+
+        exported = recorder.export()["requests"][0]
+
+        self.assertEqual(exported["persistence_status"], "persisted")
+        self.assertEqual(exported["persistence_origin"], "host_media_path")
+        self.assertEqual(exported["persistence_completion_time"], 100)
+        self.assertEqual(exported["persistence_total_latency"], exported["host_total_latency"])
+        self.assertEqual(exported["persistence_breakdown"], exported["breakdown"])
+
     def test_background_flush_lineage_marks_write_as_persisted(self):
         recorder = RequestLatencyRecorder()
         req = self._make_req(RequestType.WRITE, "req-persisted")
@@ -307,6 +342,7 @@ class TestRequestLatencyRecorder(unittest.TestCase):
             {
                 "cmt_hit": 1,
                 "gmt_hit": 0,
+                "metadata_hit": 0,
                 "mapping_read": 0,
                 "uncached_write": 0,
             },
@@ -339,6 +375,7 @@ class TestRequestLatencyRecorder(unittest.TestCase):
             {
                 "cmt_hit": 0,
                 "gmt_hit": 0,
+                "metadata_hit": 0,
                 "mapping_read": 0,
                 "uncached_write": 0,
             },

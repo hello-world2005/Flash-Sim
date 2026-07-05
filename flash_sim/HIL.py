@@ -11,17 +11,27 @@ from .common import *
 
 
 class HIL:
-    def __init__(self, name, host, device):
-        print("Initializing HIL...")
+    def __init__(
+        self,
+        name,
+        host,
+        device,
+        cache_bypass: bool = False,
+        data_cache_capacity: int | None = None,
+    ):
+        if not QUIET:
+            print("Initializing HIL...")
         self._construction_valid: bool = False
         self.name = name
         self.host = host
         self.device = device
+        self.cache_bypass = cache_bypass
         num_queues = getattr(host, "num_of_queues", 8)
         self.input_streams = [Queue() for _ in range(num_queues)]
-        self.cache_manager = Cache_Manager(self)
+        self.cache_manager = Cache_Manager(self, data_cache_capacity=data_cache_capacity)
         self.ftl: FTL
-        print("HIL initialization complete.")
+        if not QUIET:
+            print("HIL initialization complete.")
 
     def Validate_construction(self):
         if self._construction_valid:
@@ -33,7 +43,8 @@ class HIL:
         assert self.ftl is not None, "HIL ftl is not set"
         self._construction_valid = True
         self.ftl.Validate_construction()
-        print("HIL construction validation complete.")
+        if not QUIET:
+            print("HIL construction validation complete.")
 
     @property
     def pcie_link(self):
@@ -98,7 +109,7 @@ class HIL:
                 tr.failed = True
                 tr.error_message = error_message
 
-        print(
+        debug_info(
             f"[HIL] REQ_COMP {self._request_brief(req)} "
             f"status={status} error_message={error_message!r}"
         )
@@ -194,7 +205,8 @@ class HIL:
             req.transaction_list.append(tr)
 
     def _on_transaction_serviced(self, tr):
-        debug_info(f"[HIL] _on_transaction_serviced: tr: {repr(tr)}")
+        if not QUIET:
+            debug_info(f"[HIL] _on_transaction_serviced: tr: {repr(tr)}")
         tr.completed = True
         self.cache_manager.on_transaction_serviced(tr)
         source_req = tr.source_req
@@ -271,7 +283,11 @@ class HIL:
                 self._validate_request_domain(req)
                 self.segment(req)
                 if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
-                    self.cache_manager.register_write_request(req)
+                    if not self.cache_bypass:
+                        try:
+                            self.cache_manager.register_write_request(req)
+                        except ValueError:
+                            req.cache_forced_bypass = True
                 self.fetch_data(req)
                 if req.type in (RequestType.SEARCH, RequestType.COMPUTE):
                     self.ftl.handle_new_req(req)
@@ -283,19 +299,36 @@ class HIL:
             ):
                 req = message.payload["req"]
                 data = message.payload["data"]
-                debug_info(f"[HIL] received data for req: {req}")
+                if not QUIET:
+                    debug_info(f"[HIL] received data for req: {req}")
                 self._tile_data(req, data)
                 self._ack_request_received(req)
                 for tr in req.transaction_list:
                     tr.data_ready = True
                 if req.type in (RequestType.WRITE, RequestType.STATIC_WRITE):
-                    resumed_reqs = self.cache_manager.cache_write(req)
-                    self._complete_request(req)
-                    for resumed_req in resumed_reqs:
-                        if resumed_req.is_serviced():
-                            self._complete_request(resumed_req)
+                    if self.cache_bypass or req.cache_forced_bypass:
+                        # Bypass cache: submit directly to FTL→TSU→PHY→NAND.
+                        self.ftl.handle_new_req(req)
+                    else:
+                        try:
+                            resumed_reqs = self.cache_manager.cache_write(req)
+                        except ValueError:
+                            req.cache_forced_bypass = True
+                            self.ftl.handle_new_req(req)
+                            resumed_reqs = self.cache_manager.discard_unready_registration_for_request(req)
+                            for resumed_req in resumed_reqs:
+                                if resumed_req.is_serviced():
+                                    self._complete_request(resumed_req)
+                                else:
+                                    self.ftl.handle_new_req(resumed_req)
+                            return
                         else:
-                            self.ftl.handle_new_req(resumed_req)
+                            self._complete_request(req)
+                            for resumed_req in resumed_reqs:
+                                if resumed_req.is_serviced():
+                                    self._complete_request(resumed_req)
+                                else:
+                                    self.ftl.handle_new_req(resumed_req)
                 else:
                     self.ftl.tsu.Prepare_trans_submission()
                     self.ftl.tsu.Schedule()
@@ -307,7 +340,8 @@ class HIL:
             self._fail_request(req, str(exc))
 
     def _tile_data(self, req, data):
-        debug_info(f"[HIL] <_tile_data> req: {req}, data: {data}")
+        if not QUIET:
+            debug_info(f"[HIL] <_tile_data> req: {req}, data: {data}")
         if req.type == RequestType.STATIC_WRITE:
             for idx, tr in enumerate(req.transaction_list):
                 value = data[idx] if idx < len(data) else INVALID_DATA
@@ -337,6 +371,14 @@ class Data_Cache:
         self.user_entries: dict[int, dict] = {}
         self.static_entries: dict[int, dict] = {}
 
+    @staticmethod
+    def user_entry_resident_line_count(entry: dict) -> int:
+        return sum(1 for ready in entry.get("ready_bitmap", []) if ready)
+
+    @staticmethod
+    def static_entry_resident_line_count(entry: dict) -> int:
+        return 1 if entry.get("ready") else 0
+
     @property
     def lines(self) -> dict[int, int]:
         lines: dict[int, int] = {}
@@ -353,8 +395,15 @@ class Data_Cache:
         return lines
 
     def free_lines(self) -> int:
-        # Each cache entry (LPA or static line) consumes one cache line.
-        return self._max_lines - len(self.user_entries) - len(self.static_entries)
+        used_user_lines = sum(
+            self.user_entry_resident_line_count(entry)
+            for entry in self.user_entries.values()
+        )
+        used_static_lines = sum(
+            self.static_entry_resident_line_count(entry)
+            for entry in self.static_entries.values()
+        )
+        return self._max_lines - used_user_lines - used_static_lines
 
     def clear(self):
         self.user_entries.clear()
@@ -362,9 +411,11 @@ class Data_Cache:
 
 
 class Cache_Manager:
-    def __init__(self, hil: HIL):
+    def __init__(self, hil: HIL, data_cache_capacity: int | None = None):
         self.hil = hil
-        self.cache = Data_Cache()
+        self.cache = Data_Cache(
+            capacity=DATA_CACHE_CAP if data_cache_capacity is None else data_cache_capacity
+        )
         self.waiting_user_reads: dict[int, list[Request]] = defaultdict(list)
         self.waiting_read_lpas_by_req: dict[str, set[int]] = {}
 
@@ -474,12 +525,46 @@ class Cache_Manager:
                 ready_to_resume.append(req)
         return ready_to_resume
 
+    def discard_unready_registration_for_request(self, req: Request) -> list[Request]:
+        affected_lpas: list[int] = []
+        if req.type != RequestType.WRITE:
+            return []
+        for tr in req.transaction_list:
+            entry = self.cache.user_entries.get(tr.lpa)
+            if entry is None:
+                continue
+            changed = False
+            for i in range(SECTOR_PER_PAGE):
+                if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
+                    continue
+                if (
+                    entry["origin_request_ids"][i] == req.report_req_id
+                    and entry["ready_bitmap"][i] == 0
+                ):
+                    entry["bitmap"][i] = 0
+                    entry["payload"][i] = INVALID_DATA
+                    entry["origin_request_ids"][i] = None
+                    changed = True
+            if changed:
+                affected_lpas.append(tr.lpa)
+            if (
+                not any(entry["bitmap"])
+                and not any(entry["ready_bitmap"])
+                and entry["flush_inflight_generation"] is None
+            ):
+                self.cache.user_entries.pop(tr.lpa, None)
+        return self._resume_waiting_reads_for_lpas(affected_lpas)
+
     def _count_new_ready_lines(self, req: Request) -> int:
         if req.type == RequestType.WRITE:
             count = 0
             for tr in req.transaction_list:
-                if tr.lpa not in self.cache.user_entries:
-                    count += 1
+                entry = self.cache.user_entries.get(tr.lpa)
+                for i in range(SECTOR_PER_PAGE):
+                    if i >= len(tr.bitmap) or tr.bitmap[i] == 0:
+                        continue
+                    if entry is None or entry["ready_bitmap"][i] == 0:
+                        count += 1
             return count
 
         if req.type == RequestType.STATIC_WRITE:
@@ -487,19 +572,39 @@ class Cache_Manager:
             for tr in req.transaction_list:
                 line_addr = self._line_addr_of_static(tr)
                 entry = self.cache.static_entries.get(line_addr)
-                if entry is None or not entry["ready"]:
+                if entry is None or self.cache.static_entry_resident_line_count(entry) == 0:
                     new_ready_lines += 1
             return new_ready_lines
 
         return 0
 
+    def _ensure_space_for_new_lines(self, new_lines: int) -> None:
+        if new_lines <= 0:
+            return
+        if new_lines > self.cache._max_lines:
+            raise ValueError("Incoming write data exceeds DATA_CACHE_CAP")
+        if new_lines <= self.cache.free_lines():
+            return
+        self.write_flush()
+        if new_lines > self.cache.free_lines():
+            raise ValueError("Incoming write data exceeds DATA_CACHE_CAP")
+
+    def _ensure_cache_not_overfull(self) -> None:
+        if self.cache.free_lines() >= 0:
+            return
+        self.write_flush()
+        if self.cache.free_lines() < 0:
+            raise ValueError("Incoming write data exceeds DATA_CACHE_CAP")
+
     def register_write_request(self, req: Request):
         if req.cache_registration_complete:
             return
+        self._ensure_space_for_new_lines(self._count_new_ready_lines(req))
         if req.type == RequestType.WRITE:
             self._register_user_write(req)
         elif req.type == RequestType.STATIC_WRITE:
             self._register_static_write(req)
+        self._ensure_cache_not_overfull()
         req.cache_registration_complete = True
 
     def query_cache(self, req: Request) -> bool:
@@ -549,16 +654,16 @@ class Cache_Manager:
             return []
         # Count new lines BEFORE registering so we know the demand accurately.
         new_lines = self._count_new_ready_lines(req)
+        self._ensure_space_for_new_lines(new_lines)
         # Now register (creates entries so write_flush has something to flush).
         self.register_write_request(req)
-        if new_lines > self.cache.free_lines():
-            self.write_flush()
-        if new_lines > self.cache.free_lines():
-            raise ValueError("Incoming write data exceeds DATA_CACHE_CAP")
         if req.type == RequestType.WRITE:
-            return self._hydrate_user_write(req)
+            resumed = self._hydrate_user_write(req)
+            self._ensure_cache_not_overfull()
+            return resumed
         else:
             self._hydrate_static_write(req)
+            self._ensure_cache_not_overfull()
             return []
 
     def _register_user_write(self, req: Request):
