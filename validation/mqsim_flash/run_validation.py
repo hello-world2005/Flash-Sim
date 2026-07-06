@@ -25,7 +25,16 @@ from typing import Any
 
 FLASH_SIM_ROOT = Path(__file__).resolve().parents[2]
 WORKSPACE_ROOT = FLASH_SIM_ROOT.parent
-MQSIM_ROOT = WORKSPACE_ROOT / "MQSim"
+
+
+def _env_path(name: str, default: Path) -> Path:
+    raw = os.environ.get(name)
+    if not raw:
+        return default
+    return Path(os.path.expandvars(raw)).expanduser().resolve()
+
+
+MQSIM_ROOT = _env_path("MQSIM_ROOT", WORKSPACE_ROOT / "MQSim")
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "out"
 
 FLASHSIM_SECTOR_SIZE_BYTES = 64
@@ -1851,6 +1860,22 @@ def parse_mqsim_report(report_path: Path, stdout_path: Path | None = None) -> di
         flow.get("End_to_End_Request_Delay_us", flow.get("End_to_End_Request_Delay"))
         for flow in flows
     )
+    min_device_response_time_us = min_float(
+        flow.get("Min_Device_Response_Time_us", flow.get("Min_Device_Response_Time"))
+        for flow in flows
+    )
+    max_device_response_time_us = max_float(
+        flow.get("Max_Device_Response_Time_us", flow.get("Max_Device_Response_Time"))
+        for flow in flows
+    )
+    min_end_to_end_delay_us = min_float(
+        flow.get("Min_End_to_End_Request_Delay_us", flow.get("Min_End_to_End_Request_Delay"))
+        for flow in flows
+    )
+    max_end_to_end_delay_us = max_float(
+        flow.get("Max_End_to_End_Request_Delay_us", flow.get("Max_End_to_End_Request_Delay"))
+        for flow in flows
+    )
     streams = []
     for stream in root.findall(".//SSDDevice.IO_Stream"):
         stream_data = {child.tag: parse_number(child.text) for child in list(stream)}
@@ -1888,8 +1913,16 @@ def parse_mqsim_report(report_path: Path, stdout_path: Path | None = None) -> di
         "bytes_transferred": sum_float(flow.get("Bytes_Transferred") for flow in flows),
         "avg_device_response_time_us": avg_device_response_time_us,
         "avg_device_response_time_ns": avg_device_response_time_us * 1000.0,
+        "min_device_response_time_us": min_device_response_time_us,
+        "min_device_response_time_ns": min_device_response_time_us * 1000.0,
+        "max_device_response_time_us": max_device_response_time_us,
+        "max_device_response_time_ns": max_device_response_time_us * 1000.0,
         "avg_end_to_end_delay_us": avg_end_to_end_delay_us,
         "avg_end_to_end_delay_ns": avg_end_to_end_delay_us * 1000.0,
+        "min_end_to_end_delay_us": min_end_to_end_delay_us,
+        "min_end_to_end_delay_ns": min_end_to_end_delay_us * 1000.0,
+        "max_end_to_end_delay_us": max_end_to_end_delay_us,
+        "max_end_to_end_delay_ns": max_end_to_end_delay_us * 1000.0,
         "avg_read_transaction_turnaround_time_us": average(
             stream.get("Average_Read_Transaction_Turnaround_Time_us")
             for stream in streams
@@ -1970,6 +2003,20 @@ def average(values: Any) -> float:
     if not materialized:
         return 0.0
     return sum(materialized) / len(materialized)
+
+
+def min_float(values: Any) -> float:
+    materialized = [float(value) for value in values if value is not None]
+    if not materialized:
+        return 0.0
+    return min(materialized)
+
+
+def max_float(values: Any) -> float:
+    materialized = [float(value) for value in values if value is not None]
+    if not materialized:
+        return 0.0
+    return max(materialized)
 
 
 def percentile(values: Any, percentile_value: float) -> float:

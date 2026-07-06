@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 from dataclasses import field
 from typing import Any
+import math
 import random
 from .common import *
 from .config import RuntimeConfig, make_event_runtime_geometry
@@ -2647,17 +2648,25 @@ class GC_WL_Unit:
         self.tsu: TSU
         self.address_mapping_unit: Address_Mapping_Unit
         self.gc_low_watermark: int = GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD
+        self.gc_exec_threshold: float | None = None
         self.gc_min_invalid_pages: int = 1
+        self.gc_min_invalid_ratio: float = 0.0
         self.gc_emergency_watermark: int = 1
         self.gc_victim_policy: str = "greedy"
+        self.gc_d_choices: int = 10
+        self._gc_random = random.Random(42)
         self.static_wl_enabled: bool = True
         self.static_wl_wear_gap_threshold: int = 2
 
     def apply_runtime_config(self, runtime: RuntimeConfig) -> None:
         self.gc_low_watermark = runtime.gc_low_watermark
+        self.gc_exec_threshold = runtime.gc_exec_threshold
         self.gc_min_invalid_pages = runtime.gc_min_invalid_pages
+        self.gc_min_invalid_ratio = runtime.gc_min_invalid_ratio
         self.gc_emergency_watermark = runtime.gc_emergency_watermark
         self.gc_victim_policy = runtime.gc_victim_policy
+        self.gc_d_choices = runtime.gc_d_choices
+        self._gc_random = random.Random(runtime.gc_random_seed)
         self.static_wl_enabled = runtime.static_wl_enabled
         self.static_wl_wear_gap_threshold = runtime.static_wl_wear_gap_threshold
     
@@ -2805,16 +2814,36 @@ class GC_WL_Unit:
         min_invalid_pages: int = 1,
     ) -> int:
         plane_bke = self.block_manager.get_plane_bke(plane_address)
+        if self.gc_victim_policy == "d-choices":
+            candidates = self._gc_victim_candidates(
+                plane_address,
+                require_no_valid=require_no_valid,
+                min_invalid_pages=min_invalid_pages,
+            )
+            if not candidates:
+                return -1
+            sample_size = min(self.gc_d_choices, len(candidates))
+            sampled = self._gc_random.sample(candidates, sample_size)
+            victim = min(
+                sampled,
+                key=lambda bid: (
+                    plane_bke.block_entries[bid].valid_page_count,
+                    -plane_bke.block_entries[bid].invalid_page_count,
+                    plane_bke.block_entries[bid].wl_level,
+                    bid,
+                ),
+            )
+            return victim
+
+        candidates = self._gc_victim_candidates(
+            plane_address,
+            require_no_valid=require_no_valid,
+            min_invalid_pages=min_invalid_pages,
+        )
         best_block = -1
         best_key = None
-        for bid in range(self.block_manager.block_no_per_plane):
-            if not self._is_safe_maintenance_block(plane_address, bid):
-                continue
+        for bid in candidates:
             bke = plane_bke.block_entries[bid]
-            if bke.invalid_page_count < min_invalid_pages:
-                continue
-            if require_no_valid and bke.valid_page_count > 0:
-                continue
             key = (
                 bke.invalid_page_count,
                 -bke.valid_page_count,
@@ -2825,6 +2854,26 @@ class GC_WL_Unit:
                 best_key = key
                 best_block = bid
         return best_block
+
+    def _gc_victim_candidates(
+        self,
+        plane_address: FlashAddress,
+        *,
+        require_no_valid: bool,
+        min_invalid_pages: int,
+    ) -> list[int]:
+        plane_bke = self.block_manager.get_plane_bke(plane_address)
+        candidates: list[int] = []
+        for bid in range(self.block_manager.block_no_per_plane):
+            if not self._is_safe_maintenance_block(plane_address, bid):
+                continue
+            bke = plane_bke.block_entries[bid]
+            if bke.invalid_page_count < min_invalid_pages:
+                continue
+            if require_no_valid and bke.valid_page_count > 0:
+                continue
+            candidates.append(bid)
+        return candidates
 
     def _pick_static_wl_source_block(self, plane_address: FlashAddress) -> int:
         plane_bke = self.block_manager.get_plane_bke(plane_address)
@@ -2856,7 +2905,20 @@ class GC_WL_Unit:
         free_blocks = self.block_manager.get_free_pool_count(plane_address)
         if free_blocks <= self.gc_emergency_watermark:
             return 1
-        return self.gc_min_invalid_pages
+        ratio_pages = math.ceil(self.block_manager.pages_per_block * self.gc_min_invalid_ratio)
+        return max(self.gc_min_invalid_pages, ratio_pages)
+
+    def _gc_trigger_threshold_blocks(self) -> int:
+        if self.gc_exec_threshold is None:
+            return self.gc_low_watermark
+        threshold = int(self.gc_exec_threshold * self.block_manager.block_no_per_plane)
+        return max(1, threshold)
+
+    def _gc_required_for_pool_size(self, free_blocks: int) -> bool:
+        threshold = self._gc_trigger_threshold_blocks()
+        if self.gc_exec_threshold is None:
+            return free_blocks <= threshold
+        return free_blocks < threshold
 
     def can_trigger_gc(self, plane_address: FlashAddress) -> bool:
         plane_bke = self.block_manager.get_plane_bke(plane_address)
@@ -2899,7 +2961,7 @@ class GC_WL_Unit:
                         plane_bke = self.block_manager.get_plane_bke(plane_addr)
                         if plane_bke.gc_wl_barrier_blocks:
                             continue
-                        if len(plane_bke.free_block_pool) <= self.gc_low_watermark:
+                        if self._gc_required_for_pool_size(len(plane_bke.free_block_pool)):
                             self.block_manager._record_plane_snapshot(plane_addr)
                             self._trigger_gc(plane_addr)
 
@@ -2916,7 +2978,7 @@ class GC_WL_Unit:
         plane_bke = self.block_manager.get_plane_bke(plane_addr)
         if plane_bke.gc_wl_barrier_blocks:
             return
-        threshold = self.gc_low_watermark
+        threshold = self._gc_trigger_threshold_blocks()
         plane_key = self.block_manager._plane_key(plane_addr)
         if self.block_manager.waiting_writes.get(plane_key):
             threshold = max(
@@ -2924,7 +2986,11 @@ class GC_WL_Unit:
                 self.block_manager.STOP_SERVICING_WRITES_THRESHOLD
                 + self.block_manager.GC_RESERVE_BLOCKS,
             )
-        if len(plane_bke.free_block_pool) <= threshold:
+        free_blocks = len(plane_bke.free_block_pool)
+        if (
+            (self.gc_exec_threshold is None and free_blocks <= threshold)
+            or (self.gc_exec_threshold is not None and free_blocks < threshold)
+        ):
             self.block_manager._record_plane_snapshot(plane_addr)
             self._trigger_gc(plane_addr)
     
@@ -3106,7 +3172,7 @@ class GC_WL_Unit:
             return
         if self.block_manager.waiting_writes.get(self.block_manager._plane_key(plane_addr)):
             return
-        if len(plane_bke.free_block_pool) <= self.gc_low_watermark:
+        if self._gc_required_for_pool_size(len(plane_bke.free_block_pool)):
             return
         if not self._wear_skew_requires_static_wl(plane_addr):
             return

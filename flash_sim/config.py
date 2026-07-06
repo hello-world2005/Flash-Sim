@@ -596,11 +596,15 @@ class RuntimeConfig:
     """Event-driven runtime policy knobs."""
 
     gc_low_watermark: int = 3
+    gc_exec_threshold: float | None = None
     stop_servicing_writes_threshold: int = 1
     gc_reserve_blocks: int = 1
     gc_min_invalid_pages: int = 1
+    gc_min_invalid_ratio: float = 0.0
     gc_emergency_watermark: int = 1
     gc_victim_policy: str = "greedy"
+    gc_d_choices: int = 10
+    gc_random_seed: int = 42
     static_wl_enabled: bool = True
     static_wl_wear_gap_threshold: int = 2
     cache_bypass: bool = False
@@ -621,16 +625,31 @@ class RuntimeConfig:
     def __post_init__(self):
         if self.gc_low_watermark < 0:
             raise ValueError("gc_low_watermark must be non-negative")
+        if self.gc_exec_threshold is not None and not (0.0 <= self.gc_exec_threshold <= 1.0):
+            raise ValueError("gc_exec_threshold must be between 0.0 and 1.0")
         if self.stop_servicing_writes_threshold < 0:
             raise ValueError("stop_servicing_writes_threshold must be non-negative")
         if self.gc_reserve_blocks < 0:
             raise ValueError("gc_reserve_blocks must be non-negative")
         if self.gc_min_invalid_pages < 0:
             raise ValueError("gc_min_invalid_pages must be non-negative")
+        if not (0.0 <= self.gc_min_invalid_ratio <= 1.0):
+            raise ValueError("gc_min_invalid_ratio must be between 0.0 and 1.0")
         if self.gc_emergency_watermark < 0:
             raise ValueError("gc_emergency_watermark must be non-negative")
-        if self.gc_victim_policy != "greedy":
-            raise ValueError("gc_victim_policy currently supports only 'greedy'")
+        policy_aliases = {
+            "greedy": "greedy",
+            "d-choices": "d-choices",
+            "d_choices": "d-choices",
+            "dchoices": "d-choices",
+            "rga": "d-choices",
+        }
+        policy = policy_aliases.get(str(self.gc_victim_policy).lower())
+        if policy is None:
+            raise ValueError("gc_victim_policy must be greedy, d-choices, or rga")
+        self.gc_victim_policy = policy
+        if self.gc_d_choices <= 0:
+            raise ValueError("gc_d_choices must be positive")
         if self.static_wl_wear_gap_threshold < 0:
             raise ValueError("static_wl_wear_gap_threshold must be non-negative")
         if self.data_cache_capacity <= 0:
@@ -662,11 +681,15 @@ class FlashConfig:
         runtime_dict = dict(config_dict.get("runtime", config_dict.get("gc", {})))
         for key in (
             "gc_low_watermark",
+            "gc_exec_threshold",
             "stop_servicing_writes_threshold",
             "gc_reserve_blocks",
             "gc_min_invalid_pages",
+            "gc_min_invalid_ratio",
             "gc_emergency_watermark",
             "gc_victim_policy",
+            "gc_d_choices",
+            "gc_random_seed",
             "static_wl_enabled",
             "static_wl_wear_gap_threshold",
             "cache_bypass",
@@ -753,16 +776,20 @@ class FlashConfig:
 
         runtime = RuntimeConfig(
             gc_low_watermark=runtime_dict.get("gc_low_watermark", 3),
+            gc_exec_threshold=runtime_dict.get("gc_exec_threshold"),
             stop_servicing_writes_threshold=runtime_dict.get(
                 "stop_servicing_writes_threshold", 1
             ),
             gc_reserve_blocks=runtime_dict.get("gc_reserve_blocks", 1),
             gc_min_invalid_pages=runtime_dict.get("gc_min_invalid_pages", 1),
+            gc_min_invalid_ratio=runtime_dict.get("gc_min_invalid_ratio", 0.0),
             gc_emergency_watermark=runtime_dict.get(
                 "gc_emergency_watermark",
                 runtime_dict.get("stop_servicing_writes_threshold", 1),
             ),
             gc_victim_policy=runtime_dict.get("gc_victim_policy", "greedy"),
+            gc_d_choices=runtime_dict.get("gc_d_choices", 10),
+            gc_random_seed=runtime_dict.get("gc_random_seed", 42),
             static_wl_enabled=runtime_dict.get("static_wl_enabled", True),
             static_wl_wear_gap_threshold=runtime_dict.get(
                 "static_wl_wear_gap_threshold", 2
@@ -844,11 +871,15 @@ class FlashConfig:
             },
             "runtime": {
                 "gc_low_watermark": self.runtime.gc_low_watermark,
+                "gc_exec_threshold": self.runtime.gc_exec_threshold,
                 "stop_servicing_writes_threshold": self.runtime.stop_servicing_writes_threshold,
                 "gc_reserve_blocks": self.runtime.gc_reserve_blocks,
                 "gc_min_invalid_pages": self.runtime.gc_min_invalid_pages,
+                "gc_min_invalid_ratio": self.runtime.gc_min_invalid_ratio,
                 "gc_emergency_watermark": self.runtime.gc_emergency_watermark,
                 "gc_victim_policy": self.runtime.gc_victim_policy,
+                "gc_d_choices": self.runtime.gc_d_choices,
+                "gc_random_seed": self.runtime.gc_random_seed,
                 "static_wl_enabled": self.runtime.static_wl_enabled,
                 "static_wl_wear_gap_threshold": self.runtime.static_wl_wear_gap_threshold,
                 "cache_bypass": self.runtime.cache_bypass,

@@ -31,6 +31,8 @@ under this repository:
 - Validation scripts:
   `validation/mqsim_flash/run_validation.py` and
   `validation/mqsim_flash/run_test_matrix_latest.py`.
+- Targeted trace/precondition report helper:
+  `validation/mqsim_flash/run_small64_30k_latency_result.py`.
 - Generated reports and temporary inputs:
   `validation/mqsim_flash/out/`, `report/`, and top-level `test_result.md`.
 
@@ -49,6 +51,114 @@ The `10k` and `30k` labels refer to source Exchange request windows. During
 full-page compact normalization, multi-page requests are split, so the replay
 request counts are 10387 and 33241 respectively. The manifest records the
 request counts and SHA-256 hashes.
+
+## Recommended Environment
+
+Run validation commands from the repository root:
+
+```bash
+cd /home/kkkkaa/文档/PKU/轮转/李萌/Flash-Sim-pre-modern
+PY=/home/kkkkaa/文档/PKU/轮转/李萌/.venv/bin/python
+```
+
+The scripts also try to find this sibling virtualenv automatically, but using
+`$PY` makes runs explicit and repeatable when sharing commands.
+
+MQSim is optional for Flash-Sim-only checks, but comparison runs expect an
+MQSim checkout at `../MQSim` and a binary at `../MQSim/MQSim`. The matrix
+scripts use the existing binary and do not rebuild it. If MQSim is missing,
+exits, or fails to produce a parseable XML report, the scripts still keep the
+Flash-Sim result and record the MQSim case as failed or skipped.
+
+If MQSim is not in the sibling `../MQSim` directory, set `MQSIM_ROOT` to the
+MQSim checkout root before running the scripts:
+
+```bash
+export MQSIM_ROOT=/absolute/path/to/MQSim
+$PY validation/mqsim_flash/run_test_matrix_latest.py
+```
+
+`MQSIM_ROOT` should point to the directory that contains the `MQSim` binary, not
+to the binary file itself.
+
+## Which Runner To Use
+
+Use `run_validation.py` for focused correctness/debug cases:
+
+```bash
+$PY validation/mqsim_flash/run_validation.py --skip-build --timeout 300
+$PY validation/mqsim_flash/run_validation.py --case gc_pressure --skip-build --timeout 300
+```
+
+Use `run_test_matrix_latest.py` for the current `run_test.md` matrix:
+
+```bash
+$PY validation/mqsim_flash/run_test_matrix_latest.py
+```
+
+This runs the fixed 10k and 30k compact-normalized traces, both `small64` and
+`modern256` geometries, both `bypass` and `cache64` modes, and the configured
+precondition percentages. It writes `test_result.md` plus per-case artifacts
+under `validation/mqsim_flash/out/run_test_matrix_latest/<run_id>/`.
+
+Use `run_small64_30k_latency_result.py` for targeted small64 trace/precondition
+latency experiments without running the whole matrix:
+
+```bash
+$PY validation/mqsim_flash/run_small64_30k_latency_result.py \
+  --trace-label 30k \
+  --precondition 25 \
+  --precondition 50 \
+  --cache-mode bypass \
+  --cache-mode cache64 \
+  --result-path result_small64_30k.md \
+  --out-root validation/mqsim_flash/out/small64_30k_latency_result
+```
+
+The targeted helper accepts `--trace-label 10k|30k|50k`, repeated
+`--precondition N`, and repeated `--cache-mode bypass|cache64`. The fixed 10k
+and 30k traces are fully local under `traces/run_test`; the 50k label uses
+`validation/mqsim_flash/public_traces/exchange/` if those generated files are
+present.
+
+## Current Trace Semantics
+
+Flash-Sim trace addresses use the simulator host sector unit, which is 64 B.
+The current page size is 4 KiB, so one page is 64 Flash-Sim host sectors. The
+fixed 10k and 30k run-test traces are already compact-normalized and page
+aligned, so they should be replayed with `raw` external address mode.
+
+For the run-test matrix:
+
+- `small64` uses 8 pages/block and 64 blocks/plane. With 8 channels, 3 data
+  chips/channel, 4 dies/chip, and 4 planes/die, this is 196608 data pages, or
+  768 MiB at 4 KiB/page. Flash-Sim also has one static chip/channel, so total
+  physical storage including static chips is 1 GiB.
+- `modern256` uses the same compact event profile and 8 pages/block, but 256
+  blocks/plane. This is 786432 data pages, or 3 GiB at 4 KiB/page. Total
+  physical storage including static chips is 4 GiB.
+- `bypass` means Flash-Sim `cache_bypass=true` and MQSim
+  `Device_Level_Data_Caching_Mode=TURNED_OFF`.
+- `cache64` means Flash-Sim `data_cache_capacity=65536` and MQSim
+  `WRITE_CACHE` with `Data_Cache_Capacity=65536`.
+- Flash-Sim preconditioning uses runtime `precondition_fill_ratio` with
+  `capacity-fill`; MQSim uses built-in preconditioning with
+  `Enabled_Preconditioning=true` and the matching
+  `Initial_Occupancy_Percentage`.
+- The current matrix writes Flash-Sim GC knobs including
+  `gc_exec_threshold=0.05`, `gc_victim_policy=d-choices`, and
+  `gc_d_choices=6`.
+
+Important generated files:
+
+- `test_result.md`: latest full matrix report.
+- `result_small64_30k.md` or a custom `--result-path`: targeted latency report.
+- `validation/mqsim_flash/out/.../summary.json`: structured per-run summary.
+- `validation/mqsim_flash/out/.../flashsim_config.json`: generated Flash-Sim
+  runtime config for a case.
+- `validation/mqsim_flash/out/.../mqsim_ssdconfig.xml` and
+  `mqsim_workload.xml`: generated MQSim inputs.
+- `report/*_request_latency.json`: Flash-Sim request-level latency reports.
 
 ## FAST'18 Workload Sources
 
@@ -130,7 +240,7 @@ semantics are part of the test.
 Replay the fixed 10k compact-normalized trace through both simulators:
 
 ```bash
-python validation/mqsim_flash/run_validation.py \
+$PY validation/mqsim_flash/run_validation.py \
   --profile flashsim-event-small \
   --external-flash-trace validation/mqsim_flash/traces/run_test/exchange_disk0_page_10k_compact_flashsim.json \
   --external-mqsim-trace validation/mqsim_flash/traces/run_test/exchange_disk0_page_10k_compact_mqsim.trace \
@@ -216,22 +326,22 @@ modern-performance calibration as a separate profile.
 Run the default minimal validation:
 
 ```bash
-python validation/mqsim_flash/run_validation.py
+$PY validation/mqsim_flash/run_validation.py
 ```
 
 Run a named profile:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --profile flashsim-event-small
-python validation/mqsim_flash/run_validation.py --profile flashsim-event
-python validation/mqsim_flash/run_validation.py --profile flashsim-event-finite-cmt
-python validation/mqsim_flash/run_validation.py --profile fast18-paper
+$PY validation/mqsim_flash/run_validation.py --profile flashsim-event-small
+$PY validation/mqsim_flash/run_validation.py --profile flashsim-event
+$PY validation/mqsim_flash/run_validation.py --profile flashsim-event-finite-cmt
+$PY validation/mqsim_flash/run_validation.py --profile fast18-paper
 ```
 
 Run the current `run_test.md` matrix:
 
 ```bash
-python validation/mqsim_flash/run_test_matrix_latest.py
+$PY validation/mqsim_flash/run_test_matrix_latest.py
 ```
 
 This matrix uses the fixed `traces/run_test` inputs, runs 10k with 25/50/75%
@@ -248,61 +358,61 @@ reports the Flash-Sim result and records the MQSim failure/skipped row. To
 refresh `test_result.md` from an existing run without rerunning the simulators:
 
 ```bash
-python validation/mqsim_flash/run_test_matrix_latest.py --rerender 20260705_160118
+$PY validation/mqsim_flash/run_test_matrix_latest.py --rerender 20260705_160118
 ```
 
 Run the aligned read correctness experiment:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --case flush_then_read --skip-build
+$PY validation/mqsim_flash/run_validation.py --case flush_then_read --skip-build
 ```
 
 Run a longer mixed trace with direct latency comparison:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --case rich_aligned --skip-build
+$PY validation/mqsim_flash/run_validation.py --case rich_aligned --skip-build
 ```
 
 Run the full-page CWDP boundary check:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --case parallel_cwdp --skip-build
+$PY validation/mqsim_flash/run_validation.py --case parallel_cwdp --skip-build
 ```
 
 Run the full-page overwrite/mapping check:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --case overwrite_mapping --skip-build
+$PY validation/mqsim_flash/run_validation.py --case overwrite_mapping --skip-build
 ```
 
 Run the deterministic GC relocation check:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --case gc_pressure --skip-build
+$PY validation/mqsim_flash/run_validation.py --case gc_pressure --skip-build
 ```
 
 Run multiple deterministic GC rounds:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --case gc_pressure --gc-rounds 4 --skip-build
+$PY validation/mqsim_flash/run_validation.py --case gc_pressure --gc-rounds 4 --skip-build
 ```
 
 Run a latency-aligned finite-CMT GC check with spaced verification reads:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --profile flashsim-event-finite-cmt --case gc_pressure --gc-rounds 4 --gap-ns 300000 --skip-build
+$PY validation/mqsim_flash/run_validation.py --profile flashsim-event-finite-cmt --case gc_pressure --gc-rounds 4 --gap-ns 300000 --skip-build
 ```
 
 Run the static wear-leveling stress check:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --case wear_leveling --skip-build
+$PY validation/mqsim_flash/run_validation.py --case wear_leveling --skip-build
 ```
 
 Use an existing MQSim binary without rebuilding:
 
 ```bash
-python validation/mqsim_flash/run_validation.py --skip-build
+$PY validation/mqsim_flash/run_validation.py --skip-build
 ```
 
 Artifacts are written under:
@@ -421,3 +531,22 @@ For write-heavy cases, interpret latency carefully:
 - MQSim `device response avg` is the flow-level device response time reported
   by MQSim. In write-cache mode, it is not the same measurement boundary as
   Flash-Sim persistence latency.
+
+## Complete Command: 30k Trace + Precondition
+
+The following command runs the local fixed 30k trace on `small64`, with 25% and
+50% precondition, both cache-bypass and 64 KiB cache modes, and writes a
+self-contained result markdown plus per-case artifacts:
+
+```bash
+cd /home/kkkkaa/文档/PKU/轮转/李萌/Flash-Sim-pre-modern
+PY=/home/kkkkaa/文档/PKU/轮转/李萌/.venv/bin/python
+$PY validation/mqsim_flash/run_small64_30k_latency_result.py \
+  --trace-label 30k \
+  --precondition 25 \
+  --precondition 50 \
+  --cache-mode bypass \
+  --cache-mode cache64 \
+  --result-path result_small64_30k_precondition.md \
+  --out-root validation/mqsim_flash/out/small64_30k_precondition
+```

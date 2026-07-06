@@ -64,8 +64,15 @@ def percentile(values: list[float], pct: float) -> float | None:
     return ordered[lo] * (1.0 - frac) + ordered[hi] * frac
 
 
+def average_value(values: list[float]) -> float | None:
+    if not values:
+        return None
+    return sum(values) / len(values)
+
+
 def percentiles(values: list[float]) -> dict[str, float | None]:
     return {
+        "avg": average_value(values),
         "p10": percentile(values, 10),
         "p50": percentile(values, 50),
         "p70": percentile(values, 70),
@@ -159,6 +166,10 @@ def parse_flashsim_metrics(report_path: Path, runtime_s: float) -> dict[str, Any
     requests = data.get("requests", [])
     reads = [r for r in requests if r.get("type") == "READ"]
     writes = [r for r in requests if r.get("type") == "WRITE"]
+    status_counts = Counter(
+        str(r.get("status")) if r.get("status") is not None else "missing"
+        for r in requests
+    )
     maintenance = data.get("meta", {}).get("maintenance", {})
     host_write_pages = int(maintenance.get("host_write_pages", 0) or 0)
     physical_pages = int(maintenance.get("physical_user_write_pages", 0) or 0)
@@ -194,6 +205,12 @@ def parse_flashsim_metrics(report_path: Path, runtime_s: float) -> dict[str, Any
         "request_count": len(requests),
         "success_count": sum(1 for r in requests if r.get("status") == "SUCCESS"),
         "error_count": sum(1 for r in requests if r.get("status") == "ERROR"),
+        "unknown_status_count": sum(
+            1
+            for r in requests
+            if r.get("status") not in ("SUCCESS", "ERROR")
+        ),
+        "status_counts": dict(sorted(status_counts.items())),
         "read_mb": trace_mb(requests, "READ"),
         "write_mb": trace_mb(requests, "WRITE"),
         "gc_count": maintenance.get("gc_count"),
@@ -262,6 +279,20 @@ def parse_mqsim_metrics(report_path: Path, stdout_path: Path, runtime_s: float, 
         "write_persistence_us": {},
         "write_persistence_samples": "",
         "write_persistence_status_counts": {},
+        "mqsim_device_response_us": {
+            "min": totals.get("min_device_response_time_us"),
+            "avg": totals.get("avg_device_response_time_us"),
+            "max": totals.get("max_device_response_time_us"),
+        },
+        "mqsim_end_to_end_us": {
+            "min": totals.get("min_end_to_end_delay_us"),
+            "avg": totals.get("avg_end_to_end_delay_us"),
+            "max": totals.get("max_end_to_end_delay_us"),
+        },
+        "mqsim_transaction_us": {
+            "read_turnaround_avg": totals.get("avg_read_transaction_turnaround_time_us"),
+            "write_turnaround_avg": totals.get("avg_write_transaction_turnaround_time_us"),
+        },
         "report": str(report_path),
         "serviced_count": totals.get("stdout_serviced_request_count"),
         "generated_count": totals.get("stdout_generated_request_count"),
@@ -276,9 +307,14 @@ def write_flashsim_config(path: Path, pre_pct: int, cache_mode: str) -> None:
         "cache_bypass": cache_mode == "bypass",
         "data_cache_capacity": 65536 if cache_mode == "cache64" else 262144,
         "plane_allocation": "CWDP",
+        "gc_exec_threshold": 0.05,
         "gc_low_watermark": 3,
         "stop_servicing_writes_threshold": 1,
         "gc_reserve_blocks": 1,
+        "gc_min_invalid_ratio": 0.0,
+        "gc_victim_policy": "d-choices",
+        "gc_d_choices": 6,
+        "gc_random_seed": 42,
     }
     path.write_text(json.dumps({"runtime": runtime}, indent=2) + "\n", encoding="utf-8")
 
@@ -429,6 +465,8 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
         "- Trace: `validation/mqsim_flash/traces/run_test` 中固定的 Exchange disk0 compact-normalized traces；Flash-Sim 使用 64B/LHA sector。",
         "- small geometry: `FLASHSIM_EVENT_RUNTIME_BLOCKS_PER_PLANE=64`；modern geometry: `256`。",
         "- cache 模式: `bypass` 表示 `cache_bypass=true`；`cache64` 表示 cache enabled 且 `data_cache_capacity=65536`。",
+        "- Flash-Sim GC 对齐口径: `gc_exec_threshold=0.05`、`gc_victim_policy=d-choices`、`gc_d_choices=6`。`d=6` 对应 MQSim page-level RGA 在 small64 上的 `log2(block_no_per_plane)`。",
+        "- GC 次数对比要先看 MQSim `serviced/generated`；如果 MQSim 没有 drain 完整 trace，它的 GC 只覆盖已 serviced 的前缀负载，不能直接和 Flash-Sim 全 trace GC 相除比较。",
         "- MQSim 若未生成有效 XML 或 exit code 非 0，则不在成功结果表中汇报，只在失败/跳过表中记录。",
         "",
         "## 成功运行汇总",
@@ -440,6 +478,8 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
         complete = ""
         if row["simulator"] == "flashsim":
             complete = f"{row.get('success_count', '')}/{row.get('request_count', '')}, err={row.get('error_count', '')}"
+            if row.get("unknown_status_count"):
+                complete += f", other={row.get('unknown_status_count')}"
         else:
             serviced = row.get("serviced_count")
             generated = row.get("generated_count")
@@ -470,12 +510,19 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
     lines.extend(
         [
             "",
+            "`other` 表示 Flash-Sim raw request report 中状态既不是 `SUCCESS` 也不是 `ERROR` 的请求，通常需要结合 `summary.json` 的 `status_counts` 继续检查。",
+        ]
+    )
+
+    lines.extend(
+        [
+            "",
             "## Flash-Sim Host 延迟 Percentile (us)",
             "",
             "这里的 write percentile 是全部写请求的 host-visible 延迟；cache64 下若 cache 满或 flush 被 GC 阻塞，部分写会转入 direct/media host path，因此需要结合后面的路径拆分表一起看。",
             "",
-            "| 几何 | trace | pre% | cache | read P10 | read P50 | read P70 | read P90 | write P10 | write P50 | write P70 | write P90 |",
-            "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+            "| 几何 | trace | pre% | cache | read avg | read P10 | read P50 | read P70 | read P90 | write avg | write P10 | write P50 | write P70 | write P90 |",
+            "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for row in results:
@@ -491,10 +538,12 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
                     str(row["trace"]),
                     str(row["pre_pct"]),
                     str(row["cache_mode"]),
+                    fmt(read.get("avg"), 3),
                     fmt(read.get("p10"), 3),
                     fmt(read.get("p50"), 3),
                     fmt(read.get("p70"), 3),
                     fmt(read.get("p90"), 3),
+                    fmt(write.get("avg"), 3),
                     fmt(write.get("p10"), 3),
                     fmt(write.get("p50"), 3),
                     fmt(write.get("p70"), 3),
@@ -511,8 +560,8 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
             "",
             "`cache-only` 表示 host 完成前没有进入 AMU/TSU/PHY；`direct/media` 表示 bypass 或 cache forced-bypass，host 完成需要等待 NAND 路径。状态计数为有效持久化状态，兼容旧 raw report 的标签问题。",
             "",
-            "| 几何 | trace | pre% | cache | cache-only samples | direct/media samples | cache-only P50(us) | cache-only P90(us) | direct/media P50(us) | direct/media P90(us) | persistence 状态计数 |",
-            "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|",
+            "| 几何 | trace | pre% | cache | cache-only samples | direct/media samples | cache-only avg(us) | cache-only P50(us) | cache-only P90(us) | direct/media avg(us) | direct/media P50(us) | direct/media P90(us) | persistence 状态计数 |",
+            "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|",
         ]
     )
     for row in results:
@@ -534,8 +583,10 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
                     str(row["cache_mode"]),
                     fmt(row.get("write_cache_only_samples"), 0),
                     fmt(row.get("write_direct_host_samples"), 0),
+                    fmt(cache_pct.get("avg"), 3),
                     fmt(cache_pct.get("p50"), 3),
                     fmt(cache_pct.get("p90"), 3),
+                    fmt(direct_pct.get("avg"), 3),
                     fmt(direct_pct.get("p50"), 3),
                     fmt(direct_pct.get("p90"), 3),
                     status_text,
@@ -551,8 +602,8 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
             "",
             "cache-bypass/direct-media 写的 host completion 已是 NAND 完成边界；cache64 中后台 flush 成功的写使用 persistence latency；被 cache 覆盖、没有单独落盘的 superseded 写不计入 samples。",
             "",
-            "| 几何 | trace | pre% | cache | samples | write persistence P10 | P50 | P70 | P90 |",
-            "|---|---|---:|---|---:|---:|---:|---:|---:|",
+            "| 几何 | trace | pre% | cache | samples | write persistence avg | P10 | P50 | P70 | P90 |",
+            "|---|---|---:|---|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for row in results:
@@ -568,6 +619,7 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
                     str(row["pre_pct"]),
                     str(row["cache_mode"]),
                     fmt(row.get("write_persistence_samples"), 0),
+                    fmt(pct.get("avg"), 3),
                     fmt(pct.get("p10"), 3),
                     fmt(pct.get("p50"), 3),
                     fmt(pct.get("p70"), 3),
@@ -580,12 +632,52 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
     lines.extend(
         [
             "",
-            "## MQSim 可用延迟字段",
+            "## MQSim XML 延迟 (us)",
             "",
-            "MQSim 当前 XML 没有请求级 P10/P50/P70/P90，因此本报告不伪造 MQSim percentile；成功 MQSim 行只汇报程序时间、估算模拟完成时间、请求数、数据量、GC 和 WA。",
+            "MQSim 当前 XML 没有请求级 P10/P50/P70/P90，因此本报告不伪造 MQSim percentile；成功 MQSim 行只汇报 XML 中已有的 min/avg/max 聚合延迟。",
             "",
         ]
     )
+    mqsim_rows = [row for row in results if row["simulator"] == "mqsim"]
+    if mqsim_rows:
+        lines.extend(
+            [
+                "| 几何 | trace | pre% | cache | Device min | Device avg | Device max | E2E min | E2E avg | E2E max | Read txn avg | Write txn avg |",
+                "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+            ]
+        )
+        for row in mqsim_rows:
+            device = row.get("mqsim_device_response_us", {}) or {}
+            e2e = row.get("mqsim_end_to_end_us", {}) or {}
+            txn = row.get("mqsim_transaction_us", {}) or {}
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        str(row["geometry"]),
+                        str(row["trace"]),
+                        str(row["pre_pct"]),
+                        str(row["cache_mode"]),
+                        fmt(device.get("min"), 3),
+                        fmt(device.get("avg"), 3),
+                        fmt(device.get("max"), 3),
+                        fmt(e2e.get("min"), 3),
+                        fmt(e2e.get("avg"), 3),
+                        fmt(e2e.get("max"), 3),
+                        fmt(txn.get("read_turnaround_avg"), 3),
+                        fmt(txn.get("write_turnaround_avg"), 3),
+                    ]
+                )
+                + " |"
+            )
+        lines.append("")
+    else:
+        lines.extend(
+            [
+                "本次没有成功生成可解析 XML 的 MQSim case。",
+                "",
+            ]
+        )
 
     if failures:
         lines.extend(

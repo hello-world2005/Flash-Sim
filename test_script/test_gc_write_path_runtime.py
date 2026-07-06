@@ -73,16 +73,24 @@ class TestGCWritePathRuntime(unittest.TestCase):
             {
                 "runtime": {
                     "gc_low_watermark": 5,
+                    "gc_exec_threshold": 0.05,
                     "stop_servicing_writes_threshold": 2,
-                    "gc_victim_policy": "greedy",
+                    "gc_min_invalid_ratio": 0.25,
+                    "gc_victim_policy": "RGA",
+                    "gc_d_choices": 6,
+                    "gc_random_seed": 99,
                     "static_wl_wear_gap_threshold": 7,
                 }
             }
         )
 
         self.assertEqual(config.runtime.gc_low_watermark, 5)
+        self.assertEqual(config.runtime.gc_exec_threshold, 0.05)
         self.assertEqual(config.runtime.stop_servicing_writes_threshold, 2)
-        self.assertEqual(config.runtime.gc_victim_policy, "greedy")
+        self.assertEqual(config.runtime.gc_min_invalid_ratio, 0.25)
+        self.assertEqual(config.runtime.gc_victim_policy, "d-choices")
+        self.assertEqual(config.runtime.gc_d_choices, 6)
+        self.assertEqual(config.runtime.gc_random_seed, 99)
         self.assertEqual(config.runtime.static_wl_wear_gap_threshold, 7)
 
     def test_gmt_hit_write_sets_invalidation_target_at_submit_time(self):

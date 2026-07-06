@@ -66,3 +66,8 @@ STATUS.md
 test_result.md
 result.md
 error.md
+result_small64_30k_gc_aligned.md
+.gitignore
+.gitignore
+result_small64_30k.md
+result_small64_50k_cache64.md
