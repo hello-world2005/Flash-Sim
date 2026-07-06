@@ -204,6 +204,31 @@ def test_gc_victim_selection_tie_breaks_by_wear_then_block_id():
     assert unit._pick_gc_victim_block(plane_addr) == 3
 
 
+def test_gc_victim_selection_d_choices_uses_sample_min_valid_pages():
+    bm, unit, _ = _make_gc_wl_fixture()
+    unit.apply_runtime_config(
+        RuntimeConfig(gc_victim_policy="rga", gc_d_choices=99, gc_random_seed=7)
+    )
+    plane_addr = _plane_addr()
+    plane_bke = bm.get_plane_bke(plane_addr)
+
+    candidate_blocks = {2, 3, 4}
+    plane_bke.write_frontier_block = 1
+    plane_bke.free_block_pool = set(range(bm.block_no_per_plane)) - candidate_blocks
+    for block_id, valid_count, invalid_count in (
+        (2, 6, 2),
+        (3, 1, 1),
+        (4, 2, 6),
+    ):
+        bke = plane_bke.block_entries[block_id]
+        bke.write_frontier = PAGE_PER_BLOCK
+        bke.free_page_count = 0
+        bke.valid_page_count = valid_count
+        bke.invalid_page_count = invalid_count
+
+    assert unit._pick_gc_victim_block(plane_addr) == 3
+
+
 def test_trigger_gc_skips_without_recording_when_no_safe_invalid_victim(capsys):
     recorder = RequestLatencyRecorder()
     SET_REQUEST_LATENCY_RECORDER(recorder)
@@ -882,6 +907,26 @@ def test_check_gc_uses_runtime_configured_low_watermark(monkeypatch):
 
     assert triggered == [plane_addr]
     assert unit.gc_low_watermark == 5
+
+
+def test_check_gc_uses_strict_ratio_threshold_when_configured(monkeypatch):
+    bm, unit, _ = _make_gc_wl_fixture()
+    unit.apply_runtime_config(
+        RuntimeConfig(gc_low_watermark=999, gc_exec_threshold=0.05)
+    )
+    plane_addr = _plane_addr()
+    plane_bke = bm.get_plane_bke(plane_addr)
+    threshold = unit._gc_trigger_threshold_blocks()
+    triggered: list[FlashAddress] = []
+    monkeypatch.setattr(unit, "_trigger_gc", lambda addr: triggered.append(addr))
+
+    plane_bke.free_block_pool = set(range(threshold))
+    unit.check_gc()
+    assert triggered == []
+
+    plane_bke.free_block_pool = set(range(threshold - 1))
+    unit.check_gc()
+    assert triggered == [plane_addr]
 
 
 def test_check_gc_attempts_trigger_at_zero_watermark_with_empty_pool(monkeypatch):
