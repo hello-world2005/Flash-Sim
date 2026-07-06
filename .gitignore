@@ -55,7 +55,7 @@ output/
 report/
 
 # validation outputs
-validation/out
+validation/mqsim_flash/out
 
 # Local agent/session files
 .*/
