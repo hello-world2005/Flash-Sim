@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import math
 import os
 import re
 import shutil
@@ -34,13 +35,13 @@ def _env_path(name: str, default: Path) -> Path:
     return Path(os.path.expandvars(raw)).expanduser().resolve()
 
 
-MQSIM_ROOT = _env_path("MQSIM_ROOT", WORKSPACE_ROOT / "MQSim")
+MQSIM_ROOT = _env_path("MQSIM_ROOT", WORKSPACE_ROOT / "MQSim-test")
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "out"
 
 FLASHSIM_SECTOR_SIZE_BYTES = 64
 FLASHSIM_SECTORS_PER_PAGE = 64
 FLASHSIM_DATA_CACHE_LINES = 64
-MQSIM_SECTOR_SIZE_BYTES = 512
+MQSIM_SECTOR_SIZE_BYTES = 64
 MQSIM_OVERPROVISIONING_RATIO = 0.07
 MQSIM_LATENCY_FIELDS_US = {
     "Device_Response_Time",
@@ -89,7 +90,7 @@ class Profile:
     @property
     def mqsim_sectors_per_page(self) -> int:
         if self.page_capacity % MQSIM_SECTOR_SIZE_BYTES != 0:
-            raise ValueError(f"{self.name}: page size must be a multiple of 512 B")
+            raise ValueError(f"{self.name}: page size must be a multiple of the 64 B host sector")
         return self.page_capacity // MQSIM_SECTOR_SIZE_BYTES
 
 
@@ -176,6 +177,18 @@ PROFILES["flashsim-event-finite-cmt"] = replace(
     ideal_mapping_table=False,
 )
 
+PROFILES["flashsim-event-small-finite-cmt-aligned"] = replace(
+    PROFILES["flashsim-event-small"],
+    name="flashsim-event-small-finite-cmt-aligned",
+    description=(
+        "Small64 geometry with finite mapping state aligned to 64 CMT entries "
+        "and MQSim-derived translation-page coverage."
+    ),
+    # small64: CMT entry = ceil((2*log2(196608)+64)/8) = 13 B.
+    cmt_capacity=64 * 13,
+    ideal_mapping_table=False,
+)
+
 
 def flashsim_event_runtime_env(profile: Profile) -> dict[str, str]:
     """Environment overrides consumed by flash_sim.config at import time."""
@@ -191,6 +204,21 @@ def flashsim_event_runtime_env(profile: Profile) -> dict[str, str]:
         layers_per_block = profile.page_no_per_block
         sl_per_block = 1
         ssl_per_sl = 1
+    total_physical_pages = (
+        profile.flash_channel_count
+        * profile.chip_no_per_channel
+        * profile.die_no_per_chip
+        * profile.plane_no_per_die
+        * profile.block_no_per_plane
+        * profile.page_no_per_block
+    )
+    sectors_per_page = profile.mqsim_sectors_per_page
+    cmt_entry_size = math.ceil(
+        (2 * math.log2(total_physical_pages) + sectors_per_page) / 8
+    )
+    gtd_entry_size = math.ceil(
+        (math.log2(total_physical_pages) + sectors_per_page) / 8
+    )
     return {
         "FLASHSIM_EVENT_RUNTIME_DIES": str(profile.die_no_per_chip),
         "FLASHSIM_EVENT_RUNTIME_PLANES_PER_DIE": str(profile.plane_no_per_die),
@@ -198,6 +226,13 @@ def flashsim_event_runtime_env(profile: Profile) -> dict[str, str]:
         "FLASHSIM_EVENT_RUNTIME_LAYERS_PER_BLOCK": str(layers_per_block),
         "FLASHSIM_EVENT_RUNTIME_SL_PER_BLOCK": str(sl_per_block),
         "FLASHSIM_EVENT_RUNTIME_SSL_PER_SL": str(ssl_per_sl),
+        "FLASHSIM_CMT_SIZE": str(profile.cmt_capacity // cmt_entry_size),
+        "FLASHSIM_LPA_NO_PER_MAPPING_PAGE": str(
+            profile.page_capacity // gtd_entry_size
+        ),
+        "FLASHSIM_EVENT_RUNTIME_PRECONDITIONING_CMT_RATIO": (
+            "1.0" if profile.name.endswith("finite-cmt-aligned") else "0.5"
+        ),
     }
 
 
@@ -273,7 +308,7 @@ def build_ssd_config_xml(
     add_text(host, "PCIe_Lane_Bandwidth", "1.00000")
     add_text(host, "PCIe_Lane_Count", 4)
     add_text(host, "SATA_Processing_Delay", 400000)
-    add_text(host, "Enable_ResponseTime_Logging", "false")
+    add_text(host, "Enable_ResponseTime_Logging", "true")
     add_text(host, "ResponseTime_Logging_Period_Length", 1000000)
 
     device = ET.SubElement(root, "Device_Parameter_Set")
@@ -651,6 +686,38 @@ def maintenance_mqsim_gc_threshold(
     threshold_blocks = max(1, profile.block_no_per_plane - fill_blocks - extra_allocated_blocks + 1)
     threshold_ratio = min(0.999999, threshold_blocks / profile.block_no_per_plane)
     return f"{threshold_ratio:.6f}"
+
+
+def align_gc_parameters(case: GeneratedCase, profile: Profile) -> GeneratedCase:
+    """Apply one shared GC policy to both simulators."""
+    gc_threshold = 0.05
+    gc_blocks = max(1, int(gc_threshold * profile.block_no_per_plane))
+    d_choices = max(1, profile.block_no_per_plane.bit_length() - 1)
+    runtime = dict(case.flashsim_runtime_overrides or {})
+    runtime.update(
+        {
+            "gc_exec_threshold": gc_threshold,
+            "gc_low_watermark": gc_blocks,
+            "stop_servicing_writes_threshold": 1,
+            "gc_reserve_blocks": 1,
+            "gc_min_invalid_pages": 1,
+            "gc_min_invalid_ratio": 0.0,
+            "gc_emergency_watermark": 1,
+            "gc_victim_policy": "d-choices",
+            "gc_d_choices": d_choices,
+            "gc_random_seed": 321,
+            "static_wl_enabled": True,
+            "static_wl_wear_gap_threshold": 16,
+            "write_allocation_mode": "lpa-affine",
+        }
+    )
+    return replace(
+        case,
+        mqsim_gc_exec_threshold=f"{gc_threshold:.5f}",
+        mqsim_gc_block_selection_policy="RGA",
+        mqsim_static_wl_threshold=16,
+        flashsim_runtime_overrides=runtime,
+    )
 
 
 def generate_gc_pressure(
@@ -1056,8 +1123,12 @@ def contiguous_page_spans(pages: list[int]) -> list[tuple[int, int]]:
 
 
 def operation_page_span(operation: dict[str, Any]) -> tuple[int, int]:
-    start_page = operation["flashsim_start_lha"] // FLASHSIM_SECTORS_PER_PAGE
-    page_count = operation["flashsim_size"] // FLASHSIM_SECTORS_PER_PAGE
+    start_sector = operation["flashsim_start_lha"]
+    end_sector = start_sector + operation["flashsim_size"]
+    start_page = start_sector // FLASHSIM_SECTORS_PER_PAGE
+    page_count = (
+        end_sector + FLASHSIM_SECTORS_PER_PAGE - 1
+    ) // FLASHSIM_SECTORS_PER_PAGE - start_page
     return start_page, page_count
 
 
@@ -1312,10 +1383,16 @@ def build_external_trace_case(
     )
     read_before_write_stats = count_read_before_write(operations)
     mqsim_warmup_gap_ns = max(1, profile.page_program_latency_lsb)
+    mqsim_precondition_records = (
+        list(reversed(precondition_records))
+        if precondition_records is not None
+        and profile.name.endswith("finite-cmt-aligned")
+        else precondition_records
+    )
     mqsim_warmup_operations = (
         build_mqsim_warmup_operations(
             profile,
-            precondition_records,
+            mqsim_precondition_records,
             mqsim_warmup_gap_ns,
         )
         if precondition_records is not None and not mqsim_preconditioning
@@ -1503,7 +1580,7 @@ def write_case_inputs(case: GeneratedCase, profile: Profile, case_dir: Path) -> 
         "mqsim_main_time_shift_ns": case.mqsim_main_time_shift_ns,
         "external_trace_stats": case.external_trace_stats,
         "notes": [
-            "Flash-Sim sectors are 64 B; MQSim sectors are 512 B.",
+            "Flash-Sim and MQSim sectors are both 64 B.",
             "This case is full-page aligned and avoids partial sector bitmaps.",
             "MQSim external traces may include a write warmup prefix to mirror Flash-Sim preconditioning.",
         ],
@@ -3418,6 +3495,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--flashsim-gc-emergency-watermark", type=int, default=None, help="Eligible free-block watermark where Flash-Sim GC bypasses the normal victim yield threshold")
     parser.add_argument("--flashsim-static-wl", choices=["on", "off"], default=None, help="Enable or disable Flash-Sim static wear leveling")
     parser.add_argument("--flashsim-static-wl-threshold", type=int, default=None, help="Flash-Sim static wear-leveling wear-gap threshold")
+    parser.add_argument(
+        "--align-gc-parameters",
+        action="store_true",
+        help="Align GC trigger, victim selection, seed, backpressure, and static-WL parameters",
+    )
     parser.add_argument("--gc-rounds", type=int, default=None, help="Number of deterministic GC rounds for gc_pressure")
     parser.add_argument("--external-flash-trace", type=Path, default=None, help="Existing full-page Flash-Sim JSON trace to replay")
     parser.add_argument("--external-mqsim-trace", type=Path, default=None, help="Existing MQSim ASCII trace matching --external-flash-trace")
@@ -3497,6 +3579,9 @@ def main(argv: list[str] | None = None) -> int:
         case = generate_wear_leveling(profile, args.requests, args.gap_ns)
     else:
         raise SystemExit(f"unsupported case: {args.case}")
+
+    if args.align_gc_parameters:
+        case = align_gc_parameters(case, profile)
 
     runtime_overrides = dict(case.flashsim_runtime_overrides or {})
     if args.flashsim_gc_low_watermark is not None:

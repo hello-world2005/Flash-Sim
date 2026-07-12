@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Convert SNIA Microsoft Exchange traces to MQSim and Flash-Sim inputs.
 
-The Exchange archive stores Windows ETW CSV files inside gzip members.  MQSim
-expects an ASCII trace with 512-byte sectors, while Flash-Sim's current event
-path uses 64-byte host sectors.  This converter keeps both outputs derived from
-the same byte-addressed DiskRead/DiskWrite records.
+The Exchange archive stores Windows ETW CSV files inside gzip members.  The
+maintained MQSim-test build and Flash-Sim event path both use 64-byte host
+sectors.  This converter keeps both outputs derived from the same byte-addressed
+DiskRead/DiskWrite records.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 
 
-MQSIM_SECTOR_BYTES = 512
+MQSIM_SECTOR_BYTES = 64
 FLASHSIM_SECTOR_BYTES = 64
 DEFAULT_PAGE_BYTES = 4096
 
@@ -46,8 +46,8 @@ class ConvertStats:
     last_input_timestamp: int | None = None
     first_output_time_ns: int | None = None
     last_output_time_ns: int | None = None
-    min_lba_512: int | None = None
-    max_lba_512_exclusive: int | None = None
+    min_mqsim_lba_64: int | None = None
+    max_mqsim_lba_64_exclusive: int | None = None
     min_flash_lha_64: int | None = None
     max_flash_lha_64_exclusive: int | None = None
 
@@ -198,9 +198,9 @@ def convert(
                         stats.write_count += 1
                     stats.first_output_time_ns = time_ns if stats.first_output_time_ns is None else stats.first_output_time_ns
                     stats.last_output_time_ns = time_ns
-                    stats.min_lba_512, stats.max_lba_512_exclusive = update_range(
-                        stats.min_lba_512,
-                        stats.max_lba_512_exclusive,
+                    stats.min_mqsim_lba_64, stats.max_mqsim_lba_64_exclusive = update_range(
+                        stats.min_mqsim_lba_64,
+                        stats.max_mqsim_lba_64_exclusive,
                         mqsim_start_lba,
                         mqsim_size,
                     )

@@ -16,6 +16,16 @@ def _env_int(name: str, default: int) -> int:
         raise ValueError(f"{name} must be an integer, got {raw!r}") from exc
 
 
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a number, got {raw!r}") from exc
+
+
 DEFAULT_CHANNEL_NO = 8
 DEFAULT_CHIP_PER_CHANNEL = 4
 DEFAULT_DIES = 4
@@ -38,6 +48,12 @@ EVENT_RUNTIME_LAYERS_PER_BLOCK = _env_int("FLASHSIM_EVENT_RUNTIME_LAYERS_PER_BLO
 EVENT_RUNTIME_SL_PER_BLOCK = _env_int("FLASHSIM_EVENT_RUNTIME_SL_PER_BLOCK", 2)
 EVENT_RUNTIME_SSL_PER_SL = _env_int("FLASHSIM_EVENT_RUNTIME_SSL_PER_SL", 4)
 EVENT_RUNTIME_SUB_BLOCKS_PER_BLOCK = EVENT_RUNTIME_SL_PER_BLOCK * EVENT_RUNTIME_SSL_PER_SL
+EVENT_RUNTIME_PRECONDITIONING_CMT_RATIO = _env_float(
+    "FLASHSIM_EVENT_RUNTIME_PRECONDITIONING_CMT_RATIO", 0.5
+)
+EVENT_RUNTIME_VALID_INVALID_RATIO = _env_float(
+    "FLASHSIM_EVENT_RUNTIME_VALID_INVALID_RATIO", 1.0
+)
 
 
 def make_event_runtime_geometry(**overrides) -> "FlashGeometry":
@@ -56,6 +72,8 @@ def make_event_runtime_geometry(**overrides) -> "FlashGeometry":
         "compute_max_parallel_sl": DEFAULT_COMPUTE_MAX_PARALLEL_SL,
         "search_max_parallel_wl": DEFAULT_SEARCH_MAX_PARALLEL_WL,
         "static_chip_per_channel": DEFAULT_STATIC_CHIP_PER_CHANNEL,
+        "valid_invalid_ratio": EVENT_RUNTIME_VALID_INVALID_RATIO,
+        "preconditioning_cmt_ratio": EVENT_RUNTIME_PRECONDITIONING_CMT_RATIO,
     }
     geometry_kwargs.update(overrides)
     return FlashGeometry(**geometry_kwargs)
@@ -187,6 +205,7 @@ class FlashGeometry:
     # ----- Preconditioning 参数 -----
     valid_invalid_ratio: float = 1.0  # 预条件时每个 block 中有效页占比（1.0=全有效, 0.5=半有效）
     preconditioning_full_block_ratio: float = 0.5  # write_frontier 之外的剩余 block 中，写满 block 的比例（0.0 ~ 1.0）
+    preconditioning_cmt_ratio: float = 0.5  # 预条件后预热的 CMT 比例
 
     def __post_init__(self):
         if self.layers_per_block <= 0:
@@ -205,6 +224,8 @@ class FlashGeometry:
             raise ValueError("chip_per_channel must be positive")
         if self.sector_per_page <= 0:
             raise ValueError("sector_per_page must be positive")
+        if not (0.0 <= self.preconditioning_cmt_ratio <= 1.0):
+            raise ValueError("preconditioning_cmt_ratio must be between 0.0 and 1.0")
 
     @property
     def pages_per_block(self) -> int:
@@ -607,6 +628,7 @@ class RuntimeConfig:
     gc_random_seed: int = 42
     static_wl_enabled: bool = True
     static_wl_wear_gap_threshold: int = 2
+    write_allocation_mode: str = "lpa-affine"
     cache_bypass: bool = False
     data_cache_capacity: int = DEFAULT_DATA_CACHE_CAPACITY
     precondition_fill_ratio: float | None = None
@@ -652,6 +674,24 @@ class RuntimeConfig:
             raise ValueError("gc_d_choices must be positive")
         if self.static_wl_wear_gap_threshold < 0:
             raise ValueError("static_wl_wear_gap_threshold must be non-negative")
+        write_allocation_aliases = {
+            "lpa-affine": "lpa-affine",
+            "lpa_affine": "lpa-affine",
+            "fixed-lpa": "lpa-affine",
+            "fixed_lpa": "lpa-affine",
+            "dynamic-cwdp": "dynamic-cwdp",
+            "dynamic_cwdp": "dynamic-cwdp",
+            "round-robin": "dynamic-cwdp",
+            "round_robin": "dynamic-cwdp",
+        }
+        write_allocation_mode = write_allocation_aliases.get(
+            str(self.write_allocation_mode).lower()
+        )
+        if write_allocation_mode is None:
+            raise ValueError(
+                "write_allocation_mode must be lpa-affine or dynamic-cwdp"
+            )
+        self.write_allocation_mode = write_allocation_mode
         if self.data_cache_capacity <= 0:
             raise ValueError("data_cache_capacity must be positive")
         if self.precondition_fill_ratio is not None and not (0.0 <= self.precondition_fill_ratio <= 1.0):
@@ -692,6 +732,7 @@ class FlashConfig:
             "gc_random_seed",
             "static_wl_enabled",
             "static_wl_wear_gap_threshold",
+            "write_allocation_mode",
             "cache_bypass",
             "cache_cap",
             "cache_capacity",
@@ -794,6 +835,9 @@ class FlashConfig:
             static_wl_wear_gap_threshold=runtime_dict.get(
                 "static_wl_wear_gap_threshold", 2
             ),
+            write_allocation_mode=runtime_dict.get(
+                "write_allocation_mode", "lpa-affine"
+            ),
             cache_bypass=runtime_dict.get("cache_bypass", False),
             data_cache_capacity=runtime_dict.get(
                 "data_cache_capacity",
@@ -882,6 +926,7 @@ class FlashConfig:
                 "gc_random_seed": self.runtime.gc_random_seed,
                 "static_wl_enabled": self.runtime.static_wl_enabled,
                 "static_wl_wear_gap_threshold": self.runtime.static_wl_wear_gap_threshold,
+                "write_allocation_mode": self.runtime.write_allocation_mode,
                 "cache_bypass": self.runtime.cache_bypass,
                 "data_cache_capacity": self.runtime.data_cache_capacity,
                 "precondition_fill_ratio": self.runtime.precondition_fill_ratio,

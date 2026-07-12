@@ -16,6 +16,8 @@
 - [x] **Host SQ 多队列死锁** — `fix/host-sq-flow-deadlock` 分支已修复并合入 PR
 - [x] **PHY 功耗评估** — per-stage 能耗模型（P_ARRAY/P_IF/P_SEARCH/P_COMPUTE）已在 PHY.py 实现，JSON/CSV 报告输出 energy_uj/persistence_energy_uj
 - [x] **GC/WL correctness 与压力验证** — trigger、victim、relocation、映射、bookkeeping、overwrite、waiting queue、报告守恒和 Static WL 均已覆盖；完整 pytest 与 16-trace matrix 通过
+- [x] **Read/Mapping/PCIe 对齐** — 64 B sector、PCIe TLP、finite CMT、GTD/mapping page、pending MVPN 与 MQSim mapping-write 调度均已对齐；最终 20k Exchange read 平均延迟相差 5.748 ns
+- [ ] **Write host completion 对齐** — 4 KiB bypass write 的 PCIe/NAND 分项公式已对齐为 253205 ns，但 MQSim 最小 write-stream 仍 generated=2、serviced=0
 
 ---
 
@@ -60,3 +62,10 @@
 ## PHY
 
 1. **地址跳跃延时模型** — 当前所有读写操作用固定常量（T_READ_LSB=5000ns, T_PROG=250000ns），不区分地址间跳跃距离。chip.py 已有 page_type 感知（LSB/CSB/MSB），但 PHY.py 事件驱动层未接入。需让延时随地址跳跃距离变化
+
+## 7.8
+Cache size  total capacity / 250
+sector size
+onfi & pcie latency parameter
+report 细粒度
+短 trace 验证 ～30条 逐条验证

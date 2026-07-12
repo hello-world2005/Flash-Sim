@@ -315,6 +315,8 @@ def write_flashsim_config(path: Path, pre_pct: int, cache_mode: str) -> None:
         "gc_victim_policy": "d-choices",
         "gc_d_choices": 6,
         "gc_random_seed": 42,
+        "write_allocation_mode": "dynamic-cwdp",
+        "static_wl_wear_gap_threshold": 16,
     }
     path.write_text(json.dumps({"runtime": runtime}, indent=2) + "\n", encoding="utf-8")
 
@@ -465,7 +467,7 @@ def render_report(results: list[dict[str, Any]], failures: list[dict[str, Any]],
         "- Trace: `validation/mqsim_flash/traces/run_test` 中固定的 Exchange disk0 compact-normalized traces；Flash-Sim 使用 64B/LHA sector。",
         "- small geometry: `FLASHSIM_EVENT_RUNTIME_BLOCKS_PER_PLANE=64`；modern geometry: `256`。",
         "- cache 模式: `bypass` 表示 `cache_bypass=true`；`cache64` 表示 cache enabled 且 `data_cache_capacity=65536`。",
-        "- Flash-Sim GC 对齐口径: `gc_exec_threshold=0.05`、`gc_victim_policy=d-choices`、`gc_d_choices=6`。`d=6` 对应 MQSim page-level RGA 在 small64 上的 `log2(block_no_per_plane)`。",
+        "- Flash-Sim GC 对齐口径: `gc_exec_threshold=0.05`、`gc_victim_policy=d-choices`、`gc_d_choices=6`、`write_allocation_mode=dynamic-cwdp`、`static_wl_wear_gap_threshold=16`。`d=6` 对应 MQSim page-level RGA 在 small64 上的 `log2(block_no_per_plane)`。",
         "- GC 次数对比要先看 MQSim `serviced/generated`；如果 MQSim 没有 drain 完整 trace，它的 GC 只覆盖已 serviced 的前缀负载，不能直接和 Flash-Sim 全 trace GC 相除比较。",
         "- MQSim 若未生成有效 XML 或 exit code 非 0，则不在成功结果表中汇报，只在失败/跳过表中记录。",
         "",

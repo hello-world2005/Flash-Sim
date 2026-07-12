@@ -4,7 +4,9 @@ from flash_sim.common import (
     EventType,
     MessageType,
     PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS,
-    PCIE_PACKET_OVERHEAD_BYTES,
+    PCIE_NVME_SQ_ENTRY_BYTES,
+    PCIE_TLP_MAX_PAYLOAD_BYTES,
+    PCIE_TLP_PACKET_OVERHEAD_BYTES,
     Request,
     RequestType,
     SECTOR_SIZE_BYTES,
@@ -59,12 +61,17 @@ class TestPCIeLinkLatency(unittest.TestCase):
     def _make_req(self, req_type=RequestType.WRITE, size=1):
         return Request(type=req_type, lha_start=0, size=size)
 
-    def test_control_message_uses_fixed_packet_overhead_only(self):
+    def test_request_message_uses_mqsim_nvme_submission_cost(self):
         link, _, _ = self._make_link()
         req = self._make_req(RequestType.READ)
         msg = PCIe_message(MessageType.READ_REQ, payload={"req": req})
 
-        expected_latency = -(-PCIE_PACKET_OVERHEAD_BYTES // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS)
+        wire_bytes = (
+            PCIE_TLP_PACKET_OVERHEAD_BYTES + 2
+            + PCIE_TLP_PACKET_OVERHEAD_BYTES + 4
+            + PCIE_NVME_SQ_ENTRY_BYTES + PCIE_TLP_PACKET_OVERHEAD_BYTES
+        )
+        expected_latency = -(-wire_bytes // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS)
 
         self.assertEqual(link.estimate_latency(msg), expected_latency)
 
@@ -80,11 +87,16 @@ class TestPCIeLinkLatency(unittest.TestCase):
             payload={"req": req, "data": [1, 2, 3, 4]},
         )
 
+        small_payload = SECTOR_SIZE_BYTES
+        large_payload = 4 * SECTOR_SIZE_BYTES
         expected_small = -(
-            -(PCIE_PACKET_OVERHEAD_BYTES + SECTOR_SIZE_BYTES) // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
+            -(small_payload + PCIE_TLP_PACKET_OVERHEAD_BYTES)
+            // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
         )
+        large_packets = -(-large_payload // PCIE_TLP_MAX_PAYLOAD_BYTES)
         expected_large = -(
-            -(PCIE_PACKET_OVERHEAD_BYTES + 4 * SECTOR_SIZE_BYTES) // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
+            -(large_payload + large_packets * PCIE_TLP_PACKET_OVERHEAD_BYTES)
+            // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
         )
 
         self.assertEqual(link.estimate_latency(small_msg), expected_small)

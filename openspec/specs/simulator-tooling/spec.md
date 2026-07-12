@@ -154,3 +154,11 @@ The repository SHALL distinguish between standalone simulator traces and event-d
 
 - **WHEN** one trace raises an exception or produces incomplete requests
 - **THEN** the runner MUST record the issue for that trace and continue executing the remaining traces
+### Requirement: Exchange trace conversion uses the maintained 64 B host sector
+
+`validation/mqsim_flash/convert_exchange_trace.py` SHALL derive MQSim and Flash-Sim addresses and sizes from the same byte offsets using a 64 B sector for both outputs. The manifest MUST state both sector sizes and MUST expose 64 B address ranges without legacy 512 B field names.
+
+#### Scenario: Partial-page Exchange request is converted identically
+
+- **WHEN** a 64 B-aligned Exchange request is converted with `--allow-partial`
+- **THEN** the MQSim ASCII row and Flash-Sim JSON record MUST contain identical start-sector and sector-count values

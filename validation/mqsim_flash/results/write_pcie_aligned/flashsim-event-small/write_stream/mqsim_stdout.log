@@ -1,0 +1,19 @@
+MQSim started at Sat Jul 11 15:25:07 2026
+
+******************************
+Executing scenario 1 out of 1 .......
+Investigating input trace file: ../flash-sim/validation/mqsim_flash/results/write_pcie_aligned/flashsim-event-small/write_stream/validation_flashsim-event-small_write_stream_mqsim.trace
+Trace file: ../flash-sim/validation/mqsim_flash/results/write_pcie_aligned/flashsim-event-small/write_stream/validation_flashsim-event-small_write_stream_mqsim.trace seems healthy
+Standalone media drain enabled: retrying overfull-plane writes with relaxed free-block reserve.
+Standalone drain stopped: no additional host submissions, cache flushes, or overfull-plane writes could be advanced.
+Remaining drain state: dirty cache slots=0 waiting overfull-plane transactions=0
+MQSim finished at Sat Jul 11 15:25:07 2026
+
+Total simulation time: 0:0:0
+
+Writing results to output file .......
+Flow Host.IO_Flow.Trace.../flash-sim/validation/mqsim_flash/results/write_pcie_aligned/flashsim-event-small/write_stream/validation_flashsim-event-small_write_stream_mqsim.trace - total requests generated: 1 total requests serviced:0
+                   - generated read/write: 0/1 serviced read/write: 0/0 outstanding:1
+                   - host waiting:0 nvme software queue:1 request queue memory occupancy:1
+                   - device response time: 0 (us) end-to-end request delay:0 (us)
+Simulation complete; Press any key to exit.

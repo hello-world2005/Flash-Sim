@@ -135,6 +135,12 @@ Define the baseline behavior of the FTL, mapping subsystem, transaction schedule
 
 当 `AMU.translate_and_submit(WRITE)` 准备为 first-time write 分配 PPA，而目标 plane 的 free block pool 已小于或等于 `stop_servicing_writes_threshold` 时，系统 SHALL 将该事务放入以 `(channel, chip, die, plane)` 标识的物理 plane waiting queue，并暂不分配 PPA、暂不更新 CMT/GMT、暂不提交到 `TSU`。覆写事务 MAY 越过普通 first-time write 背压检查，以便产生 invalid page 支撑后续 GC；若分配时确实无可用 block，覆写也 MUST 进入 waiting queue。GC erase 完成并回收 block 后，`Block_Manager` MUST 按严格 FIFO 重试该物理 plane 的 waiting writes；队首无法提交时 MUST 保留整个队列后缀，不得让后续 overwrite 越过。
 
+#### Scenario: Dynamic CWDP 写分配不把 hot LPA 固定到一个 plane
+
+- **WHEN** runtime config sets `write_allocation_mode="dynamic-cwdp"` and `plane_allocation="CWDP"`
+- **THEN** `AMU.translate_and_submit(WRITE)` MUST choose new user-program PPAs from a device-wide CWDP plane cursor, skipping planes that are under active maintenance or write backpressure when another data plane can accept the write
+- **AND** logical-to-physical mapping MUST still record the selected PPA so later reads and overwrites resolve through CMT/GMT/metadata rather than recomputing the LPA's original plane
+
 #### Scenario: First-time write 因 free pool 阈值进入等待队列
 
 - **WHEN** 一个 first-time `USER_WRITE` 到达，且目标 plane 的 free block pool 数量小于或等于停写阈值
@@ -283,3 +289,21 @@ When a suspended write command is resumed, `PHY` MUST determine whether it is a 
 #### Scenario: Resume restores user write chip status
 - **WHEN** the resumed command's first transaction is a non-GC write such as `USER_WRITE` or `MAPPING_WRITE`
 - **THEN** `PHY` MUST mark the chip as `ChipStatus.WRITE` and continue scheduling completion normally
+### Requirement: Finite CMT misses use NAND mapping pages and bounded departing state
+
+When ideal mapping is disabled, the FTL SHALL model a finite CMT. A clean CMT victim MUST be discarded without generating a mapping write and MUST NOT be retained as an unlimited GMT hit. A dirty victim MAY remain in a temporary departing table only until its mapping-page write completes. A normal CMT miss MUST resolve through the GTD and a physical `MAPPING_READ`; concurrent misses to the same MVPN MUST join the in-flight read rather than issuing duplicate NAND reads.
+
+#### Scenario: Clean CMT victim is revisited
+
+- **WHEN** a clean entry is evicted from a full finite CMT and the same LPA is accessed later
+- **THEN** the later access MUST miss the CMT and resolve through its physical mapping page instead of receiving a zero-delay GMT hit
+
+#### Scenario: Dirty CMT victim is written back
+
+- **WHEN** a dirty entry is evicted
+- **THEN** the entry MUST remain temporarily accessible while its mapping write is in flight, and MUST leave departing state when that write completes
+
+#### Scenario: Multiple misses share one MVPN read
+
+- **WHEN** multiple waiting transactions miss entries belonging to an MVPN whose mapping read is already in flight
+- **THEN** they MUST join that mapping read and continue only after its result arrives

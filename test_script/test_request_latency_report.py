@@ -4,7 +4,8 @@ from flash_sim.common import (
     FlashAddress,
     MessageType,
     PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS,
-    PCIE_PACKET_OVERHEAD_BYTES,
+    PCIE_TLP_MAX_PAYLOAD_BYTES,
+    PCIE_TLP_PACKET_OVERHEAD_BYTES,
     REQUEST_STATUS_SUCCESS,
     Request,
     RequestType,
@@ -311,11 +312,12 @@ class TestRequestLatencyRecorder(unittest.TestCase):
         recorder.note_request_completed(req, 65)
 
         row = recorder.export_csv_rows()[0]
-        expected_payload_latency = (
-            req.size * SECTOR_SIZE_BYTES + PCIE_PACKET_OVERHEAD_BYTES
-        ) // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
-        if (req.size * SECTOR_SIZE_BYTES + PCIE_PACKET_OVERHEAD_BYTES) % PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS:
-            expected_payload_latency += 1
+        payload_bytes = req.size * SECTOR_SIZE_BYTES
+        packet_count = -(-payload_bytes // PCIE_TLP_MAX_PAYLOAD_BYTES)
+        wire_bytes = payload_bytes + packet_count * PCIE_TLP_PACKET_OVERHEAD_BYTES
+        expected_payload_latency = -(
+            -wire_bytes // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
+        )
 
         self.assertEqual(row[CSV_COLUMN_NAMES[3]], 5)
         self.assertEqual(row[CSV_COLUMN_NAMES[4]], 10)
@@ -495,11 +497,12 @@ class TestRequestLatencyRecorder(unittest.TestCase):
         recorder.note_request_completed(req, 110)
 
         row = recorder.export_csv_rows()[0]
-        expected_payload_latency = (
-            req.size * SECTOR_SIZE_BYTES + PCIE_PACKET_OVERHEAD_BYTES
-        ) // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
-        if (req.size * SECTOR_SIZE_BYTES + PCIE_PACKET_OVERHEAD_BYTES) % PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS:
-            expected_payload_latency += 1
+        payload_bytes = req.size * SECTOR_SIZE_BYTES
+        packet_count = -(-payload_bytes // PCIE_TLP_MAX_PAYLOAD_BYTES)
+        wire_bytes = payload_bytes + packet_count * PCIE_TLP_PACKET_OVERHEAD_BYTES
+        expected_payload_latency = -(
+            -wire_bytes // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
+        )
 
         self.assertEqual(row[CSV_COLUMN_NAMES[0]], 12)
         self.assertEqual(row[CSV_COLUMN_NAMES[1]], "READ")

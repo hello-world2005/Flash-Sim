@@ -1,0 +1,14 @@
+MQSim started at Sun Jul 12 09:57:28 2026
+
+******************************
+Executing scenario 1 out of 1 .......
+Investigating input trace file: ../flash-sim/validation/mqsim_flash/results/write_mapping_fixed/flashsim-event-small/write_stream/validation_flashsim-event-small_write_stream_mqsim.trace
+Trace file: ../flash-sim/validation/mqsim_flash/results/write_mapping_fixed/flashsim-event-small/write_stream/validation_flashsim-event-small_write_stream_mqsim.trace seems healthy
+MQSim finished at Sun Jul 12 09:57:28 2026
+
+Total simulation time: 0:0:0
+
+Writing results to output file .......
+Flow Host.IO_Flow.Trace.../flash-sim/validation/mqsim_flash/results/write_mapping_fixed/flashsim-event-small/write_stream/validation_flashsim-event-small_write_stream_mqsim.trace - total requests generated: 2 total requests serviced:0
+                   - device response time: 0 (us) end-to-end request delay:0 (us)
+Simulation complete; Press any key to exit.

@@ -8,7 +8,11 @@ from .common import (
     EventType,
     MessageType,
     PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS,
+    PCIE_NVME_CQ_ENTRY_BYTES,
+    PCIE_NVME_SQ_ENTRY_BYTES,
     PCIE_PACKET_OVERHEAD_BYTES,
+    PCIE_TLP_MAX_PAYLOAD_BYTES,
+    PCIE_TLP_PACKET_OVERHEAD_BYTES,
     REQUEST_LATENCY_RECORDER,
     SECTOR_SIZE_BYTES,
 )
@@ -89,11 +93,49 @@ class PCIe_link:
         return ceil(transfer_bytes / bandwidth)
 
     def _estimate_transfer_bytes(self, message) -> int:
+        """Return wire bytes using MQSim's PCIe/NVMe transfer model.
+
+        Flash-Sim carries the request object directly in one message, while
+        MQSim models doorbell write + SQ read request + SQ entry DMA.  Charge
+        their aggregate wire bytes to the request message.  Payload and CQ
+        transfers use the same 128-B TLP and 28-B per-packet overhead as
+        MQSim.  *_RECEIVED messages are internal queue-release notifications
+        and have no MQSim PCIe counterpart, so they consume no link time.
+        """
+        message_type = getattr(message, "type", None)
+        if message_type in (
+            MessageType.READ_REQ,
+            MessageType.WRITE_REQ,
+        ):
+            doorbell_bytes = PCIE_TLP_PACKET_OVERHEAD_BYTES + 2
+            sq_read_request_bytes = PCIE_TLP_PACKET_OVERHEAD_BYTES + 4
+            sq_entry_bytes = self._tlp_wire_bytes(PCIE_NVME_SQ_ENTRY_BYTES)
+            return doorbell_bytes + sq_read_request_bytes + sq_entry_bytes
+        if message_type in (
+            MessageType.WRITE_DATA_REQ,
+        ):
+            return PCIE_TLP_PACKET_OVERHEAD_BYTES + 4
+        if message_type in (
+            MessageType.WRITE_DATA_RECEIVED,
+            MessageType.READ_REQ_RECEIVED,
+        ):
+            return 0
+        if message_type == MessageType.REQ_COMP:
+            return self._tlp_wire_bytes(PCIE_NVME_CQ_ENTRY_BYTES)
+
         payload = getattr(message, "payload", None)
         user_data_bytes = 0
         if isinstance(payload, dict) and "data" in payload:
             user_data_bytes = self._estimate_user_data_bytes(payload["data"])
-        return user_data_bytes + PCIE_PACKET_OVERHEAD_BYTES
+            return self._tlp_wire_bytes(user_data_bytes)
+        return PCIE_PACKET_OVERHEAD_BYTES
+
+    @staticmethod
+    def _tlp_wire_bytes(payload_bytes: int) -> int:
+        if payload_bytes <= 0:
+            return 0
+        packet_count = ceil(payload_bytes / PCIE_TLP_MAX_PAYLOAD_BYTES)
+        return payload_bytes + packet_count * PCIE_TLP_PACKET_OVERHEAD_BYTES
 
     def _estimate_user_data_bytes(self, data) -> int:
         if data is None:

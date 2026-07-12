@@ -1,0 +1,306 @@
+{
+  "profile": {
+    "name": "flashsim-event-small-finite-cmt-aligned",
+    "description": "Small64 geometry with finite mapping state aligned to 64 CMT entries and MQSim-derived translation-page coverage.",
+    "page_capacity": 4096,
+    "page_metadata_capacity": 448,
+    "page_no_per_block": 8,
+    "block_no_per_plane": 64,
+    "plane_no_per_die": 4,
+    "die_no_per_chip": 4,
+    "flash_channel_count": 8,
+    "chip_no_per_channel": 3,
+    "flash_channel_width": 8,
+    "channel_transfer_rate": 333,
+    "flash_technology": "SLC",
+    "page_read_latency_lsb": 5000,
+    "page_program_latency_lsb": 250000,
+    "block_erase_latency": 10000000,
+    "data_cache_capacity": 262144,
+    "cmt_capacity": 832,
+    "ideal_mapping_table": false,
+    "enabled_preconditioning": false,
+    "queue_fetch_size": 512
+  },
+  "case": {
+    "name": "read_only_1k_cmt_aligned_builtin_precondition",
+    "trace_kind": "external",
+    "request_count": 1000,
+    "read_count": 1000,
+    "write_count": 0,
+    "mqsim_warmup_request_count": 0,
+    "mqsim_warmup_read_count": 0,
+    "mqsim_warmup_write_count": 0,
+    "mqsim_expected_request_count": 1000,
+    "mqsim_expected_read_count": 1000,
+    "mqsim_expected_write_count": 0,
+    "mqsim_main_time_shift_ns": 0,
+    "expect_media_reads": false,
+    "expect_user_programs_equal_writes": false,
+    "latency_alignment": true,
+    "direct_latency_compare": true,
+    "mqsim_cache_mode": "TURNED_OFF",
+    "mqsim_initial_occupancy_percentage": 1,
+    "mqsim_gc_exec_threshold": null,
+    "mqsim_gc_block_selection_policy": null,
+    "mqsim_static_wl_threshold": null,
+    "expect_gc": false,
+    "expect_static_wl": false,
+    "expect_no_static_wl": false,
+    "expected_gc_count": null,
+    "expected_static_wl_count": null,
+    "expected_gc_relocated_pages": null,
+    "expected_erase_count": null,
+    "mqsim_maintenance_diagnostic": false,
+    "flashsim_cache_bypass": true,
+    "flashsim_plane_allocation": "CWDP",
+    "flashsim_runtime_overrides": {
+      "static_wl_enabled": false
+    },
+    "external_trace_stats": {
+      "source_flash_trace": "validation/mqsim_flash/traces/read_only/read_only_1k_64b_flashsim.json",
+      "source_mqsim_trace": "validation/mqsim_flash/traces/read_only/read_only_1k_64b_mqsim.trace",
+      "source_request_count": 1000,
+      "normalized_request_count": 1000,
+      "source_read_request_count": 1000,
+      "source_write_request_count": 0,
+      "normalized_read_request_count": 1000,
+      "normalized_write_request_count": 0,
+      "original_page_ops": 1000,
+      "normalized_page_ops": 1000,
+      "unique_normalized_pages": 1000,
+      "address_mode": "raw",
+      "logical_page_limit": 182844,
+      "mqsim_logical_page_count": 182844,
+      "flashsim_data_page_count": 195840,
+      "split_requests": 0,
+      "split_request_reason": "none",
+      "split_requests_at_logical_boundary": 0,
+      "compact_unique_source_pages": null,
+      "min_original_page": 0,
+      "max_original_page": 999,
+      "precondition": {
+        "mode": "read-pages",
+        "page_count": 1000,
+        "min_lpa": 0,
+        "max_lpa": 999
+      },
+      "read_before_write": {
+        "request_count": 1000,
+        "page_ops": 1000
+      },
+      "mqsim_preconditioning": true,
+      "mqsim_initial_occupancy_percentage": 1,
+      "mqsim_warmup_prefix_enabled": false,
+      "mqsim_warmup_request_count": 0,
+      "mqsim_warmup_page_ops": 0,
+      "mqsim_warmup_gap_ns": 0,
+      "mqsim_warmup_settle_ns": 0,
+      "mqsim_main_time_shift_ns": 0,
+      "mqsim_trace_request_count": 1000,
+      "mqsim_trace_read_request_count": 1000,
+      "mqsim_trace_write_request_count": 0
+    }
+  },
+  "dataset_manifest": {
+    "paper_validation_real_traces": {
+      "source": "MQSim FAST'18 Table 2 validation workloads",
+      "names": [
+        "tpcc",
+        "tpce",
+        "exchange"
+      ],
+      "local_full_datasets_present": false
+    },
+    "paper_reproducibility_inputs_present": [
+      "MQSim/fast18/data-cache-contention",
+      "MQSim/fast18/backend-contention",
+      "MQSim/fast18/queue-fetch-size"
+    ],
+    "local_trace_samples_present": [
+      "MQSim/traces/tpcc-small.trace",
+      "MQSim/traces/wsrch-small.trace"
+    ],
+    "first_validation_scope": [
+      "generated full-page aligned trace",
+      "external full-page aligned public trace replay",
+      "traditional flash read/write semantics",
+      "no partial sector bitmap",
+      "no modern SSD calibration yet"
+    ]
+  },
+  "paths": {
+    "flash_trace": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_flashsim_trace.json",
+    "mqsim_trace": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_mqsim.trace",
+    "ssd_config": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/mqsim_ssdconfig.xml",
+    "workload": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/mqsim_workload.xml",
+    "manifest": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/case_manifest.json",
+    "precondition": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_precondition.json",
+    "flash_config": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/flashsim_config.json",
+    "summary": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/summary.json",
+    "html_report": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/report.html",
+    "analysis": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/analysis.md"
+  },
+  "build_notes": [
+    "Using existing MQSim binary: $MQSIM_ROOT/MQSim"
+  ],
+  "runs": {
+    "flashsim": {
+      "command": [
+        "/opt/miniconda3/bin/python",
+        "-m",
+        "flash_sim.cli",
+        "run-engine",
+        "$FLASHSIM_ROOT/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_flashsim_trace.json",
+        "--pre-trace",
+        "$FLASHSIM_ROOT/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_precondition.json",
+        "--config",
+        "$FLASHSIM_ROOT/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/flashsim_config.json",
+        "--cache-bypass",
+        "--plane-allocation",
+        "CWDP",
+        "--no-timeline",
+        "--quiet",
+        "--events",
+        "$FLASHSIM_ROOT/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/flashsim_events.json",
+        "--no-viz"
+      ],
+      "exit_code": 0,
+      "stdout_log": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/flashsim_stdout.log",
+      "events": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/flashsim_events.json",
+      "report": "$FLASHSIM_ROOT/report/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_flashsim_trace_request_latency.json"
+    },
+    "mqsim": {
+      "command": [
+        "$MQSIM_ROOT/MQSim",
+        "-i",
+        "$FLASHSIM_ROOT/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/mqsim_ssdconfig.xml",
+        "-w",
+        "$FLASHSIM_ROOT/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/mqsim_workload.xml"
+      ],
+      "exit_code": -8,
+      "stdout_log": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/mqsim_stdout.log",
+      "report": "validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/mqsim_workload_scenario_1.xml"
+    }
+  },
+  "reports": {
+    "flashsim": {
+      "exists": true,
+      "request_count": 1000,
+      "read_count": 1000,
+      "write_count": 0,
+      "success_count": 1000,
+      "error_count": 0,
+      "final_time": 999012400,
+      "maintenance": {
+        "gc_count": 0,
+        "static_wl_count": 0,
+        "gc_relocated_pages": 0,
+        "gc_erased_blocks": 0,
+        "host_write_pages": 0,
+        "physical_user_write_pages": 0,
+        "physical_gc_write_pages": 0,
+        "min_free_pool": 0,
+        "max_wear_skew": 0,
+        "current_waiting_writes": 0,
+        "max_waiting_writes": 0,
+        "backpressure_enqueued": 0,
+        "backpressure_retried": 0,
+        "backpressure_wait_time": 0,
+        "precondition": {
+          "mode": "manual",
+          "source": "$FLASHSIM_ROOT/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_precondition.json",
+          "input_pages": 1000,
+          "actual_pages": 1000,
+          "actual_fill_ratio": 0.005517302259887006,
+          "preconditionable_pages": 181248,
+          "dropped_pages": 0,
+          "non_empty_planes": 384,
+          "plane_actual_min": 2,
+          "plane_actual_max": 3,
+          "cmt_warm_pages": 64
+        },
+        "planes": {},
+        "write_amplification": 0.0
+      },
+      "media_read_count": 1000,
+      "media_program_count": 0,
+      "media_gc_program_count": 0,
+      "media_erase_count": 0,
+      "avg_user_read_transaction_latency": 6856.0,
+      "avg_user_write_transaction_latency": 0.0,
+      "avg_user_read_service_latency": 6856.0,
+      "avg_user_write_service_latency": 0.0,
+      "avg_host_latency": 12057.984,
+      "avg_read_host_latency": 12057.984,
+      "avg_write_host_latency": 0.0,
+      "host_latency_percentiles_ns": {
+        "p50": 12400.0,
+        "p95": 12400.0,
+        "p99": 12400.0
+      },
+      "read_host_latency_percentiles_ns": {
+        "p50": 12400.0,
+        "p95": 12400.0,
+        "p99": 12400.0
+      },
+      "write_host_latency_percentiles_ns": {
+        "p50": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "avg_persistence_latency": 0.0,
+      "non_success_count": 0,
+      "non_success_requests": [],
+      "data_cache_statuses": [
+        "miss"
+      ],
+      "persistence_statuses": [
+        "not_applicable"
+      ]
+    },
+    "mqsim": {
+      "exists": false
+    }
+  },
+  "timing_sanity": {
+    "payload_bytes": 4096,
+    "channel_width_bytes": 8,
+    "expected": {
+      "read_command": 290,
+      "program_command": 361,
+      "erase_command": 220,
+      "data_in": 1536,
+      "data_out": 1566
+    },
+    "observed": {
+      "read_command": 290,
+      "program_command": 361,
+      "erase_command": 220,
+      "data_in": 1536,
+      "data_out": 1566
+    },
+    "mismatches": {},
+    "timing_constants": {
+      "flashsim_T_READ_LSB": 5000,
+      "flashsim_T_PROG": 250000,
+      "flashsim_T_BERS": 10000000,
+      "profile_read": 5000,
+      "profile_program": 250000,
+      "profile_erase": 10000000
+    },
+    "timing_match": true
+  },
+  "comparison": {
+    "passed": false,
+    "issues": [
+      "MQSim scenario report was not produced.",
+      "MQSim exited with -8."
+    ],
+    "notes": [
+      "Latency equality is not asserted because Flash-Sim can complete writes at controller-cache acceptance while persistence is reported separately.",
+      "MQSim XML latency fields are reported in microseconds; the HTML report converts them to nanoseconds for the diagnostic latency snapshot.",
+      "External validation trace is normalized before replay: address_mode=raw, logical_page_limit=182844, precondition=read-pages, source_requests=1000, normalized_requests=1000."
+    ]
+  }
+}

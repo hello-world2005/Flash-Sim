@@ -24,7 +24,7 @@
 ## 4. CLI Integration
 
 - [x] 4.1 Wire `main(argv)` in `test_script/request_resource_contention_experiments.py` so users can run the size-scan experiment, the read-impact experiment, or both with configurable sizes and output root.
-- [x] 4.2 Ensure CLI output prints the generated trace paths, aggregate result paths, chart paths, and read-impact comparison paths without changing existing `flash-sim` console scripts.
+- [x] 4.2 Ensure CLI output prints the generated trace paths, aggregate result paths, chart paths, and read-impact comparison paths without changing existing `Flash-Sim` console scripts.
 
 ## 5. Verification
 

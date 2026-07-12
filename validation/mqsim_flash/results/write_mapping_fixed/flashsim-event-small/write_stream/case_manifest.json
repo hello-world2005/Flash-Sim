@@ -1,0 +1,55 @@
+{
+  "case": "write_stream",
+  "trace_kind": "generated",
+  "profile": {
+    "name": "flashsim-event-small",
+    "description": "Original small Flash-Sim event-runtime geometry/timing used for GC-pressure validation.",
+    "page_capacity": 4096,
+    "page_metadata_capacity": 448,
+    "page_no_per_block": 8,
+    "block_no_per_plane": 64,
+    "plane_no_per_die": 4,
+    "die_no_per_chip": 4,
+    "flash_channel_count": 8,
+    "chip_no_per_channel": 3,
+    "flash_channel_width": 8,
+    "channel_transfer_rate": 333,
+    "flash_technology": "SLC",
+    "page_read_latency_lsb": 5000,
+    "page_program_latency_lsb": 250000,
+    "block_erase_latency": 10000000,
+    "data_cache_capacity": 262144,
+    "cmt_capacity": 2097152,
+    "ideal_mapping_table": true,
+    "enabled_preconditioning": false,
+    "queue_fetch_size": 512
+  },
+  "operations": [
+    {
+      "type": "write",
+      "time": 0,
+      "page_id": 0,
+      "flashsim_start_lha": 0,
+      "flashsim_size": 64,
+      "mqsim_start_sector": 0,
+      "mqsim_size_sectors": 64
+    },
+    {
+      "type": "write",
+      "time": 300000,
+      "page_id": 1,
+      "flashsim_start_lha": 64,
+      "flashsim_size": 64,
+      "mqsim_start_sector": 64,
+      "mqsim_size_sectors": 64
+    }
+  ],
+  "mqsim_warmup_request_count": 0,
+  "mqsim_main_time_shift_ns": 0,
+  "external_trace_stats": null,
+  "notes": [
+    "Flash-Sim and MQSim sectors are both 64 B.",
+    "This case is full-page aligned and avoids partial sector bitmaps.",
+    "MQSim external traces may include a write warmup prefix to mirror Flash-Sim preconditioning."
+  ]
+}

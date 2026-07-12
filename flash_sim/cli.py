@@ -282,7 +282,7 @@ def cmd_run_engine(args) -> int:
         from .visualizer import visualize_timeline
     except Exception as e:
         print(f"Failed to import visualizer dependencies: {e}", file=sys.stderr)
-        print("Install with: conda run -n flash-sim pip install plotly", file=sys.stderr)
+        print("Install with: conda run -n Flash-Sim pip install plotly", file=sys.stderr)
         return 1
 
     html_path = visualize_timeline(
@@ -319,7 +319,7 @@ def main(argv: Optional[list] = None) -> int:
             argv = ['run'] + argv
 
     parser = argparse.ArgumentParser(
-        prog="flash-sim",
+        prog="Flash-Sim",
         description="Cycle-accurate Flash Simulator with 3D NAND support",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -338,7 +338,7 @@ Examples:
   flash-sim addr --block 0 --layer 1 --page 100
 
   # Run a trace file (legacy or new style)
-  flash-sim trace.json -o results.json
+  Flash-Sim trace.json -o results.json
   flash-sim run trace.json -c my_3d_config.json
 
     # Run event-driven engine and auto-open timeline

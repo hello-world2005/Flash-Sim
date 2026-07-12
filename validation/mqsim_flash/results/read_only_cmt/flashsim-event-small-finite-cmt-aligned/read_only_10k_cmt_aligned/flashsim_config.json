@@ -1,0 +1,11 @@
+{
+  "runtime": {
+    "gc_low_watermark": 3,
+    "stop_servicing_writes_threshold": 1,
+    "gc_victim_policy": "greedy",
+    "static_wl_enabled": false,
+    "static_wl_wear_gap_threshold": 2,
+    "cache_bypass": true,
+    "plane_allocation_scheme": "CWDP"
+  }
+}
