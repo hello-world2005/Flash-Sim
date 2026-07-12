@@ -1,0 +1,56 @@
+MQSim started at Sun Jul 12 12:21:43 2026
+
+******************************
+Executing scenario 1 out of 1 .......
+Investigating input trace file: ../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+Trace file: ../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace seems healthy
+[>                   ]  0% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[=>                  ]  5% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[==>                 ]  10% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[===>                ]  15% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[====>               ]  20% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[=====>              ]  25% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[======>             ]  30% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[=======>            ]  35% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[========>           ]  40% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[=========>          ]  45% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[==========>         ]  50% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[===========>        ]  55% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[============>       ]  60% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[=============>      ]  65% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[==============>     ]  70% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[===============>    ]  75% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[================>   ]  80% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[=================>  ]  85% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[==================> ]  90% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[===================>]  95% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+[====================]  100% progress in Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace
+
+MQSim finished at Sun Jul 12 12:21:44 2026
+
+Total simulation time: 0:0:1
+
+Writing results to output file .......
+Flow Host.IO_Flow.Trace.../Flash-Sim-pre-modern/validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned/validation_flashsim-event-small-finite-cmt-aligned_exchange_all_reads_small64_finite_cmt_used_mqsim.trace - total requests generated: 78994 total requests serviced:78994
+                   - device response time: 197 (us) end-to-end request delay:197 (us)
+Simulation complete; Press any key to exit.

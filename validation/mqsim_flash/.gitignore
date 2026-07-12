@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+out/*
+public_traces/
+
+!out/exchange_pressure_20k_small64_mapping_aligned/
+!out/exchange_pressure_20k_small64_mapping_aligned/**

@@ -171,7 +171,7 @@ class HIL:
                     type=tr_type,
                     address=address,
                     lpa=lpa,
-                    data_ready=req.type == RequestType.SEARCH,
+                    data_ready=False,
                 )
                 req.transaction_list.append(tr)
             return
