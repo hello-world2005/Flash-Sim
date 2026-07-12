@@ -47,21 +47,40 @@ class CMT:
         self.lru_list.insert(0, lpa)
         return invalidation_victim_address
     
-    def eject_entry(self, lpa: int):
+    def eject_entry(self, lpa: int, *, retain_for_writeback: bool = True) -> cmt_entry:
         self.lru_list.remove(lpa)
         leaving_entry = self.cache.pop(lpa)
-        self.address_mapping_unit.gmt[lpa] = leaving_entry
+        if retain_for_writeback:
+            self.address_mapping_unit.gmt[lpa] = leaving_entry
+        else:
+            self.address_mapping_unit.gmt.pop(lpa, None)
         if not QUIET:
             debug_info(f"[CMT] <eject_entry> ejecting entry: ({lpa}, {repr(leaving_entry)})")
+        return leaving_entry
             
     
     def add_entry(self, lpa: int, address: FlashAddress, dirty: bool) -> None:
+        if lpa in self.cache:
+            self.update_entry(lpa, address, dirty)
+            return
         entry = cmt_entry(address=address, dirty=dirty)
         if not QUIET:
             debug_info(f"[CMT] <add_entry> adding entry: ({lpa}, {repr(entry)})")
         if len(self.cache) >= CMT_SIZE:
             lru_lpa = self.lru_list[-1]
-            self.address_mapping_unit.generate_mapping_write_transaction(self.cache, lru_lpa//LPA_NO_PER_MAPPING_PAGE)
+            # Match MQSim's CMT replacement semantics: a clean translation
+            # entry can be discarded immediately.  Only a dirty victim needs
+            # a translation-page writeback.
+            if self.cache[lru_lpa].dirty:
+                # MQSim first evicts the dirty victim into its departing-entry
+                # buffer, then writes back dirty entries from the same MVPN.
+                self.eject_entry(lru_lpa, retain_for_writeback=True)
+                self.address_mapping_unit.generate_mapping_write_transaction(
+                    self.cache,
+                    lru_lpa // LPA_NO_PER_MAPPING_PAGE,
+                )
+            else:
+                self.eject_entry(lru_lpa, retain_for_writeback=False)
         self.cache[lpa] = entry
         self.lru_list.insert(0, lpa)
 
@@ -611,8 +630,8 @@ class Block_Manager:
         submitted_count = 0
         any_submitted = False
         for tr in pending:
-            # *tr.address* was set to the plane address by get_plane_address_for_lpa
-            # before enqueuing; reuse it as the plane_addr for allocation.
+            # *tr.address* holds the plane selected before queuing; dynamic
+            # allocation may choose a fresher plane when the write is retried.
             tr_plane_addr = tr.address
             if amu is not None:
                 sq_id = getattr(tr, "_mapping_sq_id", None)
@@ -622,8 +641,14 @@ class Block_Manager:
                     sq_id = 0
                 resolution, old_address = amu._resolve_write_mapping_state(sq_id, tr.lpa)
             else:
+                sq_id = 0
                 resolution, old_address = "unmapped", None
             is_overwrite = resolution != "unmapped"
+            if amu is not None:
+                tr_plane_addr = amu.select_write_plane_for_lpa(
+                    tr.lpa,
+                    is_overwrite=is_overwrite,
+                )
             if is_overwrite:
                 if self.should_backpressure_overwrite(tr_plane_addr):
                     break
@@ -734,7 +759,7 @@ class Block_Manager:
         cmt_ratio = getattr(geometry, "preconditioning_cmt_ratio", 0.5)
         if not (0.0 < valid_invalid_ratio <= 1.0):
             valid_invalid_ratio = 0.5
-        if not (0.0 < cmt_ratio <= 1.0):
+        if not (0.0 <= cmt_ratio <= 1.0):
             cmt_ratio = 0.5
 
         # Keep preconditioning reproducible so GC/metadata regressions can be
@@ -1968,9 +1993,15 @@ class Address_Mapping_Unit:
             print("Initializing Address Mapping Unit...")
         self._construction_valid: bool = False
         self._plane_allocation_scheme: str = "PAGE_LEVEL"
+        self._write_allocation_mode: str = "lpa-affine"
+        self._write_plane_cursor: int = 0
         self.flash_geometry = make_event_runtime_geometry()
         self.domains = [Address_Mapping_Domain() for _ in range(NUM_OF_QUEUES)]
         self.waiting_for_mapping_trans: dict[int, list[Transaction]] = defaultdict(list)
+        # MQSim reserves a WAITING CMT slot while a translation page is being
+        # fetched.  Keep one host mapping read per MVPN and attach later misses
+        # to it instead of issuing one flash read per LPA.
+        self.pending_host_mapping_reads: dict[int, Transaction] = {}
         self.reads_waiting_for_lpa_write: dict[int, list[Transaction]] = defaultdict(list)
         self.tsu: TSU
         self.cmt: CMT
@@ -2139,6 +2170,8 @@ class Address_Mapping_Unit:
     def _handle_mapping_response(self, tr: Transaction):
         # handle response for tr waiting mapping info
         if tr.type == TransactionType.MAPPING_READ:
+            if self.pending_host_mapping_reads.get(tr.mvpn) is tr:
+                self.pending_host_mapping_reads.pop(tr.mvpn, None)
             if not QUIET:
                 debug_info(f"[AMU] <_handle_mapping_response> response tr: {repr(tr)}")
             self.tsu.Prepare_trans_submission()
@@ -2266,7 +2299,7 @@ class Address_Mapping_Unit:
         self.tsu.Prepare_trans_submission()
         if req.type == RequestType.READ:
             to_submit: list[Transaction] = []
-            mapping_waits: list[tuple[int, Transaction, Transaction]] = []
+            mapping_waits: list[tuple[int, Transaction, Transaction, bool]] = []
             recorder = REQUEST_LATENCY_RECORDER()
             for tr in req.transaction_list:
                 resolution = domain.query_cmt(tr)
@@ -2304,13 +2337,29 @@ class Address_Mapping_Unit:
                             continue
                         raise RequestFailure("Read request accessing invalid ppa in mapping page")
                     debug_info(f"[AMU] <translate_and_submit> Read mapping page")
-                    read_tr = self.generate_mapping_read_transaction(tr, mvpn)
+                    read_tr = self.pending_host_mapping_reads.get(mvpn)
+                    submit_mapping_read = False
+                    if read_tr is None or read_tr.completed:
+                        read_tr = self.generate_mapping_read_transaction(tr, mvpn)
+                        self.pending_host_mapping_reads[mvpn] = read_tr
+                        submit_mapping_read = True
+                    else:
+                        idx = tr.lpa % LPA_NO_PER_MAPPING_PAGE
+                        read_tr.bitmap[idx] = 1
+                        if (
+                            tr.source_req is not None
+                            and tr.source_req.report_req_id is not None
+                            and tr.source_req.report_req_id not in read_tr.report_origin_request_ids
+                        ):
+                            read_tr.report_origin_request_ids.append(
+                                tr.source_req.report_req_id
+                            )
                     tr.rely_on_transactions.append(read_tr)
                     read_tr.required_by_transactions.append(tr)
-                    mapping_waits.append((tr.lpa, tr, read_tr))
+                    mapping_waits.append((tr.lpa, tr, read_tr, submit_mapping_read))
             for tr in to_submit:
                 self.tsu.Submit_trans(tr)
-            for lpa, waiting_tr, read_tr in mapping_waits:
+            for lpa, waiting_tr, read_tr, submit_mapping_read in mapping_waits:
                 self.waiting_for_mapping_trans[lpa].append(waiting_tr)
                 if recorder is not None:
                     recorder.note_mapping_wait_start(
@@ -2318,7 +2367,8 @@ class Address_Mapping_Unit:
                         str(id(read_tr)),
                         CURRENT_TIME(),
                     )
-                self.tsu.Submit_trans(read_tr)
+                if submit_mapping_read:
+                    self.tsu.Submit_trans(read_tr)
         elif req.type == RequestType.WRITE:
             """process write requests — with MQSim-style backpressure.
 
@@ -2327,8 +2377,6 @@ class Address_Mapping_Unit:
             Block_Manager.waiting_writes and will be retried when GC returns a block.
             """
             for tr in req.transaction_list:
-                plane_addr = self.get_plane_address_for_lpa(tr.lpa)
-                tr.address = plane_addr
                 tr._mapping_sq_id = req.sq_id
                 try:
                     resolution, old_address = self._resolve_write_mapping_state(
@@ -2340,6 +2388,11 @@ class Address_Mapping_Unit:
                         raise RequestFailure(str(exc))
                     raise
                 is_overwrite = resolution != "unmapped"
+                plane_addr = self.select_write_plane_for_lpa(
+                    tr.lpa,
+                    is_overwrite=is_overwrite,
+                )
+                tr.address = plane_addr
                 # ── Backpressure check (方案A / MQSim Stop_servicing_writes) ──
                 # First-time writes preserve GC reserve space.  Overwrites usually
                 # pass through to create invalid pages, except when GC can already
@@ -2394,17 +2447,26 @@ class Address_Mapping_Unit:
         self.tsu.Prepare_trans_submission()
         bitmap = [0 for _ in range(LPA_NO_PER_MAPPING_PAGE)]
         data = [INVALID_PPA for _ in range(LPA_NO_PER_MAPPING_PAGE)]
-        lpa_to_eject = []
-        for lpa, entry in cache.items():
-            if lpa // LPA_NO_PER_MAPPING_PAGE != mvpn: # write back clear entry in the meantime
-                continue
+        # The evicted dirty victim is held in GMT until writeback completes.
+        # Other dirty entries from this MVPN remain resident in CMT and become
+        # clean, matching MQSim's writeback clustering behavior.
+        departing_entries = {
+            lpa: entry
+            for lpa, entry in self.gmt.items()
+            if lpa // LPA_NO_PER_MAPPING_PAGE == mvpn
+        }
+        dirty_resident_entries = {
+            lpa: entry
+            for lpa, entry in cache.items()
+            if lpa // LPA_NO_PER_MAPPING_PAGE == mvpn and entry.dirty
+        }
+        entries_to_write = {**departing_entries, **dirty_resident_entries}
+        for lpa, entry in entries_to_write.items():
             index = lpa % LPA_NO_PER_MAPPING_PAGE
             bitmap[index] = 1
             data[index] = utils.translate_address_to_ppa(entry.address)
-            self.gmt[lpa] = entry
-            lpa_to_eject.append(lpa)
-        for lpa in lpa_to_eject:
-            self.cmt.eject_entry(lpa)
+        for entry in dirty_resident_entries.values():
+            entry.dirty = False
         if mvpn not in self.gtd:
             # writing to a new mapping page, get page address for it
             page_address = self.get_plane_address_for_mvpn(mvpn)
@@ -2568,6 +2630,101 @@ class Address_Mapping_Unit:
             sub_plane=block_id,
             page=page_id,
         )
+
+    def _data_plane_count(self) -> int:
+        g = self.flash_geometry
+        return (
+            g.channel_no
+            * (g.chip_per_channel - g.static_chip_per_channel)
+            * g.dies
+            * g.planes_per_die
+        )
+
+    def _data_plane_address_for_cwdp_index(self, plane_index: int) -> FlashAddress:
+        g = self.flash_geometry
+        non_static_chip_no = g.chip_per_channel - g.static_chip_per_channel
+        plane_count = self._data_plane_count()
+        if plane_count <= 0:
+            raise ValueError("[AMU] no data planes available for write allocation")
+        plane_index %= plane_count
+        channel_id = plane_index % g.channel_no
+        chip_id = (plane_index // g.channel_no) % non_static_chip_no
+        die_id = (plane_index // (g.channel_no * non_static_chip_no)) % g.dies
+        plane_id = (
+            plane_index
+            // (g.channel_no * non_static_chip_no * g.dies)
+        ) % g.planes_per_die
+        return FlashAddress(
+            channel=channel_id,
+            chip=chip_id,
+            die=die_id,
+            plane=plane_id,
+            sub_plane=-1,
+            page=-1,
+        )
+
+    def _plane_has_allocatable_user_slot(self, plane_addr: FlashAddress) -> bool:
+        plane_bke = self.block_manager.get_plane_bke(plane_addr)
+        frontier_block = plane_bke.write_frontier_block
+        if 0 <= frontier_block < self.block_manager.block_no_per_plane:
+            frontier_bke = plane_bke.block_entries[frontier_block]
+            if (
+                frontier_block not in plane_bke.metadata_blocks
+                and frontier_block not in plane_bke.gc_wl_barrier_blocks
+                and frontier_bke.write_frontier < self.block_manager.pages_per_block
+            ):
+                return True
+        return self.block_manager.select_wl_aware_free_block(plane_addr) >= 0
+
+    def select_write_plane_for_lpa(
+        self,
+        lpa: int,
+        *,
+        is_overwrite: bool,
+    ) -> FlashAddress:
+        """Choose the physical plane for a new user-program page.
+
+        The legacy path keeps an LPA-affine plane choice.  The dynamic CWDP path
+        advances a device-wide plane cursor so hot LPAs do not exhaust a single
+        physical plane while the rest of the device is still empty.
+        """
+        if self._write_allocation_mode != "dynamic-cwdp":
+            return self.get_plane_address_for_lpa(lpa)
+
+        plane_count = self._data_plane_count()
+        if plane_count <= 0:
+            return self.get_plane_address_for_lpa(lpa)
+
+        fallback_addr: FlashAddress | None = None
+        fallback_index: int | None = None
+        for step in range(plane_count):
+            index = (self._write_plane_cursor + step) % plane_count
+            plane_addr = self._data_plane_address_for_cwdp_index(index)
+            plane_bke = self.block_manager.get_plane_bke(plane_addr)
+            if plane_bke.gc_wl_barrier_blocks:
+                continue
+            if not self._plane_has_allocatable_user_slot(plane_addr):
+                if fallback_addr is None:
+                    fallback_addr = plane_addr
+                    fallback_index = index
+                continue
+            blocked = (
+                self.block_manager.should_backpressure_overwrite(plane_addr)
+                if is_overwrite
+                else self.block_manager.should_backpressure_first_write(plane_addr)
+            )
+            if blocked:
+                if fallback_addr is None:
+                    fallback_addr = plane_addr
+                    fallback_index = index
+                continue
+            self._write_plane_cursor = (index + 1) % plane_count
+            return plane_addr
+
+        if fallback_addr is not None:
+            self._write_plane_cursor = ((fallback_index or 0) + 1) % plane_count
+            return fallback_addr
+        return self.get_plane_address_for_lpa(lpa)
 
     def get_plane_address_for_lpa(self, lpa) -> FlashAddress:
         if lpa < 0 or lpa >= self.random_access_data_pages:
@@ -3220,6 +3377,7 @@ class FTL:
         self.block_manager.apply_runtime_config(runtime)
         self.gc_wl_unit.apply_runtime_config(runtime)
         self.address_mapping_unit._plane_allocation_scheme = runtime.plane_allocation
+        self.address_mapping_unit._write_allocation_mode = runtime.write_allocation_mode
 
     def handle_new_req(self, req: Request):
         self.address_mapping_unit.translate_and_submit(req)

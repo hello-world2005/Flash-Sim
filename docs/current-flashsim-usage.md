@@ -1,6 +1,6 @@
 # Flash-Sim Pre-modern 当前使用说明
 
-本文记录当前 `Flash-Sim-pre-modern` 的推荐使用方式，便于和他人讨论、对接实验结果。这里的“当前”指本仓库现有事件引擎、FTL/GC/WL、CWDP、precondition 和 validation harness 的组合状态。
+本文记录当前 `Flash-Sim` 的推荐使用方式，便于和他人讨论、对接实验结果。这里的“当前”指本仓库现有事件引擎、FTL/GC/WL、CWDP、precondition 和 validation harness 的组合状态。
 
 ## 一句话结论
 
@@ -18,7 +18,8 @@
 推荐使用虚拟环境里的 Python：
 
 ```bash
-PY=/home/kkkkaa/文档/PKU/轮转/李萌/.venv/bin/python
+export FLASHSIM_ROOT=.
+PY=python3
 ```
 
 直接运行 Flash-Sim event engine：

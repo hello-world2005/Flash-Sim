@@ -170,3 +170,17 @@ Define the baseline request path between Host, PCIe, HIL, and the controller-sid
 - **WHEN** 一个 cache entry 中的某个 sector 或静态写单元在 flush 之前被后续请求覆盖
 - **THEN** 系统 MUST 更新该单元的 lineage 为最新请求，而不是把后台持久化时延继续归因给已被覆盖的旧请求
 
+### Requirement: PCIe request, payload, and completion transfers use TLP accounting
+
+The event-driven host link SHALL model NVMe submission, data payload, and completion traffic with 4 B/ns link bandwidth, 128 B maximum payload, and 28 B TLP overhead. Read payload transfer MUST be a real queued device-to-host PCIe event completed before CQ delivery. Write payload transfer MUST occur exactly once before NAND programming.
+
+#### Scenario: 4 KiB read returns payload before completion
+
+- **WHEN** a 4 KiB read finishes its NAND data-out phase
+- **THEN** the link MUST transfer 32 payload TLPs (4,992 wire bytes, 1,248 ns) before the 11 ns CQ transfer completes the host request
+
+#### Scenario: Internal controller notification has no extra wire transfer
+
+- **WHEN** HIL and Host exchange an internal queue/data-ready notification that has no MQSim PCIe counterpart
+- **THEN** that notification MUST add zero PCIe wire time
+

@@ -1,0 +1,7 @@
+MQSim started at Sat Jul 11 14:47:46 2026
+
+******************************
+Executing scenario 1 out of 1 .......
+Investigating input trace file: ../flash-sim/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_mqsim.trace
+Trace file: ../flash-sim/validation/mqsim_flash/results/read_only_cmt/flashsim-event-small-finite-cmt-aligned/read_only_1k_cmt_aligned_builtin_precondition/validation_flashsim-event-small-finite-cmt-aligned_read_only_1k_cmt_aligned_builtin_precondition_mqsim.trace seems healthy
+SSD Device preconditioning started .........

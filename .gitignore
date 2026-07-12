@@ -74,3 +74,15 @@ result_small64_30k_gc_aligned.md
 .gitignore
 result_small64_30k.md
 result_small64_50k_cache64.md
+ANALYSIS_METHODOLOGY.md
+analysis_report.txt
+analyze_flashsim.py
+analyze_mqsim.py
+background.txt
+FlashSim_模拟器报告.md
+latency_analysis.png
+latency_distribution.png
+stage_breakdown.png
+timeline_events.json
+docs/parallelism_issue.md
+traces/Exchange.12-12-2007.02-39-PM.trace.csv

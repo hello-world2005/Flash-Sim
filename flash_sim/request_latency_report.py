@@ -10,7 +10,8 @@ from typing import Any, Optional
 from .common import (
     MessageType,
     PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS,
-    PCIE_PACKET_OVERHEAD_BYTES,
+    PCIE_TLP_MAX_PAYLOAD_BYTES,
+    PCIE_TLP_PACKET_OVERHEAD_BYTES,
     REQUEST_STATUS_SUCCESS,
     Request,
     RequestType,
@@ -1000,7 +1001,11 @@ class RequestLatencyRecorder:
             return 0
         if PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS <= 0:
             raise ValueError("PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS must be positive")
-        transfer_bytes = rec.size * SECTOR_SIZE_BYTES + PCIE_PACKET_OVERHEAD_BYTES
+        payload_bytes = rec.size * SECTOR_SIZE_BYTES
+        packet_count = ceil(payload_bytes / PCIE_TLP_MAX_PAYLOAD_BYTES)
+        transfer_bytes = (
+            payload_bytes + packet_count * PCIE_TLP_PACKET_OVERHEAD_BYTES
+        )
         return ceil(transfer_bytes / PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS)
 
     def _filtered_interval_duration(

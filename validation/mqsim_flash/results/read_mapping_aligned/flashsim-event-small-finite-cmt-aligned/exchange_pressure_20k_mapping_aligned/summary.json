@@ -1,0 +1,49 @@
+{
+  "status": "authoritative_read_alignment_result",
+  "request_count": 20000,
+  "sector_bytes": 64,
+  "page_bytes": 4096,
+  "cmt_entries": 64,
+  "ideal_mapping_table": false,
+  "latency_ns": {
+    "flashsim": {
+      "average": 16154.4953,
+      "p50": 14748,
+      "p95": 26346,
+      "p99": 33912,
+      "min": 7556,
+      "max": 95934
+    },
+    "mqsim": {
+      "average": 16148.7469,
+      "p50": 14728,
+      "p95": 26248,
+      "p99": 33736,
+      "min": 7546,
+      "max": 105988
+    }
+  },
+  "behavior_counts": {
+    "flashsim": {
+      "user_page_reads": 80264,
+      "cmt_hits": 1776,
+      "cmt_misses": 78488,
+      "physical_mapping_reads": 20131,
+      "gc": 0,
+      "wear_leveling": 0,
+      "erase": 0
+    },
+    "mqsim": {
+      "user_page_reads": 80264,
+      "cmt_hits": 1756,
+      "cmt_misses": 78508,
+      "physical_mapping_reads": 20131,
+      "arriving_mvpn_joins": 58377,
+      "departing_mvpn_bypasses": 0,
+      "no_mppn": 0,
+      "gc": 0,
+      "wear_leveling": 0,
+      "erase": 0
+    }
+  }
+}

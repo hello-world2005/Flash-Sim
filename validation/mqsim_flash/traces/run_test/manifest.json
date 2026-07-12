@@ -3,7 +3,7 @@
   "source": {
     "base_trace": "validation/mqsim_flash/public_traces/exchange/exchange_disk0_page_50000_*",
     "matrix_run_id": "20260705_160118",
-    "normalization": "compact page mapping, full-page aligned, 64B Flash-Sim sectors and 512B MQSim sectors",
+    "normalization": "compact page mapping, full-page aligned, 64B sectors for both Flash-Sim and MQSim",
     "note": "The labels 10k and 30k refer to the source Exchange request windows. Multi-page requests are split during normalization, so replay request counts are larger."
   },
   "traces": {
@@ -16,7 +16,7 @@
       },
       "mqsim": {
         "path": "exchange_disk0_page_10k_compact_mqsim.trace",
-        "sha256": "6902805688899413f7a711a1791de38f33e2fd519485b7558610a77f973f54f7"
+        "sha256": "5a1bffc8229536406b28418952d3dc3b9d7a033856eb16c354b66df69fc19ac2"
       }
     },
     "30k": {
@@ -28,7 +28,7 @@
       },
       "mqsim": {
         "path": "exchange_disk0_page_30k_compact_mqsim.trace",
-        "sha256": "11d872304d8cb808774beb1d182307b801eeffbd0b851cca88245c269b0e2315"
+        "sha256": "065fc2e262484b9587e5c76f42c7a1bb0ca3e42ddf1b94eea9d955060646dc89"
       }
     }
   }

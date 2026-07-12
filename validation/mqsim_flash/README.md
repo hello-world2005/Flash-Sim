@@ -3,24 +3,18 @@
 This directory contains a small correctness-validation harness for comparing
 Flash-Sim's event-driven traditional-flash path with MQSim.
 
-The first target is deliberately narrow:
-
-- full-page aligned requests only
-- trace-based workloads only
-- no sector bitmap / partial-page semantics
-- no compute/search/static-flash features
-- no attempt to calibrate to a modern SSD yet
-
-This keeps the first comparison focused on the shared flash-SSD semantics:
-request ingestion, address unit conversion, request completion, basic timing
-constants, and NAND command accounting.
+The maintained validation now covers full-page and mixed-size reads, finite-CMT
+mapping misses, PCIe payload transfer, GC/suspension diagnostics, and real
+Exchange trace conversion. Compute/search/static-flash behavior remains outside
+the MQSim comparison because MQSim has no equivalent operations.
 
 ## Local Assets And Dependency Boundary
 
 The validation harness is intended to be reproducible from this Flash-Sim
-checkout plus one MQSim checkout/binary. The expected MQSim location is the
-sibling directory `../MQSim`, and both validation runners default to
-`../MQSim/MQSim`. You can also pass an explicit MQSim binary to
+checkout plus one MQSim checkout/binary. The final aligned results use the
+sibling directory `../MQSim-test` containing the mapping-write fixes. This is
+also the current `run_validation.py` default. You can override it with
+`MQSIM_ROOT` or pass an explicit MQSim binary to
 `run_validation.py` with `--mqsim-bin`.
 
 Everything else needed for the current Flash-Sim-side validation flow lives
@@ -57,24 +51,26 @@ request counts and SHA-256 hashes.
 Run validation commands from the repository root:
 
 ```bash
-cd /home/kkkkaa/文档/PKU/轮转/李萌/Flash-Sim-pre-modern
-PY=/home/kkkkaa/文档/PKU/轮转/李萌/.venv/bin/python
+export FLASHSIM_ROOT=.
+export MQSIM_ROOT=../MQSim-test
+PY=python3
+cd "$FLASHSIM_ROOT"
 ```
 
 The scripts also try to find this sibling virtualenv automatically, but using
 `$PY` makes runs explicit and repeatable when sharing commands.
 
-MQSim is optional for Flash-Sim-only checks, but comparison runs expect an
-MQSim checkout at `../MQSim` and a binary at `../MQSim/MQSim`. The matrix
+MQSim is optional for Flash-Sim-only checks, but final comparison runs expect
+the fixed MQSim checkout at `../MQSim-test` and binary `../MQSim-test/MQSim`. The matrix
 scripts use the existing binary and do not rebuild it. If MQSim is missing,
 exits, or fails to produce a parseable XML report, the scripts still keep the
 Flash-Sim result and record the MQSim case as failed or skipped.
 
-If MQSim is not in the sibling `../MQSim` directory, set `MQSIM_ROOT` to the
+Set `MQSIM_ROOT` when the fixed MQSim checkout is not at sibling `../MQSim-test`:
 MQSim checkout root before running the scripts:
 
 ```bash
-export MQSIM_ROOT=/absolute/path/to/MQSim
+export MQSIM_ROOT=/absolute/path/to/MQSim-test
 $PY validation/mqsim_flash/run_test_matrix_latest.py
 ```
 
@@ -82,6 +78,55 @@ $PY validation/mqsim_flash/run_test_matrix_latest.py
 to the binary file itself.
 
 ## Which Runner To Use
+
+### Final read-alignment result
+
+The result produced by the final read-aligned code is:
+
+```text
+validation/mqsim_flash/results/read_mapping_aligned/
+  flashsim-event-small-finite-cmt-aligned/
+    exchange_pressure_20k_mapping_aligned/
+```
+
+Its `flashsim_per_req.csv`, `mqsim_per_req.csv`, `mqsim_report.xml`, and
+`analysis.md` are the authoritative read comparison artifacts. The result uses
+the fixed `../MQSim-test` build; older `read_only_ideal`, `read_only_cmt`, and
+`read_only_pcie_aligned` directories document intermediate validation stages.
+The current numerical summary and write limitations are maintained in
+[`report.md`](report.md).
+
+Reproduce it with the variables initialized in the environment section above:
+
+```bash
+$PY validation/mqsim_flash/run_exchange_all_reads_small64.py \
+  --pressure-window 20000 \
+  --case-dir validation/mqsim_flash/out/exchange_pressure_20k_small64_mapping_aligned \
+  --timeout 300
+```
+
+The runner extracts the consecutive 20,000-read window with the shortest
+timestamp span, maps the ten source disks into disjoint small64 partitions,
+prefills every touched logical page, creates stale physical pages, uses a
+64-entry non-ideal CMT, and excludes MQSim warmup writes from the final read CSV.
+
+### Automated tests
+
+Run the maintained unittest-compatible core without requiring pytest:
+
+```bash
+python -m unittest -q \
+  test_script.test_convert_exchange_trace \
+  test_script.test_gc_write_path_runtime \
+  test_script.test_request_error_handling \
+  test_script.test_pcie_link_latency \
+  test_script.test_request_latency_report \
+  test_script.test_read_write_trace
+```
+
+If pytest is installed, run the complete suite with `pytest -q test_script`.
+The Exchange converter test explicitly verifies that both generated traces use
+64 B sectors.
 
 Use `run_validation.py` for focused correctness/debug cases:
 
@@ -147,7 +192,9 @@ For the run-test matrix:
   `Initial_Occupancy_Percentage`.
 - The current matrix writes Flash-Sim GC knobs including
   `gc_exec_threshold=0.05`, `gc_victim_policy=d-choices`, and
-  `gc_d_choices=6`.
+  `gc_d_choices=6`, and uses `write_allocation_mode=dynamic-cwdp` for
+  MQSim-style CWDP user-write allocation. Static wear leveling is relaxed with
+  `static_wl_wear_gap_threshold=16` for the compact validation geometry.
 
 Important generated files:
 
@@ -194,9 +241,8 @@ The SNIA Microsoft Exchange archive can be converted directly from the
 downloaded tarball. The converter reads the gzip-compressed ETW CSV members in
 the archive and emits two aligned inputs:
 
-- MQSim ASCII trace: `time_ns device start_lba_512B size_512B type`.
-- Flash-Sim JSON trace: `time`, `start_lha` and `size` in Flash-Sim's 64 B host
-  sectors.
+- MQSim ASCII trace: `time_ns device start_lba_64B size_64B type`.
+- Flash-Sim JSON trace: `time`, `start_lha` and `size` in the same 64 B host sectors.
 
 Generate the conservative full-page aligned subset used for first-pass
 correctness comparison:
@@ -233,7 +279,7 @@ python validation/mqsim_flash/convert_exchange_trace.py \
   --allow-partial
 ```
 
-The sector-exact version keeps 512 B-aligned partial-page requests and should
+The sector-exact version keeps 64 B-aligned partial-page requests and should
 not be used as the first correctness gate unless both simulators' partial-page
 semantics are part of the test.
 
@@ -353,7 +399,7 @@ test_result.md
 validation/mqsim_flash/out/run_test_matrix_latest/<run_id>/summary.json
 ```
 
-If `../MQSim/MQSim` is missing or a specific MQSim case fails, the matrix still
+If `$MQSIM_ROOT/MQSim` is missing or a specific MQSim case fails, the matrix still
 reports the Flash-Sim result and records the MQSim failure/skipped row. To
 refresh `test_result.md` from an existing run without rerunning the simulators:
 
@@ -539,8 +585,7 @@ The following command runs the local fixed 30k trace on `small64`, with 25% and
 self-contained result markdown plus per-case artifacts:
 
 ```bash
-cd /home/kkkkaa/文档/PKU/轮转/李萌/Flash-Sim-pre-modern
-PY=/home/kkkkaa/文档/PKU/轮转/李萌/.venv/bin/python
+cd "$FLASHSIM_ROOT"
 $PY validation/mqsim_flash/run_small64_30k_latency_result.py \
   --trace-label 30k \
   --precondition 25 \

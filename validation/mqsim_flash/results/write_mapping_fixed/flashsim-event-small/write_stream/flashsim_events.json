@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "final_time": 805102,
+    "request_count": 2,
+    "transaction_count": 2,
+    "channel_count": 8,
+    "chip_count": 4
+  },
+  "requests": [
+    {
+      "req_key": "req_140563263211568",
+      "type": "RequestType.WRITE",
+      "start_lha": 0,
+      "size": 64,
+      "stream_id": 0,
+      "phases": {
+        "REQ_INIT": 0,
+        "DELIVER": 41,
+        "WRITE_DATA": 1297,
+        "REQ_COMP": 1308
+      },
+      "segments": [
+        {
+          "phase": "REQ_INIT",
+          "start": 0,
+          "end": 41
+        },
+        {
+          "phase": "DELIVER",
+          "start": 41,
+          "end": 1297
+        },
+        {
+          "phase": "WRITE_DATA",
+          "start": 1297,
+          "end": 1308
+        },
+        {
+          "phase": "REQ_COMP",
+          "start": 1308,
+          "end": 1309
+        }
+      ]
+    },
+    {
+      "req_key": "req_140563282700368",
+      "type": "RequestType.WRITE",
+      "start_lha": 64,
+      "size": 64,
+      "stream_id": 0,
+      "phases": {
+        "REQ_INIT": 300000,
+        "DELIVER": 300041,
+        "WRITE_DATA": 301297,
+        "REQ_COMP": 301308
+      },
+      "segments": [
+        {
+          "phase": "REQ_INIT",
+          "start": 300000,
+          "end": 300041
+        },
+        {
+          "phase": "DELIVER",
+          "start": 300041,
+          "end": 301297
+        },
+        {
+          "phase": "WRITE_DATA",
+          "start": 301297,
+          "end": 301308
+        },
+        {
+          "phase": "REQ_COMP",
+          "start": 301308,
+          "end": 301309
+        }
+      ]
+    }
+  ],
+  "transactions": [
+    {
+      "txn_key": "txn_140563282702608",
+      "type": "TransactionType.USER_WRITE",
+      "source_req": null,
+      "accessed_lpa": 0,
+      "accessed_address": {
+        "channel": 0,
+        "chip": 0,
+        "die": 0,
+        "plane": 0,
+        "sub_plane": 29,
+        "page": 0
+      },
+      "channel": 0,
+      "chip": 0,
+      "phases": {
+        "dispatch": 301308,
+        "CMP_TRANSFERED": 301669,
+        "COMPLETE": 553205
+      },
+      "segments": [
+        {
+          "phase": "dispatch",
+          "start": 301308,
+          "end": 301669
+        },
+        {
+          "phase": "CMP_TRANSFERED",
+          "start": 301669,
+          "end": 553205
+        },
+        {
+          "phase": "COMPLETE",
+          "start": 553205,
+          "end": 553206
+        }
+      ]
+    },
+    {
+      "txn_key": "txn_140563282761744",
+      "type": "TransactionType.USER_WRITE",
+      "source_req": null,
+      "accessed_lpa": 1,
+      "accessed_address": {
+        "channel": 0,
+        "chip": 0,
+        "die": 0,
+        "plane": 0,
+        "sub_plane": 29,
+        "page": 1
+      },
+      "channel": 0,
+      "chip": 0,
+      "phases": {
+        "dispatch": 553205,
+        "CMP_TRANSFERED": 553566,
+        "COMPLETE": 805102
+      },
+      "segments": [
+        {
+          "phase": "dispatch",
+          "start": 553205,
+          "end": 553566
+        },
+        {
+          "phase": "CMP_TRANSFERED",
+          "start": 553566,
+          "end": 805102
+        },
+        {
+          "phase": "COMPLETE",
+          "start": 805102,
+          "end": 805103
+        }
+      ]
+    }
+  ]
+}

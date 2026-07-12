@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flash-Sim vs MQSim Validation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202a;
+      --muted: #657083;
+      --line: #d8dee8;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --pass: #18794e;
+      --pass-bg: #e9f7ef;
+      --fail: #b42318;
+      --fail-bg: #fdecec;
+      --info: #8a5a00;
+      --info-bg: #fff5d6;
+      --accent: #246bfe;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 24px auto 40px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 8px solid var(--pass);
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .hero.fail { border-left-color: var(--fail); }
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font-size: 24px; }
+    h2 { margin-bottom: 12px; font-size: 17px; }
+    .muted { color: var(--muted); }
+    .badge {
+      display: inline-block;
+      min-width: 58px;
+      text-align: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .badge.pass { color: var(--pass); background: var(--pass-bg); }
+    .badge.fail { color: var(--fail); background: var(--fail-bg); }
+    .badge.info { color: var(--info); background: var(--info-bg); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .metric {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .big {
+      display: block;
+      margin-top: 4px;
+      font-size: 26px;
+      font-weight: 750;
+      color: var(--ink);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 190px 1fr 90px;
+      gap: 12px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .bar-label { color: var(--muted); }
+    .bar-track {
+      height: 12px;
+      background: #e9edf5;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--accent);
+    }
+    .bar-value {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    code {
+      background: #eef2f8;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    ul { margin-bottom: 0; padding-left: 20px; }
+    @media (max-width: 760px) {
+      .hero, .grid, .bar-row { grid-template-columns: 1fr; }
+      .bar-value { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero pass">
+      <div>
+        <h1>Flash-Sim vs MQSim Validation</h1>
+        <p class="muted">profile=<code>flashsim-event-small</code> case=<code>read_only_10k_ideal_mapping</code></p>
+      </div>
+      <span class="badge pass">PASS</span>
+    </section>
+
+    <section class="grid">
+      <div class="panel"><span class="metric">Main requests</span><span class="big">10000</span></div>
+      <div class="panel"><span class="metric">Flash-Sim errors</span><span class="big">0</span></div>
+      <div class="panel"><span class="metric">MQSim serviced / warmup</span><span class="big">20000/10000</span></div>
+    </section>
+
+    <section class="panel">
+      <h2>Correctness Gates</h2>
+      <table>
+        <thead><tr><th>Check</th><th>Expected</th><th>Flash-Sim</th><th>MQSim</th><th>Status</th></tr></thead>
+        <tbody><tr><td>Total requests</td><td>Flash main=10000; MQSim trace=20000</td><td>10000</td><td>20000</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Read requests</td><td>10000</td><td>10000</td><td>10000</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Write requests</td><td>Flash main=0; MQSim trace=10000</td><td>0</td><td>10000</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Flash-Sim host-visible errors</td><td>0</td><td>0</td><td>n/a</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Flash-Sim successful completions</td><td>10000</td><td>10000</td><td>n/a</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>ONFI helper formula</td><td>no mismatch</td><td>no mismatch</td><td>MQSim source formula</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Array timing constants</td><td>profile match</td><td>match</td><td>profile</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>User media read page ops</td><td>diagnostic</td><td>10000</td><td>10000</td><td><span class="badge info">INFO</span></td></tr>
+<tr><td>MQSim raw read page ops</td><td>diagnostic</td><td>n/a</td><td>10000</td><td><span class="badge info">INFO</span></td></tr>
+<tr><td>MQSim mapping read page ops</td><td>diagnostic</td><td>n/a</td><td>0</td><td><span class="badge info">INFO</span></td></tr>
+<tr><td>Media program page ops</td><td>Flash main=0; MQSim trace=10000</td><td>0</td><td>10000</td><td><span class="badge info">INFO</span></td></tr>
+<tr><td>GC/WL relocated program pages</td><td>n/a</td><td>0</td><td>see MQSim GC/WL avg</td><td><span class="badge info">INFO</span></td></tr>
+<tr><td>GC executions</td><td>diagnostic</td><td>0</td><td>0</td><td><span class="badge info">INFO</span></td></tr>
+<tr><td>Static WL executions</td><td>diagnostic</td><td>0</td><td>0</td><td><span class="badge info">INFO</span></td></tr>
+<tr><td>Erase commands</td><td>0</td><td>0</td><td>0</td><td><span class="badge pass">PASS</span></td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Request Count View</h2>
+      <div class="bar-row"><div class="bar-label">Expected total</div><div class="bar-track"><div class="bar-fill" style="width: 50.00%"></div></div><div class="bar-value">10000</div></div>
+<div class="bar-row"><div class="bar-label">Expected MQSim trace total</div><div class="bar-track"><div class="bar-fill" style="width: 100.00%"></div></div><div class="bar-value">20000</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim total</div><div class="bar-track"><div class="bar-fill" style="width: 50.00%"></div></div><div class="bar-value">10000</div></div>
+<div class="bar-row"><div class="bar-label">MQSim total</div><div class="bar-track"><div class="bar-fill" style="width: 100.00%"></div></div><div class="bar-value">20000</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim writes</div><div class="bar-track"><div class="bar-fill" style="width: 0.00%"></div></div><div class="bar-value">0</div></div>
+<div class="bar-row"><div class="bar-label">MQSim writes</div><div class="bar-track"><div class="bar-fill" style="width: 50.00%"></div></div><div class="bar-value">10000</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim reads</div><div class="bar-track"><div class="bar-fill" style="width: 50.00%"></div></div><div class="bar-value">10000</div></div>
+<div class="bar-row"><div class="bar-label">MQSim reads</div><div class="bar-track"><div class="bar-fill" style="width: 50.00%"></div></div><div class="bar-value">10000</div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Direct Latency Comparison</h2>
+      <p class="muted">Ratios compare the larger value to the smaller value. Media transaction rows are the most meaningful after SSD parameters are aligned.</p>
+      <table>
+        <thead><tr><th>Metric</th><th>Flash-Sim</th><th>MQSim</th><th>Ratio</th></tr></thead>
+        <tbody><tr><td>Read media service latency (ns)</td><td>6856.00</td><td>6000.00</td><td>1.14</td></tr>
+<tr><td>Write media service latency (ns)</td><td>0.00</td><td>251000.00</td><td>n/a</td></tr>
+<tr><td>Read host/device latency (ns)</td><td>7056.00</td><td>6000.00</td><td>1.18</td></tr>
+<tr><td>Read transaction turnaround incl. queue (ns)</td><td>6856.00</td><td>6000.00</td><td>1.14</td></tr>
+<tr><td>Write transaction turnaround incl. queue (ns)</td><td>0.00</td><td>251000.00</td><td>n/a</td></tr>
+<tr><td>Overall host/device response (ns)</td><td>7056.00</td><td>130000.00</td><td>18.42</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Latency Snapshot</h2>
+      <p class="muted">This section is diagnostic only. It is not a correctness gate because Flash-Sim write completion can be cache-visible while persistence is tracked separately. MQSim XML latency fields are reported in microseconds and converted to nanoseconds here.</p>
+      <div class="bar-row"><div class="bar-label">Flash-Sim host avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 2.81%"></div></div><div class="bar-value">7056.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim read host avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 2.81%"></div></div><div class="bar-value">7056.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim read host p95 (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 2.81%"></div></div><div class="bar-value">7056.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim read host p99 (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 2.81%"></div></div><div class="bar-value">7056.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim read service avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 2.73%"></div></div><div class="bar-value">6856.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim write host p95 (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 0.00%"></div></div><div class="bar-value">0.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim write host p99 (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 0.00%"></div></div><div class="bar-value">0.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim write service avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 0.00%"></div></div><div class="bar-value">0.00</div></div>
+<div class="bar-row"><div class="bar-label">Flash-Sim persistence avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 0.00%"></div></div><div class="bar-value">0.00</div></div>
+<div class="bar-row"><div class="bar-label">MQSim device response avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 51.79%"></div></div><div class="bar-value">130000.00</div></div>
+<div class="bar-row"><div class="bar-label">MQSim read transaction avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 2.39%"></div></div><div class="bar-value">6000.00</div></div>
+<div class="bar-row"><div class="bar-label">MQSim write transaction avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 100.00%"></div></div><div class="bar-value">251000.00</div></div>
+<div class="bar-row"><div class="bar-label">MQSim read service avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 2.39%"></div></div><div class="bar-value">6000.00</div></div>
+<div class="bar-row"><div class="bar-label">MQSim write service avg (ns)</div><div class="bar-track"><div class="bar-fill" style="width: 100.00%"></div></div><div class="bar-value">251000.00</div></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Issues</h2>
+        <p class="muted">No correctness issues were reported.</p>
+      </div>
+      <div class="panel">
+        <h2>Notes</h2>
+        <ul><li>MQSim trace includes a preconditioning warmup prefix: warmup_requests=10000, main_requests=10000, trace_requests=20000, main_time_shift_ns=2520000000. MQSim generated/serviced gates use the full trace count; Flash-Sim request gates use the main trace count.</li><li>Direct MQSim latency/GC comparison is disabled for this run because MQSim aggregate XML metrics include the warmup prefix. Use the metrics as diagnostics only unless a main-phase-only MQSim report is added.</li><li>Latency equality is not asserted because Flash-Sim can complete writes at controller-cache acceptance while persistence is reported separately.</li><li>MQSim XML latency fields are reported in microseconds; the HTML report converts them to nanoseconds for the diagnostic latency snapshot.</li><li>External validation trace is normalized before replay: address_mode=raw, logical_page_limit=182844, precondition=read-pages, source_requests=10000, normalized_requests=10000.</li></ul>
+      </div>
+      <div class="panel">
+        <h2>Artifacts</h2>
+        <p class="muted">Summary JSON</p>
+        <p><code>summary.json</code></p>
+        <p class="muted">MQSim report</p>
+        <p><code>mqsim_workload_scenario_1.xml</code></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

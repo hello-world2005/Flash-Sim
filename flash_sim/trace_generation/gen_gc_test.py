@@ -38,4 +38,4 @@ def write_trace_to_file(trace: list[dict], file_path: str):
 if __name__ == "__main__":
     trace = gen_gc_test(BLOCK_PER_PLANE-GC_WL_MANAGER_FREE_BLOCK_POOL_THRESHOLD, PAGE_PER_BLOCK)
     print(f"Generated {len(trace)} reqs")
-    write_trace_to_file(trace, f"E:/Files/Li_Meng/HBF/Flash-Sim/test_case/gc_test.json")
+    write_trace_to_file(trace, f"E:/Files/Li_Meng/HBF/flash-sim/test_case/gc_test.json")

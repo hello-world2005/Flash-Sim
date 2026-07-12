@@ -89,8 +89,11 @@ class TestRequestErrorHandling(unittest.TestCase):
         self.assertEqual(req.status, REQUEST_STATUS_SUCCESS)
         self.assertIsNone(req.error_message)
         self.assertTrue(req.completion_sent)
-        self.assertEqual(len(host.pcie_link.sent), 1)
-        message, target = host.pcie_link.sent[0]
+        self.assertEqual(len(host.pcie_link.sent), 2)
+        data_message, data_target = host.pcie_link.sent[0]
+        self.assertIs(data_target, host)
+        self.assertEqual(data_message.type, MessageType.READ_RES_SEND_BACK)
+        message, target = host.pcie_link.sent[1]
         self.assertIs(target, host)
         self.assertEqual(message.type, MessageType.REQ_COMP)
         self.assertEqual(message.payload["status"], REQUEST_STATUS_SUCCESS)

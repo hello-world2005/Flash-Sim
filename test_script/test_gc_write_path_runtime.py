@@ -68,6 +68,87 @@ def _make_amu_fixture(with_phy: bool = False):
 
 
 class TestGCWritePathRuntime(unittest.TestCase):
+    def test_clean_cmt_eviction_does_not_write_mapping_page(self):
+        amu, _, tsu = _make_amu_fixture()
+        for lpa in range(64):
+            amu.cmt.cache[lpa] = cmt_entry(
+                address=FlashAddress(channel=0, chip=0, die=0, plane=0, sub_plane=1, page=lpa % PAGE_PER_BLOCK),
+                dirty=False,
+            )
+            amu.cmt.lru_list.insert(0, lpa)
+
+        amu.cmt.add_entry(
+            1000,
+            FlashAddress(channel=0, chip=0, die=0, plane=0, sub_plane=2, page=0),
+            dirty=False,
+        )
+
+        self.assertEqual(tsu.submitted, [])
+        self.assertNotIn(0, amu.cmt.cache)
+        self.assertNotIn(0, amu.gmt)
+        self.assertIn(1000, amu.cmt.cache)
+        self.assertEqual(len(amu.cmt.cache), 64)
+
+    def test_dirty_cmt_eviction_uses_temporary_gmt_and_keeps_peer_entries(self):
+        amu, _, tsu = _make_amu_fixture(with_phy=True)
+        for lpa in range(64):
+            amu.cmt.cache[lpa] = cmt_entry(
+                address=FlashAddress(channel=0, chip=0, die=0, plane=0, sub_plane=1, page=lpa % PAGE_PER_BLOCK),
+                dirty=lpa in (0, 1),
+            )
+            amu.cmt.lru_list.insert(0, lpa)
+
+        amu.cmt.add_entry(
+            1000,
+            FlashAddress(channel=0, chip=0, die=0, plane=0, sub_plane=2, page=0),
+            dirty=False,
+        )
+
+        self.assertIn(0, amu.gmt)
+        self.assertNotIn(0, amu.cmt.cache)
+        self.assertIn(1, amu.cmt.cache)
+        self.assertFalse(amu.cmt.cache[1].dirty)
+        writes = [tr for tr in tsu.submitted if tr.type == TransactionType.MAPPING_WRITE]
+        self.assertEqual(len(writes), 1)
+        self.assertEqual(writes[0].bitmap[0], 1)
+        self.assertEqual(writes[0].bitmap[1], 1)
+
+    def test_host_mapping_misses_for_same_mvpn_share_one_flash_read(self):
+        amu, _, tsu = _make_amu_fixture(with_phy=True)
+        mvpn = 0
+        mapping_addr = amu.get_plane_address_for_mvpn(mvpn)
+        amu.gtd[mvpn] = GTDEntry(address=mapping_addr)
+        page = tsu.phy._storage[mapping_addr.channel][mapping_addr.chip][mapping_addr.die][mapping_addr.plane][mapping_addr.sub_plane][mapping_addr.page]
+        page.function = PageType.MAPPING
+        page.lpa = INVALID_LPA
+        page.mvpn = mvpn
+        page.valid_bitmap = [0] * LPA_NO_PER_MAPPING_PAGE
+        page.data = [INVALID_PPA] * LPA_NO_PER_MAPPING_PAGE
+
+        user_transactions = []
+        for lpa in (0, 1):
+            address = FlashAddress(channel=0, chip=0, die=0, plane=0, sub_plane=3, page=lpa)
+            page.valid_bitmap[lpa] = 1
+            page.data[lpa] = utils.translate_address_to_ppa(address)
+            req = Request(type=RequestType.READ, sq_id=0)
+            tr = Transaction(source_req=req, type=TransactionType.USER_READ, lpa=lpa, bitmap=[1])
+            req.transaction_list = [tr]
+            user_transactions.append(tr)
+            amu.translate_and_submit(req)
+
+        mapping_reads = [tr for tr in tsu.submitted if tr.type == TransactionType.MAPPING_READ]
+        self.assertEqual(len(mapping_reads), 1)
+        self.assertEqual(mapping_reads[0].bitmap[0], 1)
+        self.assertEqual(mapping_reads[0].bitmap[1], 1)
+        self.assertEqual(len(mapping_reads[0].required_by_transactions), 2)
+
+        mapping_reads[0].response = tsu.phy._read_from_storage(mapping_reads[0])
+        amu._handle_mapping_response(mapping_reads[0])
+
+        for tr in user_transactions:
+            self.assertIn(tr, tsu.submitted)
+        self.assertNotIn(mvpn, amu.pending_host_mapping_reads)
+
     def test_runtime_config_parses_gc_policy_knobs(self):
         config = FlashConfig.from_dict(
             {
@@ -80,6 +161,7 @@ class TestGCWritePathRuntime(unittest.TestCase):
                     "gc_d_choices": 6,
                     "gc_random_seed": 99,
                     "static_wl_wear_gap_threshold": 7,
+                    "write_allocation_mode": "dynamic-cwdp",
                 }
             }
         )
@@ -92,6 +174,35 @@ class TestGCWritePathRuntime(unittest.TestCase):
         self.assertEqual(config.runtime.gc_d_choices, 6)
         self.assertEqual(config.runtime.gc_random_seed, 99)
         self.assertEqual(config.runtime.static_wl_wear_gap_threshold, 7)
+        self.assertEqual(config.runtime.write_allocation_mode, "dynamic-cwdp")
+
+    def test_dynamic_cwdp_write_allocation_spreads_hot_lpas(self):
+        amu, bm, tsu = _make_amu_fixture()
+        amu._plane_allocation_scheme = "CWDP"
+        amu._write_allocation_mode = "dynamic-cwdp"
+        lpa_a = 0
+        lpa_b = 384
+        self.assertEqual(
+            amu.get_plane_address_for_lpa(lpa_a),
+            amu.get_plane_address_for_lpa(lpa_b),
+        )
+
+        req = Request(type=RequestType.WRITE, sq_id=0)
+        tr_a = Transaction(source_req=req, type=TransactionType.USER_WRITE, lpa=lpa_a)
+        tr_b = Transaction(source_req=req, type=TransactionType.USER_WRITE, lpa=lpa_b)
+        req.transaction_list = [tr_a, tr_b]
+
+        amu.translate_and_submit(req)
+
+        self.assertEqual(tsu.submitted, [tr_a, tr_b])
+        self.assertEqual(
+            (tr_a.address.channel, tr_a.address.chip, tr_a.address.die, tr_a.address.plane),
+            (0, 0, 0, 0),
+        )
+        self.assertEqual(
+            (tr_b.address.channel, tr_b.address.chip, tr_b.address.die, tr_b.address.plane),
+            (1, 0, 0, 0),
+        )
 
     def test_gmt_hit_write_sets_invalidation_target_at_submit_time(self):
         amu, bm, tsu = _make_amu_fixture()

@@ -118,6 +118,20 @@ class HIL:
             "status": status,
             "error_message": error_message,
         }
+        if status == REQUEST_STATUS_SUCCESS and req.type == RequestType.READ:
+            # MQSim first DMA-writes the read payload to host memory and then
+            # writes the completion queue entry.  Enqueue in that order on the
+            # same device-to-host PCIe direction so REQ_COMP becomes visible
+            # only after the payload transfer has completed.
+            read_data_msg = PCIe_link.PCIe_message(
+                type=MessageType.READ_RES_SEND_BACK,
+                payload={
+                    "req": req,
+                    "address": req.lha_start,
+                    "data": [INVALID_DATA] * req.size,
+                },
+            )
+            self.pcie_link.send(read_data_msg, self.host)
         comp_msg = PCIe_link.PCIe_message(type=MessageType.REQ_COMP, payload=payload)
         self.pcie_link.send(comp_msg, self.host)
 

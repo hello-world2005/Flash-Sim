@@ -98,7 +98,7 @@ def render_report(
         "- MQSim README 口径: `Enabled_Preconditioning=true` 启用内置 preconditioning；`Initial_Occupancy_Percentage` 是 preconditioning 期间填充的 logical pages 百分比。",
         "- 本次 MQSim 使用 built-in preconditioning 和对应 `Initial_Occupancy_Percentage`；Flash-Sim 使用 runtime `precondition_fill_ratio` 做同百分比 capacity-fill。",
         "- cache64 对齐口径: Flash-Sim 使用 `data_cache_capacity=65536`；MQSim 使用 `Data_Cache_Capacity=65536` 且 workload flow `Device_Level_Data_Caching_Mode=WRITE_CACHE`。容量/模式对齐，但两个模拟器的 cache/flush 语义不保证完全相同。",
-        "- Flash-Sim GC 对齐口径: 本脚本写入 `gc_exec_threshold=0.05`、`gc_victim_policy=d-choices`、`gc_d_choices=6`。`d=6` 来自 MQSim page-level RGA 对 `small64` 的 `log2(block_no_per_plane)`。",
+        "- Flash-Sim GC 对齐口径: 本脚本写入 `gc_exec_threshold=0.05`、`gc_victim_policy=d-choices`、`gc_d_choices=6`、`write_allocation_mode=dynamic-cwdp`、`static_wl_wear_gap_threshold=16`。`d=6` 来自 MQSim page-level RGA 对 `small64` 的 `log2(block_no_per_plane)`。",
         "- GC 次数对比要先看 MQSim `serviced/generated`；如果 MQSim 没有 drain 完整 trace，它的 GC 只覆盖已 serviced 的前缀负载，不能直接和 Flash-Sim 全 trace GC 相除比较。",
         "- MQSim XML 没有请求级 P10/P50/P70/P90；因此 MQSim 只汇报 XML 中的 min/avg/max 聚合延迟。",
         "",

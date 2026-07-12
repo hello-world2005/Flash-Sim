@@ -27,11 +27,11 @@ The repository SHALL expose a single default geometry baseline for direct `Flash
 
 #### Scenario: Runtime GC/write-path policy has stable defaults
 - **WHEN** a caller instantiates `FlashConfig()` without overrides
-- **THEN** the runtime config MUST expose `gc_low_watermark=3`, `stop_servicing_writes_threshold=1`, `gc_victim_policy="greedy"`, and `static_wl_wear_gap_threshold=2`
+- **THEN** the runtime config MUST expose `gc_low_watermark=3`, `stop_servicing_writes_threshold=1`, `gc_victim_policy="greedy"`, `static_wl_wear_gap_threshold=2`, and `write_allocation_mode="lpa-affine"`
 
 #### Scenario: Runtime config round-trip preserves policy knobs
 - **WHEN** a caller supplies runtime config values through `FlashConfig.from_dict(...)` and then serializes with `to_dict()`
-- **THEN** the serialized `runtime` object MUST preserve `gc_low_watermark`, `stop_servicing_writes_threshold`, `gc_victim_policy`, and `static_wl_wear_gap_threshold`
+- **THEN** the serialized `runtime` object MUST preserve `gc_low_watermark`, `stop_servicing_writes_threshold`, `gc_victim_policy`, `static_wl_wear_gap_threshold`, and `write_allocation_mode`
 
 #### Scenario: Unsupported GC victim policy fails explicitly
 - **WHEN** a caller configures `gc_victim_policy` to a value other than `"greedy"`
