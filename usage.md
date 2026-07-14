@@ -53,7 +53,7 @@ test_script/           # 测试脚本
 | 地址映射 | 简单 LBA→物理地址 | 完整 CMT/GTD/Block Manager |
 | 通道/芯片级并行 | 无 | 有（TSU + PHY） |
 | 适用场景 | 快速评估延迟、LBA 解析 | 完整 SSD 系统行为验证 |
-| 配置方式 | `-c config.json`（完整参数） | `-c config.json`（runtime 部分） + 环境变量（geometry） |
+| 配置方式 | `-c config.json`（完整参数） | `-c config.json`（runtime、ONFI、CIM 参数）+ 环境变量（结构 geometry） |
 
 ---
 
@@ -102,7 +102,8 @@ flash-sim run-engine trace.json \
   --no-viz                             # 不生成 HTML 可视化
 ```
 
-事件驱动引擎通过环境变量传递 geometry，在调用前设好：
+事件驱动引擎的 die/plane/block/SL/SSL 等结构 geometry 通过环境变量传递，
+需要在调用前设好：
 
 ```bash
 FLASHSIM_EVENT_RUNTIME_BLOCKS_PER_PLANE=256 \
@@ -183,6 +184,16 @@ total_pages = pages_per_die × dies
 | `static_chip_per_channel` | 1 | 用作 static area 的 chip 数 |
 | `compute_max_parallel_sl` | 256 | 计算操作最大并行 SL 数 |
 | `search_max_parallel_wl` | 256 | 搜索操作最大并行 WL 数 |
+| `wl_per_string` | 128 | 每条 NAND string 的 WL 数，也是 COMPUTE `selected_wl` 的上界 |
+| `bl_per_plane` | 262144 | 每 plane 的 BL 数 |
+| `search_input_bits_per_wl` | 1 | SEARCH keyword 在每条 WL 上的输入位数 |
+| `search_match_bits_per_bl` | 1 | SEARCH 每条 BL 返回的匹配位数 |
+| `compute_input_bits_per_sl` | 8 | COMPUTE 每个活动 SL/transaction 的输入位数 |
+| `compute_accumulator_bits` | 8 | COMPUTE 每条 BL 的 ADC/累加结果位数 |
+
+上表是 `FlashGeometry` 的公开默认值。事件引擎默认使用 compact 结构
+（4 die、4 plane/die、64 block/plane、2 SL/block、4 SSL/SL），但 CIM 位宽、
+WL/BL 数量和 `compute_max_parallel_sl` 可以从配置 JSON 的 `geometry` 段覆盖。
 
 ### 5.2 TimingConfig —— 时序参数
 
@@ -302,6 +313,12 @@ total_pages = pages_per_die × dies
     "sector_per_page": 16,
     "compute_max_parallel_sl": 256,
     "search_max_parallel_wl": 256,
+    "wl_per_string": 128,
+    "bl_per_plane": 262144,
+    "search_input_bits_per_wl": 1,
+    "search_match_bits_per_bl": 1,
+    "compute_input_bits_per_sl": 8,
+    "compute_accumulator_bits": 8,
     "static_chip_per_channel": 1
   },
   "runtime": {
@@ -322,7 +339,10 @@ total_pages = pages_per_die × dies
 }
 ```
 
-**注意**：事件驱动引擎的 geometry 不是从 JSON 读取的，而是通过环境变量。JSON 的 `geometry` 段仅在独立模拟器 (`flash-sim run`) 中使用。
+**注意**：事件驱动引擎不会用 JSON 中的 channel/chip/die/plane/block/SL/SSL
+数量重建存储数组，这些结构参数仍来自 `FLASHSIM_EVENT_RUNTIME_*` 环境变量。
+但是 JSON `geometry` 中的 CIM 参数（WL/BL 数量、输入/输出位宽和 COMPUTE
+并行上限）会传入 HIL、TSU 和 PHY；`onfi` 段也会传入事件引擎 PHY。
 
 ---
 
@@ -330,7 +350,9 @@ total_pages = pages_per_die × dies
 
 ### 7.1 事件驱动引擎
 
-在调用前设置 `FLASHSIM_EVENT_RUNTIME_*` 环境变量。这些变量在 `flash_sim/config.py:34-40` 定义，在 `flash_sim/common.py:110` 模块加载时生效。
+在调用前设置 `FLASHSIM_EVENT_RUNTIME_*` 环境变量。这些变量在
+`flash_sim/config.py` 中定义，并在 `flash_sim.common` 模块加载时生效。
+这一方式只负责结构 geometry；CIM 和 ONFI 参数仍通过 `-c config.json` 设置。
 
 ```bash
 # 修改为 256 blocks/plane 的 small64 变体
@@ -498,7 +520,8 @@ T_COMPUTE  = 500_000
 
 ### 8.3 ONFI 通道参数
 
-在 JSON 的 `onfi` 段设置（独立模拟器），或修改 `OnfiTimingConfig` 的默认值（`flash_sim/config.py:529-548`）：
+在 JSON 的 `onfi` 段设置。独立模拟器和事件驱动引擎都会读取这些参数；
+事件引擎会把它们传入 PHY 的 ONFI command/data-in/data-out 时序模型：
 
 ```json
 {
@@ -511,7 +534,7 @@ T_COMPUTE  = 500_000
 }
 ```
 
-事件驱动引擎在 `common.py:172` 创建 `DEFAULT_ONFI_TIMING = OnfiTimingConfig()`，使用全部默认值。
+未提供 `onfi` 段时，事件引擎使用 `OnfiTimingConfig` 的默认值。
 
 ---
 
@@ -537,9 +560,14 @@ T_COMPUTE  = 500_000
 [
   {"type": "write", "time": 0, "start_lha": 0, "size": 64},
   {"type": "read", "time": 1000000, "start_lha": 0, "size": 64},
-  {"type": "write", "time": 2000000, "start_lha": 1152, "size": 64}
+  {"type": "static_write", "time": 2000000, "start_lha": 12582912, "size": 8},
+  {"type": "search", "time": 3000000, "start_lha": 12582912, "size": 8},
+  {"type": "compute", "time": 4000000, "start_lha": 12582912, "size": 8, "selected_wl": 7}
 ]
 ```
+
+示例中的 `12582912` 是默认 compact event-runtime geometry 的 static-area
+起始 LHA。修改结构 geometry 后应以当前运行时的 `STATIC_BASE_LHA` 为准。
 
 | 字段 | 说明 |
 |------|------|
@@ -550,8 +578,68 @@ T_COMPUTE  = 500_000
 | `invalidate` | 可选，`1` 表示写时先作废 |
 | `stream_id` | 可选，流 ID（默认 0） |
 | `bitmap` | 可选，扇区级有效位图（search/compute） |
+| `wl_bitmap` | 可选，SEARCH/COMPUTE 输入位图 |
+| `data_address` / `data_size` | 可选，SEARCH/COMPUTE 输入数据地址和大小 |
+| `selected_wl` | COMPUTE 必填，整数且满足 `0 <= selected_wl < wl_per_string` |
 
-### 9.3 预条件 trace
+SEARCH、COMPUTE 和 STATIC_WRITE 必须完全位于 static area。一个 static LHA
+对应一个 `(block, SL, SSL)` 操作单元，所以 `size` 表示 SSL 粒度的 transaction
+数量；COMPUTE 不会把 `size` 重新解释成 SL 数。
+
+### 9.3 SEARCH / COMPUTE 时序模型
+
+事件引擎只模拟请求校验、wave 调度、固定 array delay 和 ONFI 传输，不计算
+实际匹配向量、GEMV 数值、模拟电流或 ADC code。
+
+每个 SEARCH die wave 使用一个 source request，每个 plane 最多选择一个 SSL。
+不同 die 可以选择不同 request。输入 keyword 只传一次，plane-local BL 匹配结果
+按 concat 计入输出量，而不是 OR：
+
+```text
+search_input_bytes = ceil(wl_per_string * search_input_bits_per_wl / 8)
+search_output_bytes = participating_plane_count
+                    * ceil(bl_per_plane * search_match_bits_per_bl / 8)
+```
+
+默认配置下，每个 SEARCH wave 输入 16 B，每个参与 plane 输出 32 KiB。
+
+每个 COMPUTE die wave 要求 source request 和 `selected_wl` 相同。每个 plane
+最多选择 `compute_max_parallel_sl` 个活动 SL，并且同一个 `(block, SL)` 中最多
+选择一个 SSL；同 block 的不同 SL 可以并行，不同 die 可以独立选择 request/WL：
+
+```text
+compute_input_bytes = ceil(active_transaction_count
+                         * compute_input_bits_per_sl / 8)
+compute_output_bytes = participating_plane_count
+                     * ceil(bl_per_plane * compute_accumulator_bits / 8)
+```
+
+默认 262,144 BL、8-bit ADC/累加结果时，每个参与 plane 的 COMPUTE 输出为
+256 KiB。超出一个 wave 容量或产生 SL/请求冲突的 transaction 会留在队列中；
+后续每个 wave 都会重新经历 command、data-in、固定 `T_SEARCH`/`T_COMPUTE`
+和 data-out。ONFI data-in/data-out 可以被更高优先级 command 抢占并按剩余时长恢复。
+
+可用下面的最小配置覆盖事件引擎 CIM/ONFI 参数：
+
+```json
+{
+  "onfi": {"channel_width_bytes": 16},
+  "geometry": {
+    "wl_per_string": 64,
+    "bl_per_plane": 131072,
+    "search_input_bits_per_wl": 2,
+    "search_match_bits_per_bl": 2,
+    "compute_input_bits_per_sl": 4,
+    "compute_accumulator_bits": 4,
+    "compute_max_parallel_sl": 32
+  }
+}
+```
+
+更完整的电路语义、并行规则和公式见 `docs/cim-cam.md`；可运行的并行 trace
+见 `test_case/cim_parallel/`。
+
+### 9.4 预条件 trace
 
 事件驱动引擎支持在正式 trace 前自动生成预条件写，自动填充一定比例的 LBA 范围。由 `RuntimeConfig.precondition_fill_ratio` 触发，生成逻辑见 `engine.py:101-248`（`_generate_precondition_from_trace`）。
 
@@ -687,13 +775,23 @@ for r in results:
 
 ## 12. 常见问题
 
-**Q: 事件引擎的 geometry 明明在 JSON 里写了，为什么没生效？**
+**Q: 事件引擎的 geometry 明明在 JSON 里写了，为什么结构大小没变？**
 
-A: 事件引擎的 geometry 来自 `FLASHSIM_EVENT_RUNTIME_*` 环境变量，配置 JSON 的 `geometry` 段只被独立模拟器读取。验证脚本中 geometry 通过 `flashsim_event_runtime_env(profile)` 转为环境变量传递给子进程。
+A: 事件引擎的结构 geometry 来自 `FLASHSIM_EVENT_RUNTIME_*` 环境变量。
+配置 JSON 中的 channel/chip/die/plane/block/SL/SSL 数量不会重建事件引擎数组；
+但 `wl_per_string`、`bl_per_plane`、SEARCH/COMPUTE 位宽和
+`compute_max_parallel_sl` 会生效。验证脚本中结构 geometry 通过
+`flashsim_event_runtime_env(profile)` 转为环境变量传递给子进程。
 
 **Q: 修改了 `config.py` 的默认值，为什么事件引擎的行为没变？**
 
 A: 事件引擎使用的全局 geometry 在 `common.py:110`（`geometry = make_event_runtime_geometry()`）在模块加载时创建。`make_event_runtime_geometry()` 读 `FLASHSIM_EVENT_RUNTIME_*` 环境变量，不关心 `DEFAULT_*` 常量——但这些常量的确是默认值来源。修改后需清除 Python 缓存或重启进程。
+
+**Q: COMPUTE trace 为什么报缺少 `selected_wl`？**
+
+A: 事件引擎的 COMPUTE 命令必须明确选择 WL。请加入整数
+`"selected_wl": N`，并确保 `0 <= N < wl_per_string`。该字段只保存在 source
+request 上，派生 transaction 通过 `source_req.selected_wl` 使用它。
 
 **Q: 怎么知道当前 geometry 有多少数据页？**
 

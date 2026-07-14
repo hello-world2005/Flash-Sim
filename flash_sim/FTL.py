@@ -1208,7 +1208,7 @@ class TSU:
     按 读 > 写 > 擦除 的优先级向 PHY 下发命令。
     """
 
-    def __init__(self):
+    def __init__(self, compute_max_parallel_sl: int = COMPUTE_MAX_PARALLEL_SL):
         if not QUIET:
             print("Initializing TSU...")
         self._construction_valid: bool = False
@@ -1252,6 +1252,7 @@ class TSU:
         self.round_robin_turn = [0] * self.channel_no
         self.phy : PHY
         self.cache_pressure_drain_mode = False
+        self.compute_max_parallel_sl = compute_max_parallel_sl
         self._pending_cache_pressure_writes = 0
         # Register channel/chip idle callbacks so PHY can trigger re-scheduling
         # self.phy.connect_channel_idle_signal(self._on_channel_idle)
@@ -1756,7 +1757,8 @@ class TSU:
         """按 die-plane 粒度选取 search transactions 并下发给 PHY。
 
         Search 地址最细粒度为 address[4]（sub_plane/操作单元），address[5] 恒为 0。
-        约束：每个 die 的每个 plane 中最多选中一个操作单元。
+        约束：每个 die wave 仅包含同一个 source request，且每个 plane 最多
+        选中一个 SSL 操作单元。不同 die 可独立选择各自的 source request。
         对每个 die，从队列中收集满足约束的 transactions 后立即发给 PHY，
         找到第一个有候选的 die 后返回 True。
         """
@@ -1770,6 +1772,19 @@ class TSU:
         dispatched = False
         for _step in range(die_no):
             die_id = (start_die + _step) % die_no
+            seed_req = None
+            for tr in q:
+                if tr.address.die != die_id:
+                    continue
+                if tr.rely_on_transactions or not tr.data_ready:
+                    continue
+                if self._transaction_blocked_by_barrier(tr):
+                    continue
+                seed_req = tr.source_req
+                break
+            if seed_req is None:
+                continue
+
             plane_vector = 0
             dispatch_slots: list = []
             selected_indices: list[int] = []
@@ -1789,12 +1804,13 @@ class TSU:
                     continue
                 if tr.address.die != die_id:
                     continue
+                if tr.source_req is not seed_req:
+                    continue
                 tr_plane = tr.address.plane
                 if plane_vector & (1 << tr_plane):
                     if not QUIET:
                         debug_info(f"[TSU] <issue_search_command> tr plane already selected, skipping {repr(tr)}")
                     continue
-                # surppose 
                 tr.SuspendRequired = False
                 plane_vector |= 1 << tr_plane
                 dispatch_slots.append(tr)
@@ -1814,11 +1830,23 @@ class TSU:
                 dispatched = True
         return dispatched
 
+    @staticmethod
+    def _decode_static_sub_plane(sub_plane: int) -> tuple[int, int, int]:
+        """Decode flattened static address into block, SL, and SSL indices."""
+        units_per_block = SL_PER_BLOCK * SSL_PER_SL
+        if sub_plane < 0 or units_per_block <= 0:
+            raise ValueError(f"Invalid static sub_plane address: {sub_plane}")
+        block_id, unit_in_block = divmod(sub_plane, units_per_block)
+        sl_id, ssl_id = divmod(unit_in_block, SSL_PER_SL)
+        return block_id, sl_id, ssl_id
+
     def issue_compute_command(self, chip_id, q: list) -> bool:
         """按 die-plane 粒度选取 compute transactions 并下发给 PHY。
 
         Compute 地址最细粒度为 address[4]（sub_plane/操作单元），address[5] 恒为 0。
-        约束：每个 plane 中选中的操作单元数量不超过 COMPUTE_MAX_PARALLEL_SL * SSL_PER_SL。
+        约束：每个 die wave 的 source request 与 selected WL 相同；每个 plane
+        最多激活 COMPUTE_MAX_PARALLEL_SL 个 SL，且每个 (block, SL) 最多选择
+        一个 SSL。不同 SL（包括同一 block 内的不同 SL）可以并行。
         对每个 die，收集满足约束的 transactions 后立即发给 PHY，
         找到第一个有候选的 die 后返回 True。
         """
@@ -1826,13 +1854,31 @@ class TSU:
             raise ValueError("Issued an empty compute transactions deque to PHY")
 
         die_no = DIE_PER_CHIP
-        max_per_plane = COMPUTE_MAX_PARALLEL_SL * SSL_PER_SL
+        max_per_plane = self.compute_max_parallel_sl
 
         start_die = q[0].address.die
         dispatched = False
         for _step in range(die_no):
             die_id = (start_die + _step) % die_no
+            seed_req = None
+            seed_wl = None
+            for tr in q:
+                if tr.address.die != die_id:
+                    continue
+                if tr.rely_on_transactions or not tr.data_ready:
+                    continue
+                if self._transaction_blocked_by_barrier(tr):
+                    continue
+                if tr.source_req is None:
+                    continue
+                seed_req = tr.source_req
+                seed_wl = tr.source_req.selected_wl
+                break
+            if seed_req is None:
+                continue
+
             plane_count: dict = {}
+            selected_sls: dict[int, set[tuple[int, int]]] = {}
             dispatch_slots: list = []
             selected_indices: list[int] = []
 
@@ -1851,12 +1897,24 @@ class TSU:
                     if not QUIET:
                         debug_info(f"[TSU] <issue_compute_command> tr blocked by barrier, skipping {repr(tr)}")
                     continue
+                if tr.source_req is not seed_req:
+                    continue
+                if tr.source_req.selected_wl != seed_wl:
+                    continue
                 tr_plane = tr.address.plane
                 count = plane_count.get(tr_plane, 0)
                 if count >= max_per_plane:
                     continue
+                block_id, sl_id, _ssl_id = self._decode_static_sub_plane(
+                    tr.address.sub_plane
+                )
+                plane_sls = selected_sls.setdefault(tr_plane, set())
+                sl_key = (block_id, sl_id)
+                if sl_key in plane_sls:
+                    continue
                 tr.SuspendRequired = False
                 plane_count[tr_plane] = count + 1
+                plane_sls.add(sl_key)
                 dispatch_slots.append(tr)
                 selected_indices.append(idx)
 
@@ -3353,14 +3411,14 @@ class FTL:
         if not QUIET:
             print("FTL construction validation complete.")
 
-    def __init__(self):
+    def __init__(self, compute_max_parallel_sl: int = COMPUTE_MAX_PARALLEL_SL):
         if not QUIET:
             print("Initializing FTL...")
         self._construction_valid: bool = False
         self.address_mapping_unit = Address_Mapping_Unit()
         self.gc_wl_unit = GC_WL_Unit()
         self.block_manager = Block_Manager()
-        self.tsu = TSU()
+        self.tsu = TSU(compute_max_parallel_sl=compute_max_parallel_sl)
         self.tsu.block_manager = self.block_manager
         self.block_manager.gc_wl_unit = self.gc_wl_unit
         self.gc_wl_unit.block_manager = self.block_manager

@@ -58,7 +58,7 @@ ENGINE_COMMAND_SCHEMA = {
         "optional": ["bitmap", "wl_bitmap", "stream_id", "data_address", "data_size"],
     },
     "compute": {
-        "required": ["time", "start_lha", "size"],
+        "required": ["time", "start_lha", "size", "selected_wl"],
         "optional": ["bitmap", "wl_bitmap", "stream_id", "data_address", "data_size"],
     },
 }
@@ -131,6 +131,10 @@ def validate_command(cmd: Dict[str, Any], mode: str = "auto") -> str:
     for field in schema["required"]:
         if field not in cmd:
             raise ValidationError(f"Missing required field '{field}' for {cmd_type} command")
+    if resolved_mode == "engine" and cmd_type == "compute":
+        selected_wl = cmd["selected_wl"]
+        if isinstance(selected_wl, bool) or not isinstance(selected_wl, int):
+            raise ValidationError("Field 'selected_wl' for compute command must be an integer")
     return resolved_mode
 
 

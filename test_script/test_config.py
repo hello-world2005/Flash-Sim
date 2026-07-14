@@ -145,6 +145,32 @@ class TestFlashGeometry:
         assert geo.pages_per_block == 512     # 128 * 4 = 512 (total pages per block)
         assert geo.pages_per_layer == 4       # sub_blocks_per_block = pages per layer
 
+    def test_default_cim_geometry_and_payload_widths(self):
+        geo = FlashGeometry()
+
+        assert geo.wl_per_string == 128
+        assert geo.bl_per_plane == 262_144
+        assert geo.search_input_bits_per_wl == 1
+        assert geo.search_match_bits_per_bl == 1
+        assert geo.compute_input_bits_per_sl == 8
+        assert geo.compute_accumulator_bits == 8
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "wl_per_string",
+            "bl_per_plane",
+            "search_input_bits_per_wl",
+            "search_match_bits_per_bl",
+            "compute_input_bits_per_sl",
+            "compute_accumulator_bits",
+        ],
+    )
+    @pytest.mark.parametrize("value", [0, -1])
+    def test_cim_geometry_and_payload_widths_must_be_positive(self, field, value):
+        with pytest.raises(ValueError, match=field):
+            FlashGeometry(**{field: value})
+
     def test_calculated_properties(self):
         """Calculated properties are correct."""
         geo = FlashGeometry(
@@ -408,6 +434,22 @@ class TestFlashConfig:
         """Empty dict produces default config."""
         config = FlashConfig.from_dict({})
         assert config == FlashConfig()
+
+    def test_cim_geometry_fields_round_trip(self):
+        geometry_values = {
+            "wl_per_string": 96,
+            "bl_per_plane": 131_072,
+            "search_input_bits_per_wl": 2,
+            "search_match_bits_per_bl": 3,
+            "compute_input_bits_per_sl": 4,
+            "compute_accumulator_bits": 12,
+        }
+
+        config = FlashConfig.from_dict({"geometry": geometry_values})
+
+        assert {
+            field: config.to_dict()["geometry"][field] for field in geometry_values
+        } == geometry_values
 
 
 class TestFlashGeometry3D:

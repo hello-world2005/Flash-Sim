@@ -19,6 +19,7 @@ from flash_sim.common import (
     STATIC_BASE_LHA,
     Transaction,
     TransactionType,
+    WL_PER_STRING,
 )
 from flash_sim.PCIe_link import PCIe_message
 
@@ -101,7 +102,7 @@ class TestRequestErrorHandling(unittest.TestCase):
 
     def test_hil_invalid_compute_request_returns_error_without_fetch_or_ftl_submit(self):
         hil, host, ftl = _make_hil()
-        req = Request(type=RequestType.COMPUTE, sq_id=0, lha_start=0, size=1)
+        req = Request(type=RequestType.COMPUTE, sq_id=0, lha_start=0, size=1, selected_wl=0)
 
         hil.receive_pcie_message(
             PCIe_message(type=MessageType.COMPUTE_REQ, payload={"req": req})
@@ -116,6 +117,40 @@ class TestRequestErrorHandling(unittest.TestCase):
         self.assertEqual(message.type, MessageType.REQ_COMP)
         self.assertEqual(message.payload["status"], REQUEST_STATUS_ERROR)
         self.assertIn("static area", message.payload["error_message"])
+
+    def test_hil_compute_request_requires_selected_wl_before_data_fetch(self):
+        hil, host, ftl = _make_hil()
+        req = Request(type=RequestType.COMPUTE, sq_id=0, lha_start=STATIC_BASE_LHA, size=1)
+
+        hil.receive_pcie_message(
+            PCIe_message(type=MessageType.COMPUTE_REQ, payload={"req": req})
+        )
+
+        self.assertEqual(req.status, REQUEST_STATUS_ERROR)
+        self.assertIn("selected_wl", req.error_message)
+        self.assertEqual(ftl.requests, [])
+        self.assertEqual(len(host.pcie_link.sent), 1)
+
+    def test_hil_compute_selected_wl_range_is_half_open(self):
+        hil, _, _ = _make_hil()
+        for selected_wl in (0, WL_PER_STRING - 1):
+            req = Request(
+                type=RequestType.COMPUTE,
+                lha_start=STATIC_BASE_LHA,
+                size=1,
+                selected_wl=selected_wl,
+            )
+            hil._validate_request_domain(req)
+
+        for selected_wl in (-1, WL_PER_STRING):
+            req = Request(
+                type=RequestType.COMPUTE,
+                lha_start=STATIC_BASE_LHA,
+                size=1,
+                selected_wl=selected_wl,
+            )
+            with self.assertRaisesRegex(RequestFailure, "selected_wl"):
+                hil._validate_request_domain(req)
 
     def test_hil_invalid_write_to_static_does_not_register_cache_entry(self):
         hil, host, _ = _make_hil()

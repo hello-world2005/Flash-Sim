@@ -1,6 +1,6 @@
 [
   { "type": "search",  "time": 0,   "start_lha": 12582912, "size": 4 },
-  { "type": "compute", "time": 100, "start_lha": 12583424, "size": 2 },
+  { "type": "compute", "time": 100, "start_lha": 12583424, "size": 2, "selected_wl": 0 },
   { "type": "search",  "time": 200, "start_lha": 12587008, "size": 2 },
-  { "type": "compute", "time": 300, "start_lha": 12591104, "size": 3 }
+  { "type": "compute", "time": 300, "start_lha": 12591104, "size": 3, "selected_wl": 1 }
 ]

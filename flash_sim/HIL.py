@@ -18,6 +18,7 @@ class HIL:
         device,
         cache_bypass: bool = False,
         data_cache_capacity: int | None = None,
+        wl_per_string: int = WL_PER_STRING,
     ):
         if not QUIET:
             print("Initializing HIL...")
@@ -26,6 +27,7 @@ class HIL:
         self.host = host
         self.device = device
         self.cache_bypass = cache_bypass
+        self.wl_per_string = wl_per_string
         num_queues = getattr(host, "num_of_queues", 8)
         self.input_streams = [Queue() for _ in range(num_queues)]
         self.cache_manager = Cache_Manager(self, data_cache_capacity=data_cache_capacity)
@@ -76,6 +78,14 @@ class HIL:
         )
 
     def _validate_request_domain(self, req: Request):
+        if req.type == RequestType.COMPUTE:
+            if isinstance(req.selected_wl, bool) or not isinstance(req.selected_wl, int):
+                raise RequestFailure("COMPUTE request requires integer selected_wl")
+            if not 0 <= req.selected_wl < self.wl_per_string:
+                raise RequestFailure(
+                    f"COMPUTE selected_wl must be in [0, {self.wl_per_string})"
+                )
+
         if req.type == RequestType.WRITE:
             if not self._range_is_random_access(req.lha_start, req.size):
                 raise RequestFailure(

@@ -152,12 +152,15 @@ def build_static_request_command(
 ) -> dict[str, int | str]:
     normalized_type = _validate_static_request_type(request_type)
     numeric_size = validate_scan_sizes([size])[0]
-    return {
+    command = {
         "type": normalized_type,
         "time": int(time_ns),
         "start_lha": static_start_lha_for_size(numeric_size, slot=slot),
         "size": numeric_size,
     }
+    if normalized_type == "compute":
+        command["selected_wl"] = 0
+    return command
 
 
 def plan_size_scan_traces(

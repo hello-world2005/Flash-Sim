@@ -162,6 +162,7 @@ class ChannelTransferTask:
     transactions: list
     total_duration: int
     op_kind: str
+    payload_bytes: int = 0
     remaining_duration: int = 0
     start_time: Optional[int] = None
     finish_time: Optional[int] = None
@@ -279,11 +280,41 @@ class PageData:
 class PHY():
     """Flash 物理层。接收 TSU 下发的命令（send_command_to_chip），通过仿真事件驱动 chip/channel 状态机，事务完成时通过回调通知 TSU 及上层。
     """
-    def __init__(self, onfi_timing: Optional[OnfiTimingConfig] = None):
+    def __init__(
+        self,
+        onfi_timing: Optional[OnfiTimingConfig] = None,
+        cim_geometry=None,
+    ):
         if not QUIET:
             print("Initializing PHY...")
         self._construction_valid: bool = False
         self.onfi_timing: OnfiTimingConfig = onfi_timing or DEFAULT_ONFI_TIMING
+        self.wl_per_string = (
+            cim_geometry.wl_per_string if cim_geometry is not None else WL_PER_STRING
+        )
+        self.bl_per_plane = (
+            cim_geometry.bl_per_plane if cim_geometry is not None else BL_PER_PLANE
+        )
+        self.search_input_bits_per_wl = (
+            cim_geometry.search_input_bits_per_wl
+            if cim_geometry is not None
+            else SEARCH_INPUT_BITS_PER_WL
+        )
+        self.search_match_bits_per_bl = (
+            cim_geometry.search_match_bits_per_bl
+            if cim_geometry is not None
+            else SEARCH_MATCH_BITS_PER_BL
+        )
+        self.compute_input_bits_per_sl = (
+            cim_geometry.compute_input_bits_per_sl
+            if cim_geometry is not None
+            else COMPUTE_INPUT_BITS_PER_SL
+        )
+        self.compute_accumulator_bits = (
+            cim_geometry.compute_accumulator_bits
+            if cim_geometry is not None
+            else COMPUTE_ACCUMULATOR_BITS
+        )
         self._channel_busy: List[bool] = [False] * CHANNEL_NO
         self._active_transfers: List[Optional[ChannelTransferTask]] = [None] * CHANNEL_NO
         self._pending_transfers: List[List[ChannelTransferTask]] = [[] for _ in range(CHANNEL_NO)]
@@ -382,8 +413,15 @@ class PHY():
         return self._transfer_sequence
 
     def _transfer_plane_count(self, transactions: list) -> int:
-        planes = {tr.address.plane for tr in transactions if tr.address is not None and tr.address.plane >= 0}
-        return _valid_plane_count(len(planes) or 1)
+        return _valid_plane_count(self._participating_plane_count(transactions))
+
+    def _participating_plane_count(self, transactions: list) -> int:
+        planes = {
+            tr.address.plane
+            for tr in transactions
+            if tr.address is not None and tr.address.plane >= 0
+        }
+        return len(planes) or 1
 
     def _transaction_payload_bytes(self, tr: Transaction) -> int:
         if tr.type in (TransactionType.MAPPING_READ, TransactionType.MAPPING_WRITE):
@@ -398,6 +436,35 @@ class PHY():
     def _transfer_payload_bytes(self, transactions: list) -> int:
         return sum(self._transaction_payload_bytes(tr) for tr in transactions)
 
+    @staticmethod
+    def _bits_to_bytes(bit_count: int) -> int:
+        return (bit_count + 7) // 8
+
+    def _data_in_payload_bytes(self, op_kind: str, transactions: list) -> int:
+        if op_kind == "search":
+            return self._bits_to_bytes(
+                self.wl_per_string * self.search_input_bits_per_wl
+            )
+        if op_kind == "compute":
+            return self._bits_to_bytes(
+                len(transactions) * self.compute_input_bits_per_sl
+            )
+        return self._transfer_payload_bytes(transactions)
+
+    def _data_out_payload_bytes(self, op_kind: str, transactions: list) -> int:
+        plane_count = self._participating_plane_count(transactions)
+        if op_kind == "search":
+            bytes_per_plane = self._bits_to_bytes(
+                self.bl_per_plane * self.search_match_bits_per_bl
+            )
+            return plane_count * bytes_per_plane
+        if op_kind == "compute":
+            bytes_per_plane = self._bits_to_bytes(
+                self.bl_per_plane * self.compute_accumulator_bits
+            )
+            return plane_count * bytes_per_plane
+        return self._transfer_payload_bytes(transactions)
+
     def _command_transfer_duration(self, op_kind: str, transactions: list) -> int:
         plane_count = self._transfer_plane_count(transactions)
         if op_kind == "read":
@@ -408,12 +475,22 @@ class PHY():
             return onfi_erase_command_duration(plane_count, self.onfi_timing)
         raise ValueError(f"Invalid operation type: {op_kind}")
 
-    def _data_in_transfer_duration(self, transactions: list) -> int:
-        return onfi_data_in_duration(self._transfer_payload_bytes(transactions), self.onfi_timing)
+    def _data_in_transfer_duration(
+        self, transactions: list, op_kind: Optional[str] = None
+    ) -> int:
+        if op_kind is None:
+            op_kind = _op_kind(transactions[0].type) if transactions else "write"
+        payload_bytes = self._data_in_payload_bytes(op_kind, transactions)
+        return onfi_data_in_duration(payload_bytes, self.onfi_timing)
 
-    def _data_out_transfer_duration(self, transactions: list) -> int:
+    def _data_out_transfer_duration(
+        self, transactions: list, op_kind: Optional[str] = None
+    ) -> int:
+        if op_kind is None:
+            op_kind = _op_kind(transactions[0].type) if transactions else "read"
+        payload_bytes = self._data_out_payload_bytes(op_kind, transactions)
         return onfi_data_out_duration(
-            self._transfer_payload_bytes(transactions),
+            payload_bytes,
             self._transfer_plane_count(transactions),
             self.onfi_timing,
         )
@@ -598,14 +675,16 @@ class PHY():
         *,
         defer_start: bool = True,
     ) -> ChannelTransferTask:
+        payload_bytes = self._data_in_payload_bytes(op_kind, transactions)
         task = ChannelTransferTask(
             kind=self._classify_data_in_transfer(transactions),
             channel_id=chip_id[0],
             chip_id=chip_id,
             die_id=die_id,
             transactions=transactions,
-            total_duration=self._data_in_transfer_duration(transactions),
+            total_duration=onfi_data_in_duration(payload_bytes, self.onfi_timing),
             op_kind=op_kind,
+            payload_bytes=payload_bytes,
         )
         return self._submit_channel_transfer(task, defer_start=defer_start)
 
@@ -618,14 +697,20 @@ class PHY():
         *,
         defer_start: bool = True,
     ) -> ChannelTransferTask:
+        payload_bytes = self._data_out_payload_bytes(cmd_type, transactions)
         task = ChannelTransferTask(
             kind=self._classify_data_out_transfer(cmd_type, transactions),
             channel_id=chip_id[0],
             chip_id=chip_id,
             die_id=die_id,
             transactions=transactions,
-            total_duration=self._data_out_transfer_duration(transactions),
+            total_duration=onfi_data_out_duration(
+                payload_bytes,
+                self._transfer_plane_count(transactions),
+                self.onfi_timing,
+            ),
             op_kind=cmd_type,
+            payload_bytes=payload_bytes,
         )
         return self._submit_channel_transfer(task, defer_start=defer_start)
 

@@ -45,7 +45,8 @@
     "type": "compute",
     "time": 55,
     "start_lha": 12584184,
-    "size": 1
+    "size": 1,
+    "selected_wl": 0
   },
   {
     "type": "write",
