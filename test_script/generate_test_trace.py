@@ -100,14 +100,18 @@ class PendingCommand:
     plane_key: PlaneKey | None = None
     lpa: int | None = None
     role: str = "generic"
+    selected_wl: int | None = None
 
     def to_trace_entry(self, time_ns: int) -> dict[str, Any]:
-        return {
+        entry = {
             "type": self.command_type,
             "time": time_ns,
             "start_lha": self.start_lha,
             "size": self.size,
         }
+        if self.command_type == "compute":
+            entry["selected_wl"] = self.selected_wl
+        return entry
 
 
 @dataclass(frozen=True)
@@ -397,6 +401,7 @@ def build_static_requests(
             start_lha=compute_start,
             size=compute_size,
             role="static-compute",
+            selected_wl=0,
         ),
     ]
 

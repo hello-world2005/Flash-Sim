@@ -168,6 +168,7 @@ def test_command_preempts_active_user_data_out_and_resumes_remaining_duration(mo
         (TransactionType.MAPPING_READ, "read", phy_module.ChannelTransferKind.MAPPING_DATA_OUT),
         (TransactionType.USER_READ, "read", phy_module.ChannelTransferKind.USER_DATA_OUT),
         (TransactionType.USER_SEARCH, "search", phy_module.ChannelTransferKind.STATIC_RESULT_DATA_OUT),
+        (TransactionType.USER_COMPUTE, "compute", phy_module.ChannelTransferKind.STATIC_RESULT_DATA_OUT),
         (TransactionType.GC_READ, "read", phy_module.ChannelTransferKind.GC_READ_DATA_OUT),
     ],
 )
@@ -223,6 +224,41 @@ def test_command_preempts_active_data_in_and_resumes_remaining_duration(monkeypa
     resumed_event = phy._active_transfers[0].completion_event
     assert resumed_event is not old_data_in_event
     assert resumed_event.time == state["now"] + remaining
+
+
+def test_command_preempts_compute_result_and_resumes_exact_remaining_duration(monkeypatch):
+    state, events = _install_event_hooks(monkeypatch)
+    phy = phy_module.PHY()
+    compute_req = Request(type=RequestType.COMPUTE, selected_wl=0)
+    transaction = _make_transaction(
+        TransactionType.USER_COMPUTE, chip=0, source_req=compute_req
+    )
+    task = phy._enqueue_data_out_transfer(
+        (0, 0), 0, "compute", [transaction], defer_start=False
+    )
+    original_event = events[-1]
+    original_duration = task.total_duration
+
+    state["now"] = 100
+    command = _make_transaction(TransactionType.USER_READ, chip=1)
+    phy.send_command_to_chip((0, 1), [command], False)
+
+    assert original_event.ignored is True
+    assert task.payload_bytes == 262_144
+    assert task.remaining_duration == original_duration - 100
+    assert phy._active_transfers[0].kind is phy_module.ChannelTransferKind.COMMAND
+
+    command_event = phy._active_transfers[0].completion_event
+    state["now"] = command_event.time
+    phy.execute(command_event)
+
+    resumed_event = phy._active_transfers[0].completion_event
+    assert resumed_event.time - state["now"] == original_duration - 100
+    state["now"] = resumed_event.time
+    phy.execute(resumed_event)
+
+    assert transaction.completed is True
+    assert task.payload_bytes == 262_144
 
 
 def test_active_command_is_not_preempted_by_another_command(monkeypatch):
@@ -321,3 +357,83 @@ def test_request_latency_report_splits_preempted_data_in_intervals(monkeypatch):
     assert data_in_intervals[0]["end"] <= command_intervals[0]["start"]
     assert command_intervals[0]["end"] <= data_in_intervals[1]["start"]
     assert sum(interval["end"] - interval["start"] for interval in data_in_intervals) == old_data_in_event.time
+
+
+def test_search_payload_has_one_wl_input_and_concat_output_per_plane():
+    phy = phy_module.PHY()
+    req = Request(type=RequestType.SEARCH)
+    transactions = [
+        _make_transaction(TransactionType.USER_SEARCH, source_req=req),
+        _make_transaction(TransactionType.USER_SEARCH, source_req=req),
+        _make_transaction(TransactionType.USER_SEARCH, source_req=req),
+    ]
+    transactions[1].address.plane = 1
+    transactions[2].address.plane = 1
+
+    assert phy._data_in_payload_bytes("search", transactions) == 16
+    assert phy._data_out_payload_bytes("search", transactions) == 65_536
+
+
+def test_compute_payload_has_one_input_per_transaction_and_adc_output_per_plane():
+    phy = phy_module.PHY()
+    req = Request(type=RequestType.COMPUTE, selected_wl=0)
+    transactions = [
+        _make_transaction(TransactionType.USER_COMPUTE, source_req=req),
+        _make_transaction(TransactionType.USER_COMPUTE, source_req=req),
+        _make_transaction(TransactionType.USER_COMPUTE, source_req=req),
+    ]
+    transactions[2].address.plane = 1
+
+    assert phy._data_in_payload_bytes("compute", transactions) == 3
+    assert phy._data_out_payload_bytes("compute", transactions) == 524_288
+
+
+def test_cim_payload_rounds_non_byte_aligned_configurations_up():
+    geometry = type(
+        "Geometry",
+        (),
+        {
+            "wl_per_string": 3,
+            "search_input_bits_per_wl": 3,
+            "bl_per_plane": 5,
+            "search_match_bits_per_bl": 3,
+            "compute_input_bits_per_sl": 3,
+            "compute_accumulator_bits": 5,
+        },
+    )()
+    phy = phy_module.PHY(cim_geometry=geometry)
+    req = Request(type=RequestType.COMPUTE, selected_wl=0)
+    transactions = [
+        _make_transaction(TransactionType.USER_COMPUTE, source_req=req)
+        for _ in range(3)
+    ]
+    assert phy._data_in_payload_bytes("search", transactions) == 2
+    assert phy._data_out_payload_bytes("search", transactions) == 2
+    assert phy._data_in_payload_bytes("compute", transactions) == 2
+    assert phy._data_out_payload_bytes("compute", transactions) == 4
+
+
+def test_channel_task_freezes_cim_payload_and_duration_when_wave_is_created(monkeypatch):
+    _install_event_hooks(monkeypatch)
+    phy = phy_module.PHY()
+    req = Request(type=RequestType.COMPUTE, selected_wl=0)
+    transaction = _make_transaction(TransactionType.USER_COMPUTE, source_req=req)
+
+    task = phy._enqueue_data_out_transfer(
+        (0, 0), 0, "compute", [transaction], defer_start=True
+    )
+    original_duration = task.total_duration
+    phy.compute_accumulator_bits = 4
+
+    assert task.payload_bytes == 262_144
+    assert task.total_duration == original_duration
+    assert phy._data_out_payload_bytes("compute", [transaction]) == 131_072
+
+
+def test_read_and_write_still_use_transaction_sector_payloads():
+    phy = phy_module.PHY()
+    read = _make_transaction(TransactionType.USER_READ)
+    write = _make_transaction(TransactionType.USER_WRITE)
+
+    assert phy._data_out_payload_bytes("read", [read]) == phy._transfer_payload_bytes([read])
+    assert phy._data_in_payload_bytes("write", [write]) == phy._transfer_payload_bytes([write])

@@ -115,13 +115,19 @@ PLANE_PER_DIE = geometry.planes_per_die
 BLOCK_PER_PLANE = geometry.blocks_per_plane
 SL_PER_BLOCK = geometry.sl_per_block
 SSL_PER_SL = geometry.ssl_per_sl
+WL_PER_STRING = geometry.wl_per_string
+BL_PER_PLANE = geometry.bl_per_plane
+SEARCH_INPUT_BITS_PER_WL = geometry.search_input_bits_per_wl
+SEARCH_MATCH_BITS_PER_BL = geometry.search_match_bits_per_bl
+COMPUTE_INPUT_BITS_PER_SL = geometry.compute_input_bits_per_sl
+COMPUTE_ACCUMULATOR_BITS = geometry.compute_accumulator_bits
 PAGE_PER_BLOCK = geometry.pages_per_block
 SECTOR_PER_PAGE = 64
 
-COMPUTE_MAX_PARALLEL_SL = 256
-SEARCH_MAX_PARALLEL_WL = 256
+COMPUTE_MAX_PARALLEL_SL = geometry.compute_max_parallel_sl
+SEARCH_MAX_PARALLEL_WL = geometry.search_max_parallel_wl
 PAGE_NO_PER_SEARCH_BANK = SEARCH_MAX_PARALLEL_WL
-PAGE_NO_PER_COMPUTE_BANK = COMPUTE_MAX_PARALLEL_SL * SSL_PER_SL
+PAGE_NO_PER_COMPUTE_BANK = COMPUTE_MAX_PARALLEL_SL
 COMPUTE_BANK_PER_PLANE = BLOCK_PER_PLANE * SL_PER_BLOCK // COMPUTE_MAX_PARALLEL_SL
 SEARCH_BANK_PER_PLANE = SSL_PER_SL * SL_PER_BLOCK * BLOCK_PER_PLANE
 
@@ -381,6 +387,7 @@ class Request:
     trace_time: Optional[int] = None
     report_req_id: Optional[str] = None
     report_origin_request_ids: list[str] = field(default_factory=list)
+    selected_wl: Optional[int] = None
     cache_registration_complete: bool = False
     cache_forced_bypass: bool = False
 

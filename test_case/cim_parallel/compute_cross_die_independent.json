@@ -1,0 +1,22 @@
+[
+  {
+    "type": "search",
+    "time": 0,
+    "start_lha": 12582919,
+    "size": 1
+  },
+  {
+    "type": "compute",
+    "time": 1000,
+    "start_lha": 12582912,
+    "size": 1,
+    "selected_wl": 3
+  },
+  {
+    "type": "compute",
+    "time": 1000,
+    "start_lha": 12584960,
+    "size": 1,
+    "selected_wl": 11
+  }
+]

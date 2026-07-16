@@ -28,6 +28,8 @@ def test_generate_trace_contains_all_primary_types_and_legal_domains():
         else:
             assert context.static_start_lha <= command["start_lha"] < context.static_end_lha
             assert command["start_lha"] + command["size"] <= context.static_end_lha
+        if command["type"] == "compute":
+            assert command["selected_wl"] == 0
 
 
 def test_generate_trace_reads_preconditioned_and_freshly_written_data():

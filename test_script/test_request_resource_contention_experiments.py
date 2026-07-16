@@ -65,6 +65,7 @@ def test_size_validation_and_static_single_request_trace_planning():
         "time": 0,
         "start_lha": STATIC_BASE_LHA,
         "size": 4,
+        "selected_wl": 0,
     }
     assert command["start_lha"] + command["size"] <= exp.static_region_end_exclusive()
 

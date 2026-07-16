@@ -38,6 +38,12 @@ DEFAULT_SUB_BLOCKS_PER_BLOCK = DEFAULT_SL_PER_BLOCK * DEFAULT_SSL_PER_SL
 DEFAULT_SECTOR_PER_PAGE = 16
 DEFAULT_COMPUTE_MAX_PARALLEL_SL = 256
 DEFAULT_SEARCH_MAX_PARALLEL_WL = 256
+DEFAULT_WL_PER_STRING = 128
+DEFAULT_BL_PER_PLANE = 262144
+DEFAULT_SEARCH_INPUT_BITS_PER_WL = 1
+DEFAULT_SEARCH_MATCH_BITS_PER_BL = 1
+DEFAULT_COMPUTE_INPUT_BITS_PER_SL = 8
+DEFAULT_COMPUTE_ACCUMULATOR_BITS = 8
 DEFAULT_STATIC_CHIP_PER_CHANNEL = 1
 DEFAULT_DATA_CACHE_CAPACITY = 262144
 
@@ -71,6 +77,12 @@ def make_event_runtime_geometry(**overrides) -> "FlashGeometry":
         "sector_per_page": DEFAULT_SECTOR_PER_PAGE,
         "compute_max_parallel_sl": DEFAULT_COMPUTE_MAX_PARALLEL_SL,
         "search_max_parallel_wl": DEFAULT_SEARCH_MAX_PARALLEL_WL,
+        "wl_per_string": DEFAULT_WL_PER_STRING,
+        "bl_per_plane": DEFAULT_BL_PER_PLANE,
+        "search_input_bits_per_wl": DEFAULT_SEARCH_INPUT_BITS_PER_WL,
+        "search_match_bits_per_bl": DEFAULT_SEARCH_MATCH_BITS_PER_BL,
+        "compute_input_bits_per_sl": DEFAULT_COMPUTE_INPUT_BITS_PER_SL,
+        "compute_accumulator_bits": DEFAULT_COMPUTE_ACCUMULATOR_BITS,
         "static_chip_per_channel": DEFAULT_STATIC_CHIP_PER_CHANNEL,
         "valid_invalid_ratio": EVENT_RUNTIME_VALID_INVALID_RATIO,
         "preconditioning_cmt_ratio": EVENT_RUNTIME_PRECONDITIONING_CMT_RATIO,
@@ -200,6 +212,12 @@ class FlashGeometry:
     # ----- Search / compute parallelism -----
     compute_max_parallel_sl: int = DEFAULT_COMPUTE_MAX_PARALLEL_SL
     search_max_parallel_wl: int = DEFAULT_SEARCH_MAX_PARALLEL_WL
+    wl_per_string: int = DEFAULT_WL_PER_STRING
+    bl_per_plane: int = DEFAULT_BL_PER_PLANE
+    search_input_bits_per_wl: int = DEFAULT_SEARCH_INPUT_BITS_PER_WL
+    search_match_bits_per_bl: int = DEFAULT_SEARCH_MATCH_BITS_PER_BL
+    compute_input_bits_per_sl: int = DEFAULT_COMPUTE_INPUT_BITS_PER_SL
+    compute_accumulator_bits: int = DEFAULT_COMPUTE_ACCUMULATOR_BITS
     static_chip_per_channel: int = DEFAULT_STATIC_CHIP_PER_CHANNEL
     
     # ----- Preconditioning 参数 -----
@@ -224,6 +242,16 @@ class FlashGeometry:
             raise ValueError("chip_per_channel must be positive")
         if self.sector_per_page <= 0:
             raise ValueError("sector_per_page must be positive")
+        for name in (
+            "wl_per_string",
+            "bl_per_plane",
+            "search_input_bits_per_wl",
+            "search_match_bits_per_bl",
+            "compute_input_bits_per_sl",
+            "compute_accumulator_bits",
+        ):
+            if getattr(self, name) <= 0:
+                raise ValueError(f"{name} must be positive")
         if not (0.0 <= self.preconditioning_cmt_ratio <= 1.0):
             raise ValueError("preconditioning_cmt_ratio must be between 0.0 and 1.0")
 
@@ -308,8 +336,8 @@ class FlashGeometry:
 
     @property
     def page_no_per_compute_bank(self) -> int:
-        """Compute bank 内并行页数（= compute_max_parallel_sl * ssl_per_sl）。"""
-        return self.compute_max_parallel_sl * self.ssl_per_sl
+        """Compute bank 内并行操作数（每个 active SL 最多选择一个 SSL）。"""
+        return self.compute_max_parallel_sl
 
     @property
     def compute_bank_per_plane(self) -> int:
@@ -810,6 +838,20 @@ class FlashConfig:
             search_max_parallel_wl=geometry_dict.get(
                 "search_max_parallel_wl", DEFAULT_SEARCH_MAX_PARALLEL_WL
             ),
+            wl_per_string=geometry_dict.get("wl_per_string", DEFAULT_WL_PER_STRING),
+            bl_per_plane=geometry_dict.get("bl_per_plane", DEFAULT_BL_PER_PLANE),
+            search_input_bits_per_wl=geometry_dict.get(
+                "search_input_bits_per_wl", DEFAULT_SEARCH_INPUT_BITS_PER_WL
+            ),
+            search_match_bits_per_bl=geometry_dict.get(
+                "search_match_bits_per_bl", DEFAULT_SEARCH_MATCH_BITS_PER_BL
+            ),
+            compute_input_bits_per_sl=geometry_dict.get(
+                "compute_input_bits_per_sl", DEFAULT_COMPUTE_INPUT_BITS_PER_SL
+            ),
+            compute_accumulator_bits=geometry_dict.get(
+                "compute_accumulator_bits", DEFAULT_COMPUTE_ACCUMULATOR_BITS
+            ),
             static_chip_per_channel=geometry_dict.get(
                 "static_chip_per_channel", DEFAULT_STATIC_CHIP_PER_CHANNEL
             ),
@@ -911,6 +953,12 @@ class FlashConfig:
                 "sector_per_page": self.geometry.sector_per_page,
                 "compute_max_parallel_sl": self.geometry.compute_max_parallel_sl,
                 "search_max_parallel_wl": self.geometry.search_max_parallel_wl,
+                "wl_per_string": self.geometry.wl_per_string,
+                "bl_per_plane": self.geometry.bl_per_plane,
+                "search_input_bits_per_wl": self.geometry.search_input_bits_per_wl,
+                "search_match_bits_per_bl": self.geometry.search_match_bits_per_bl,
+                "compute_input_bits_per_sl": self.geometry.compute_input_bits_per_sl,
+                "compute_accumulator_bits": self.geometry.compute_accumulator_bits,
                 "static_chip_per_channel": self.geometry.static_chip_per_channel,
             },
             "runtime": {

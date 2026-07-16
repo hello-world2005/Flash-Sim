@@ -272,6 +272,8 @@ class Engine:
             self.host,
             cache_bypass=self.config.runtime.cache_bypass,
             data_cache_capacity=self.config.runtime.data_cache_capacity,
+            onfi_timing=self.config.onfi,
+            cim_geometry=self.config.geometry,
         )
         self.device.ftl.apply_runtime_config(self.config.runtime)
         self.pcie_link = PCIe_link.PCIe_link(self.host, self.device)
@@ -430,6 +432,7 @@ class Engine:
                 size=cmd["size"],
                 trace_index=trace_index,
                 trace_time=scheduled_time,
+                selected_wl=cmd.get("selected_wl"),
                 report_req_id=f"req-{trace_index:04d}-{cmd['type']}-{cmd['start_lha']}-{cmd['size']}",
             )
             if cmd.get("invalidate") == 1:

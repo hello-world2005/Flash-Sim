@@ -58,6 +58,35 @@ def _completion_path_sum(csv_row):
 
 
 class TestRequestLatencyReportEndToEnd(unittest.TestCase):
+    def test_compute_same_sl_ssls_complete_in_sequential_waves(self):
+        trace_content = [
+            {
+                "type": "compute",
+                "time": 0,
+                "start_lha": 12_582_912,
+                "size": 2,
+                "selected_wl": 17,
+            }
+        ]
+
+        report, csv_rows, output = _run_engine_and_load_report(
+            trace_content, "compute_same_sl_wave_trace.json"
+        )
+
+        self.assertNotIn("Traceback", output)
+        self.assertEqual(report["meta"]["request_count"], 1)
+        self.assertEqual(len(csv_rows), 1)
+        req = report["requests"][0]
+        self.assertEqual(req["type"], "COMPUTE")
+        self.assertEqual(req["status"], "SUCCESS")
+        array_intervals = sorted(
+            req["intervals"]["phy_array_exec"], key=lambda interval: interval["start"]
+        )
+        self.assertEqual(len(array_intervals), 2)
+        self.assertLessEqual(array_intervals[0]["end"], array_intervals[1]["start"])
+        self.assertGreater(req["breakdown"]["phy_data_in"], 0)
+        self.assertGreater(req["breakdown"]["phy_data_out"], 0)
+
     def test_preconditioned_read_exports_additive_completion_path(self):
         trace_content = json.loads((TEST_CASE_DIR / "test_read.json").read_text(encoding="utf-8"))
         report, csv_rows, output = _run_engine_and_load_report(trace_content, "single_read_trace.json")

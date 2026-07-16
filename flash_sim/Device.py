@@ -4,7 +4,7 @@
 from .HIL import HIL
 from .FTL import FTL
 from .PHY import PHY
-from .common import QUIET
+from .common import COMPUTE_MAX_PARALLEL_SL, QUIET, WL_PER_STRING
 
 class Device:
     def __init__(
@@ -12,6 +12,8 @@ class Device:
         host,
         cache_bypass: bool = False,
         data_cache_capacity: int | None = None,
+        onfi_timing=None,
+        cim_geometry=None,
     ):
         self._construction_valid: bool = False
         self.host = host
@@ -21,9 +23,18 @@ class Device:
             device=self,
             cache_bypass=cache_bypass,
             data_cache_capacity=data_cache_capacity,
+            wl_per_string=(
+                cim_geometry.wl_per_string if cim_geometry is not None else WL_PER_STRING
+            ),
         )
-        self.ftl = FTL()
-        self.phy = PHY()
+        self.ftl = FTL(
+            compute_max_parallel_sl=(
+                cim_geometry.compute_max_parallel_sl
+                if cim_geometry is not None
+                else COMPUTE_MAX_PARALLEL_SL
+            )
+        )
+        self.phy = PHY(onfi_timing=onfi_timing, cim_geometry=cim_geometry)
         self.hil.ftl = self.ftl
         self.ftl.block_manager.cache_manager = self.hil.cache_manager
         self.ftl.tsu.phy = self.phy
