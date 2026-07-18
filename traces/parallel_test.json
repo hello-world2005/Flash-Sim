@@ -1,4 +1,0 @@
-[
-  {"type": "write", "time": 0,      "start_lha": 0,    "size": 64},
-  {"type": "write", "time": 200000, "start_lha": 64,   "size": 192}
-]
