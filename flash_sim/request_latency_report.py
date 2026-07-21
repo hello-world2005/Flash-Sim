@@ -29,11 +29,24 @@ BASE_STAGE_NAMES = (
     "pcie_device_to_host",
     "amu_mapping_wait",
     "tsu_queue_wait",
+    "phy_channel_wait",
     "phy_cmd_addr",
     "phy_data_in",
     "phy_array_exec",
     "phy_data_out",
 )
+
+# Diagnostic children of the legacy enqueue-to-delivery PCIe stages.  They
+# are exported but excluded from reconciliation to avoid double counting the
+# same PCIe interval together with its parent stage.
+PCIE_DETAIL_STAGE_NAMES = (
+    "pcie_host_to_device_queue_wait",
+    "pcie_device_to_host_queue_wait",
+    "pcie_host_to_device_wire",
+    "pcie_device_to_host_wire",
+)
+
+ALL_INTERVAL_STAGE_NAMES = BASE_STAGE_NAMES + PCIE_DETAIL_STAGE_NAMES
 
 RECONCILIATION_STAGE_NAMES = ("overlap_latency", "untracked_latency")
 
@@ -41,15 +54,24 @@ CSV_COLUMN_NAMES = (
     "Issue Time",
     "REQ Type",
     "Finish Time",
+    # Host/controller-side processing and waiting
     "Time in SQ",
-    "PCIe Xfer",
     "Cache Hit",
     "Mapping",
     "Time in TSU",
-    "ONFI Xfer",
-    "Array Exec",
-    "PCIe Xfer (CQ)",
+    "Backpressure Wait Time",
+    # PCIe aggregate and raw queue/service details
+    "PCIe Xfer",
+    "PCIe Queue (Host)",
+    "PCIe Queue (Device)",
+    "PCIe Wire",
     "PCIe Xfer (Data)",
+    "PCIe Xfer (CQ)",
+    # NAND/ONFI timing
+    "ONFI Xfer",
+    "ONFI Service",
+    "Array Exec",
+    # Energy, status, and maintenance statistics
     "Energy for req (μJ)",
     "Energy for persistant storage (μJ)",
     "Status",
@@ -57,7 +79,6 @@ CSV_COLUMN_NAMES = (
     "GC Relocated Pages",
     "GC Erased Blocks",
     "Write Amplification",
-    "Backpressure Wait Time",
 )
 
 RESPONSE_DATA_MESSAGE_TYPES = {
@@ -68,6 +89,11 @@ RESPONSE_DATA_MESSAGE_TYPES = {
 
 STATUS_MESSAGE_TYPES = {MessageType.REQ_COMP.value}
 REQUEST_SIDE_DEVICE_TO_HOST_MESSAGE_TYPES = {
+    MessageType.READ_REQ.value,
+    MessageType.WRITE_REQ.value,
+    MessageType.SEARCH_REQ.value,
+    MessageType.COMPUTE_REQ.value,
+    MessageType.STATIC_WRITE_REQ.value,
     MessageType.WRITE_DATA_REQ.value,
     MessageType.SEARCH_DATA_REQ.value,
     MessageType.COMPUTE_DATA_REQ.value,
@@ -101,7 +127,7 @@ def _empty_mapping_resolution_counts() -> dict[str, int]:
 
 
 def _zero_breakdown() -> dict[str, int]:
-    data = {stage: 0 for stage in BASE_STAGE_NAMES}
+    data = {stage: 0 for stage in ALL_INTERVAL_STAGE_NAMES}
     data.update({stage: 0 for stage in RECONCILIATION_STAGE_NAMES})
     return data
 
@@ -141,10 +167,10 @@ class RequestLatencyState:
     status: Optional[str] = None
     error_message: Optional[str] = None
     intervals: dict[str, list[dict[str, Any]]] = field(
-        default_factory=lambda: {stage: [] for stage in BASE_STAGE_NAMES}
+        default_factory=lambda: {stage: [] for stage in ALL_INTERVAL_STAGE_NAMES}
     )
     persistence_intervals: dict[str, list[dict[str, Any]]] = field(
-        default_factory=lambda: {stage: [] for stage in BASE_STAGE_NAMES}
+        default_factory=lambda: {stage: [] for stage in ALL_INTERVAL_STAGE_NAMES}
     )
     persistence_status: str = "not_applicable"
     persistence_completion_time: Optional[int] = None
@@ -163,7 +189,6 @@ class RequestLatencyRecorder:
         self._pcie_messages: dict[int, dict[str, Any]] = {}
         self._mapping_waits: dict[tuple[str, str], int] = {}
         self._tsu_enqueue_times: dict[int, int] = {}
-        self._tsu_dispatched: set[int] = set()
         self._backpressure_enqueue_times: dict[int, int] = {}
         self.maintenance_stats: dict[str, Any] = {
             "gc_count": 0,
@@ -244,15 +269,34 @@ class RequestLatencyRecorder:
             "direction": direction,
             "message_type": getattr(getattr(message, "type", None), "value", str(getattr(message, "type", ""))),
             "start": timestamp,
+            "transfer_start": None,
             "transfer_bytes": transfer_bytes,
             "request_ids": request_ids,
+            "pcie_phase": getattr(message, "_nvme_command_phase", None),
         }
+
+    def note_pcie_transfer_started(self, message: Any, timestamp: int) -> None:
+        info = self._pcie_messages.get(id(message))
+        if info is not None:
+            info["transfer_start"] = timestamp
 
     def note_pcie_delivered(self, message: Any, timestamp: int) -> None:
         info = self._pcie_messages.pop(id(message), None)
         if info is None:
             return
         stage = "pcie_host_to_device" if info["direction"] == "host_to_device" else "pcie_device_to_host"
+        queue_stage = f"{stage}_queue_wait"
+        wire_stage = f"{stage}_wire"
+        transfer_start = info["transfer_start"]
+        if transfer_start is None:
+            transfer_start = info["start"]
+        metadata = {
+            "source": "pcie",
+            "direction": info["direction"],
+            "message_type": info["message_type"],
+            "transfer_bytes": info["transfer_bytes"],
+            "pcie_phase": info["pcie_phase"],
+        }
         for req_id in info["request_ids"]:
             rec = self.requests.get(req_id)
             if rec is None:
@@ -263,12 +307,23 @@ class RequestLatencyRecorder:
                 stage,
                 info["start"],
                 timestamp,
-                {
-                    "source": "pcie",
-                    "direction": info["direction"],
-                    "message_type": info["message_type"],
-                    "transfer_bytes": info["transfer_bytes"],
-                },
+                metadata,
+            )
+            self._append_interval(
+                rec,
+                "intervals",
+                queue_stage,
+                info["start"],
+                transfer_start,
+                metadata,
+            )
+            self._append_interval(
+                rec,
+                "intervals",
+                wire_stage,
+                transfer_start,
+                timestamp,
+                metadata,
             )
 
     def note_mapping_wait_start(self, req: Optional[Request], wait_key: str, timestamp: int) -> None:
@@ -337,10 +392,10 @@ class RequestLatencyRecorder:
 
     def note_tsu_dispatched(self, tr: Transaction, timestamp: int) -> None:
         txn_id = id(tr)
-        if txn_id in self._tsu_dispatched:
-            return
-        self._tsu_dispatched.add(txn_id)
-        start = self._tsu_enqueue_times.get(txn_id)
+        # Consume the matching enqueue timestamp.  Keeping dispatched object
+        # ids forever lets Python reuse an old id for a later transaction and
+        # incorrectly suppresses that later transaction's TSU interval.
+        start = self._tsu_enqueue_times.pop(txn_id, None)
         if start is None or timestamp <= start:
             return
         request_ids, scope = self._request_ids_from_transaction(tr)
@@ -383,6 +438,30 @@ class RequestLatencyRecorder:
                     finish_time,
                     {"source": "phy", "transaction_type": tr.type.value, "op_kind": op_kind},
                 )
+
+    def note_phy_channel_wait(
+        self,
+        transactions: list[Transaction],
+        op_kind: str,
+        transfer_kind: str,
+        start_time: int,
+        finish_time: int,
+    ) -> None:
+        if finish_time <= start_time:
+            return
+        for tr in transactions:
+            self._record_transaction_interval(
+                tr,
+                "phy_channel_wait",
+                start_time,
+                finish_time,
+                {
+                    "source": "phy",
+                    "transaction_type": tr.type.value,
+                    "op_kind": op_kind,
+                    "transfer_kind": transfer_kind,
+                },
+            )
 
     def note_phy_array_phase(
         self,
@@ -624,7 +703,7 @@ class RequestLatencyRecorder:
                 "trace_name": self.trace_path.name if self.trace_path is not None else None,
                 "final_time": int(self.engine.current_time if self.engine is not None else 0),
                 "request_count": len(requests_payload),
-                "stage_names": list(BASE_STAGE_NAMES),
+                "stage_names": list(ALL_INTERVAL_STAGE_NAMES),
                 "maintenance": self._maintenance_summary(),
             },
             "requests": requests_payload,
@@ -642,26 +721,30 @@ class RequestLatencyRecorder:
         for rec in self._iter_sorted_requests():
             rows.append(
                 {
-                    CSV_COLUMN_NAMES[0]: self._csv_value(self._issue_time(rec)),
-                    CSV_COLUMN_NAMES[1]: rec.req_type,
-                    CSV_COLUMN_NAMES[2]: self._csv_value(rec.host_completion_time),
-                    CSV_COLUMN_NAMES[3]: self._host_wait_time(rec),
-                    CSV_COLUMN_NAMES[4]: self._pcie_request_send_time(rec),
-                    CSV_COLUMN_NAMES[5]: self._csv_cache_hit_value(rec),
-                    CSV_COLUMN_NAMES[6]: self._mapping_time(rec),
-                    CSV_COLUMN_NAMES[7]: self._user_tsu_wait_time(rec),
-                    CSV_COLUMN_NAMES[8]: self._user_phy_transfer_time(rec),
-                    CSV_COLUMN_NAMES[9]: self._user_phy_array_time(rec),
-                    CSV_COLUMN_NAMES[10]: self._pcie_status_return_time(rec),
-                    CSV_COLUMN_NAMES[11]: self._pcie_data_return_time(rec),
-                    CSV_COLUMN_NAMES[12]: self._csv_energy_value(rec.energy_uj),
-                    CSV_COLUMN_NAMES[13]: self._csv_energy_value(rec.persistence_energy_uj),
-                    CSV_COLUMN_NAMES[14]: rec.status or "",
-                    CSV_COLUMN_NAMES[15]: self.maintenance_stats["gc_count"],
-                    CSV_COLUMN_NAMES[16]: self.maintenance_stats["gc_relocated_pages"],
-                    CSV_COLUMN_NAMES[17]: self.maintenance_stats["gc_erased_blocks"],
-                    CSV_COLUMN_NAMES[18]: self._csv_write_amplification_value(),
-                    CSV_COLUMN_NAMES[19]: self.maintenance_stats["backpressure_wait_time"],
+                    "Issue Time": self._csv_value(self._issue_time(rec)),
+                    "REQ Type": rec.req_type,
+                    "Finish Time": self._csv_value(rec.host_completion_time),
+                    "Time in SQ": self._host_wait_time(rec),
+                    "Cache Hit": self._csv_cache_hit_value(rec),
+                    "Mapping": self._mapping_time(rec),
+                    "Time in TSU": self._user_tsu_wait_time(rec),
+                    "Backpressure Wait Time": self.maintenance_stats["backpressure_wait_time"],
+                    "PCIe Xfer": self._pcie_request_send_time(rec),
+                    "PCIe Queue (Host)": self._pcie_queue_time(rec, "host_to_device"),
+                    "PCIe Queue (Device)": self._pcie_queue_time(rec, "device_to_host"),
+                    "PCIe Wire": self._pcie_wire_time(rec),
+                    "PCIe Xfer (Data)": self._pcie_data_return_time(rec),
+                    "PCIe Xfer (CQ)": self._pcie_status_return_time(rec),
+                    "ONFI Xfer": self._user_phy_transfer_time(rec),
+                    "ONFI Service": self._user_phy_service_time(rec),
+                    "Array Exec": self._user_phy_array_time(rec),
+                    "Energy for req (μJ)": self._csv_energy_value(rec.energy_uj),
+                    "Energy for persistant storage (μJ)": self._csv_energy_value(rec.persistence_energy_uj),
+                    "Status": rec.status or "",
+                    "GC Count": self.maintenance_stats["gc_count"],
+                    "GC Relocated Pages": self.maintenance_stats["gc_relocated_pages"],
+                    "GC Erased Blocks": self.maintenance_stats["gc_erased_blocks"],
+                    "Write Amplification": self._csv_write_amplification_value(),
                 }
             )
         return rows
@@ -782,10 +865,11 @@ class RequestLatencyRecorder:
     ) -> dict[str, int]:
         summary = _zero_breakdown()
         all_intervals: list[tuple[int, int]] = []
-        for stage in BASE_STAGE_NAMES:
+        for stage in ALL_INTERVAL_STAGE_NAMES:
             raw_intervals = [(item["start"], item["end"]) for item in interval_map.get(stage, [])]
             summary[stage] = _merged_duration(raw_intervals)
-            all_intervals.extend(raw_intervals)
+            if stage in BASE_STAGE_NAMES:
+                all_intervals.extend(raw_intervals)
         union_duration = _merged_duration(all_intervals)
         base_sum = sum(summary[stage] for stage in BASE_STAGE_NAMES)
         summary["overlap_latency"] = max(0, base_sum - union_duration)
@@ -810,21 +894,11 @@ class RequestLatencyRecorder:
         )
 
     def _pcie_request_send_time(self, rec: RequestLatencyState) -> int:
-        issue_time = self._issue_time(rec)
-        if issue_time is None or rec.host_completion_time is None:
-            return self._raw_request_side_pcie_time(rec)
-
-        request_send_time = (
-            rec.host_completion_time
-            - issue_time
-            - self._host_wait_time(rec)
-            - self._mapping_time(rec)
-            - self._user_tsu_wait_time(rec)
-            - self._user_phy_transfer_time(rec)
-            - self._user_phy_array_time(rec)
-            - self._pcie_status_return_time(rec)
-        )
-        return max(0, request_send_time)
+        # Report the measured request-side PCIe interval directly.  Deriving
+        # this field as the residual of end-to-end latency makes unrelated,
+        # untracked controller/channel gaps appear as PCIe time when stages
+        # overlap or contend.
+        return self._raw_request_side_pcie_time(rec)
 
     def _mapping_time(self, rec: RequestLatencyState) -> int:
         mapping_end = self._mapping_phase_end(rec)
@@ -833,28 +907,35 @@ class RequestLatencyRecorder:
         return max(0, mapping_end - self._request_side_pcie_end(rec))
 
     def _user_tsu_wait_time(self, rec: RequestLatencyState) -> int:
-        first_command_start = self._first_user_command_start(rec)
-        if first_command_start is None:
-            return 0
-        submit_time = self._first_user_submit_time(rec, first_command_start)
-        effective_start = max(
-            submit_time,
-            self._request_side_pcie_end(rec),
-            self._mapping_phase_end(rec) or 0,
+        return self._transaction_stage_duration(
+            rec.intervals["tsu_queue_wait"],
+            HOST_VISIBLE_TRANSACTION_TYPES,
         )
-        return max(0, first_command_start - effective_start)
 
     def _user_phy_transfer_time(self, rec: RequestLatencyState) -> int:
-        return self._transaction_stage_duration(
-            rec.intervals["phy_cmd_addr"],
-            HOST_VISIBLE_TRANSACTION_TYPES,
-        ) + self._transaction_stage_duration(
-            rec.intervals["phy_data_in"],
-            HOST_VISIBLE_TRANSACTION_TYPES,
-        ) + self._transaction_stage_duration(
-            rec.intervals["phy_data_out"],
-            HOST_VISIBLE_TRANSACTION_TYPES,
-        )
+        intervals = []
+        for stage in (
+            "phy_channel_wait",
+            "phy_cmd_addr",
+            "phy_data_in",
+            "phy_data_out",
+        ):
+            intervals.extend(
+                interval
+                for interval in rec.intervals[stage]
+                if interval.get("transaction_type") in HOST_VISIBLE_TRANSACTION_TYPES
+            )
+        return self._merged_stage_durations(intervals)
+
+    def _user_phy_service_time(self, rec: RequestLatencyState) -> int:
+        intervals = []
+        for stage in ("phy_cmd_addr", "phy_data_in", "phy_data_out"):
+            intervals.extend(
+                interval
+                for interval in rec.intervals[stage]
+                if interval.get("transaction_type") in HOST_VISIBLE_TRANSACTION_TYPES
+            )
+        return self._merged_stage_durations(intervals)
 
     def _user_phy_array_time(self, rec: RequestLatencyState) -> int:
         return self._transaction_stage_duration(
@@ -915,6 +996,17 @@ class RequestLatencyRecorder:
     def _raw_request_side_pcie_time(self, rec: RequestLatencyState) -> int:
         return self._merged_stage_durations(self._request_side_pcie_intervals(rec))
 
+    def _pcie_queue_time(self, rec: RequestLatencyState, direction: str) -> int:
+        return self._merged_stage_durations(
+            rec.intervals[f"pcie_{direction}_queue_wait"]
+        )
+
+    def _pcie_wire_time(self, rec: RequestLatencyState) -> int:
+        return self._merged_stage_durations(
+            rec.intervals["pcie_host_to_device_wire"]
+            + rec.intervals["pcie_device_to_host_wire"]
+        )
+
     def _request_side_pcie_end(self, rec: RequestLatencyState) -> int:
         intervals = self._request_side_pcie_intervals(rec)
         if not intervals:
@@ -923,7 +1015,14 @@ class RequestLatencyRecorder:
 
     def _mapping_phase_end(self, rec: RequestLatencyState) -> Optional[int]:
         mapping_intervals = list(rec.intervals["amu_mapping_wait"])
-        for stage in ("tsu_queue_wait", "phy_cmd_addr", "phy_data_in", "phy_array_exec", "phy_data_out"):
+        for stage in (
+            "tsu_queue_wait",
+            "phy_channel_wait",
+            "phy_cmd_addr",
+            "phy_data_in",
+            "phy_array_exec",
+            "phy_data_out",
+        ):
             mapping_intervals.extend(
                 interval
                 for interval in rec.intervals[stage]

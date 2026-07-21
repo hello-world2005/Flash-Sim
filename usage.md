@@ -636,8 +636,8 @@ compute_output_bytes = participating_plane_count
 }
 ```
 
-更完整的电路语义、并行规则和公式见 `docs/cim-cam.md`；可运行的并行 trace
-见 `test_case/cim_parallel/`。
+<!-- 更完整的电路语义、并行规则和公式见 `docs/cim-cam.md`； -->
+可运行的并行 trace见 `test_case/cim_parallel/`。
 
 ### 9.4 预条件 trace
 

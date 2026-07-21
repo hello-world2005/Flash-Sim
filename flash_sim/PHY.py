@@ -167,6 +167,7 @@ class ChannelTransferTask:
     start_time: Optional[int] = None
     finish_time: Optional[int] = None
     completion_event: Optional[SimEvent] = None
+    queue_enter_time: Optional[int] = None
     sequence: int = 0
     priority: int = field(init=False)
 
@@ -542,6 +543,7 @@ class PHY():
         raise ValueError(f"Unsupported transfer kind: {task.kind}")
 
     def _submit_channel_transfer(self, task: ChannelTransferTask, *, defer_start: bool = False) -> ChannelTransferTask:
+        task.queue_enter_time = CURRENT_TIME()
         task.sequence = self._next_transfer_sequence()
         channel_id = task.channel_id
         if task.kind == ChannelTransferKind.COMMAND:
@@ -584,6 +586,18 @@ class PHY():
 
     def _start_channel_transfer(self, task: ChannelTransferTask) -> None:
         now = CURRENT_TIME()
+        queue_enter_time = task.queue_enter_time
+        if queue_enter_time is not None and now > queue_enter_time:
+            recorder = REQUEST_LATENCY_RECORDER()
+            if recorder is not None:
+                recorder.note_phy_channel_wait(
+                    task.transactions,
+                    task.op_kind,
+                    task.kind.value,
+                    queue_enter_time,
+                    now,
+                )
+        task.queue_enter_time = None
         duration = max(0, task.remaining_duration)
         task.start_time = now
         task.finish_time = now + duration

@@ -31,7 +31,7 @@ Each JSON request latency record SHALL include a top-level `size` field whose va
 
 ### Requirement: JSON request reports include host, PCIe, AMU, TSU, and PHY stage breakdowns
 
-Each JSON request record MUST include a stage breakdown with at least `host_sq_wait`, `host_dispatch`, `pcie_host_to_device`, `pcie_device_to_host`, `amu_mapping_wait`, `tsu_queue_wait`, `phy_cmd_addr`, `phy_data_in`, `phy_array_exec`, and `phy_data_out`. If a request does not pass through a stage, that stage value MUST remain `0` instead of being omitted.
+Each JSON request record MUST include a stage breakdown with at least `host_sq_wait`, `host_dispatch`, `pcie_host_to_device`, `pcie_device_to_host`, `pcie_host_to_device_queue_wait`, `pcie_device_to_host_queue_wait`, `pcie_host_to_device_wire`, `pcie_device_to_host_wire`, `amu_mapping_wait`, `tsu_queue_wait`, `phy_channel_wait`, `phy_cmd_addr`, `phy_data_in`, `phy_array_exec`, and `phy_data_out`. The directional PCIe queue stages MUST cover enqueue-to-service-start, while the directional wire stages MUST cover service-start-to-delivery. These detail stages MUST NOT be counted again when reconciling their parent enqueue-to-delivery PCIe intervals. `phy_channel_wait` MUST contain time for which an ONFI command, data-in, or data-out task is pending but not active on its channel. If a request does not pass through a stage, that stage value MUST remain `0` instead of being omitted.
 
 #### Scenario: Read request with mapping miss reports AMU and PHY stages
 
@@ -66,19 +66,19 @@ For `WRITE` and `STATIC_WRITE`, the report MUST distinguish host-visible complet
 - **WHEN** a cached write is overwritten before it receives an independent persistence path
 - **THEN** the JSON report MUST keep the host-visible completion timing and MUST mark the request with `persistence_status="superseded_in_cache"`
 
-### Requirement: CSV latency table flattens each request into an additive host-visible completion row
+### Requirement: CSV latency table flattens each request into a raw host-visible completion row
 
-The CSV report SHALL flatten each request into one row with a fixed column order. The CSV MUST contain, from left to right: `issue_time`, `req_type`, `completion_time`, `sq_wait_time`, `pcie_request_send_time`, `cache_hit`, `mapping_time`, `tsu_wait_time`, `phy_transfer_time`, `phy_array_time`, `pcie_status_return_time`, and `pcie_data_return_time`.
+The CSV report SHALL flatten each request into one row with a fixed, subsystem-grouped column order. Identity columns MUST come first. Host/controller columns MUST be followed by all PCIe columns, then NAND/ONFI columns, energy columns, and finally status/maintenance columns. The exact order MUST be: `Issue Time`, `REQ Type`, `Finish Time`, `Time in SQ`, `Cache Hit`, `Mapping`, `Time in TSU`, `Backpressure Wait Time`, `PCIe Xfer`, `PCIe Queue (Host)`, `PCIe Queue (Device)`, `PCIe Wire`, `PCIe Xfer (Data)`, `PCIe Xfer (CQ)`, `ONFI Xfer`, `ONFI Service`, `Array Exec`, `Energy for req (μJ)`, `Energy for persistant storage (μJ)`, `Status`, `GC Count`, `GC Relocated Pages`, `GC Erased Blocks`, and `Write Amplification`. `ONFI Service` MUST contain only active command/data transfer intervals. The two PCIe queue columns MUST report raw waiting intervals in the H2D host-side FIFO and D2H device-side FIFO respectively. `PCIe Wire` MUST report the merged union of active H2D and D2H transfer intervals.
 
-`completion_time` MUST be the absolute timestamp when the Host receives `REQ_COMP` for the request, not a derived latency value. For any row with both `issue_time` and `completion_time`, the sum of `sq_wait_time`, `pcie_request_send_time`, `mapping_time`, `tsu_wait_time`, `phy_transfer_time`, `phy_array_time`, and `pcie_status_return_time` MUST equal `completion_time - issue_time`. `pcie_data_return_time` MUST remain a separate trailing payload-return column and MUST NOT be included in that equality.
+`completion_time` MUST be the absolute timestamp when the Host receives `REQ_COMP` for the request, not a derived latency value. The latency fields MUST be derived from recorded raw intervals rather than from an end-to-end residual. For a serial request path with no overlapping stages, the sum of `sq_wait_time`, `pcie_request_send_time`, `mapping_time`, `tsu_wait_time`, `phy_transfer_time`, `phy_array_time`, and `pcie_status_return_time` MUST equal `completion_time - issue_time`. Requests whose transactions execute in parallel MAY have overlapping CSV stage values; the JSON `overlap_latency` and `untracked_latency` fields remain the source of truth for reconciliation. `pcie_data_return_time` MUST remain a separate payload-return column and MUST NOT be added to the host-visible completion path.
 
 For `SEARCH` and `COMPUTE`, `cache_hit` MUST be `/`.
 
 The CSV report MAY append maintenance and status columns after the host-visible latency and energy columns. These appended columns MUST NOT participate in the additive host-visible latency equality.
 
-#### Scenario: Completed read row is additive before payload return
+#### Scenario: Serial completed read row is additive before payload return
 
-- **WHEN** a completed `READ` request is exported to CSV
+- **WHEN** a completed `READ` request with a serial, non-overlapping execution path is exported to CSV
 - **THEN** the sum of every latency column except `pcie_data_return_time` MUST equal `completion_time - issue_time`
 
 #### Scenario: Host-visible completion time is a timestamp
@@ -136,20 +136,30 @@ Any time counted in `mapping_time` MUST NOT be counted again in `tsu_wait_time`,
 - **WHEN** a `READ` request is fully satisfied by controller-side cache without backend execution
 - **THEN** the CSV row MUST report `cache_hit` as a hit, `mapping_time=0`, `phy_transfer_time=0`, and `phy_array_time=0`
 
-### Requirement: TSU wait reports only effective USER transaction queueing
+### Requirement: TSU wait reports only recorded USER transaction queueing
 
-`tsu_wait_time` MUST only measure the effective queueing of the host-visible USER transaction. It MUST start no earlier than the latest of:
+`tsu_wait_time` MUST be the merged duration of raw host-visible USER transaction intervals from TSU enqueue until TSU dispatch. It MUST NOT extend to the later PHY command-transfer start and therefore MUST NOT absorb PHY channel queueing.
 
-- the first USER transaction submission to TSU
-- the end of request-side PCIe ingress
-- the end of the mapping phase
+#### Scenario: PHY command queueing does not leak into TSU wait
 
-It MUST end when PHY begins issuing the first command for the corresponding USER transaction.
+- **WHEN** a USER transaction is dispatched by TSU but its ONFI command task waits for the channel
+- **THEN** that post-dispatch wait MUST be reported through `phy_channel_wait` and `ONFI Xfer`, not through `tsu_wait_time`
 
 #### Scenario: Mapping dependency wait does not leak into USER TSU wait
 
 - **WHEN** a mapping-miss `READ` spends time in `MAPPING_READ` queueing before its `USER_READ` can start
 - **THEN** that dependency time MUST be reflected in `mapping_time` rather than `tsu_wait_time`
+
+### Requirement: ONFI Xfer includes channel queueing and active service
+
+The CSV `ONFI Xfer` value MUST be the merged duration of host-visible USER command, data-in, and data-out intervals from each PHY channel-task enqueue through that task's active transfer completion. It MUST include channel queueing. It MUST NOT include NAND array execution between command completion and data-out enqueue. `ONFI Service` MUST include only the active `phy_cmd_addr`, `phy_data_in`, and `phy_data_out` intervals and MUST exclude `phy_channel_wait`.
+
+#### Scenario: Read data-out waits for a busy channel
+
+- **WHEN** a read array operation finishes and its data-out task waits before becoming active on the ONFI channel
+- **THEN** `ONFI Xfer` MUST include that wait
+- **AND** `ONFI Service` MUST exclude it
+- **AND** `phy_channel_wait` MUST record the raw wait interval in JSON
 
 ### Requirement: CSV return reporting separates status latency from payload latency
 

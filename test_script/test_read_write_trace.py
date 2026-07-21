@@ -7,13 +7,18 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from flash_sim.request_latency_report import CSV_COLUMN_NAMES
-
-
 def _completion_path_sum(row):
     return sum(
-        int(row[CSV_COLUMN_NAMES[index]])
-        for index in (3, 4, 6, 7, 8, 9, 10)
+        int(row[column])
+        for column in (
+            "Time in SQ",
+            "PCIe Xfer",
+            "Mapping",
+            "Time in TSU",
+            "ONFI Xfer",
+            "Array Exec",
+            "PCIe Xfer (CQ)",
+        )
     )
 
 
@@ -69,14 +74,14 @@ class TestReadWriteTrace(unittest.TestCase):
                 with csv_path.open("r", encoding="utf-8", newline="") as handle:
                     rows = list(csv.DictReader(handle))
                 self.assertEqual(len(rows), 2)
-                self.assertEqual(rows[1][CSV_COLUMN_NAMES[1]], "READ")
-                self.assertEqual(rows[1][CSV_COLUMN_NAMES[5]], "Yes")
-                self.assertEqual(int(rows[1][CSV_COLUMN_NAMES[6]]), 0)
-                self.assertEqual(int(rows[1][CSV_COLUMN_NAMES[7]]), 0)
-                self.assertEqual(int(rows[1][CSV_COLUMN_NAMES[8]]), 0)
-                self.assertEqual(int(rows[1][CSV_COLUMN_NAMES[9]]), 0)
+                self.assertEqual(rows[1]["REQ Type"], "READ")
+                self.assertEqual(rows[1]["Cache Hit"], "Yes")
+                self.assertEqual(int(rows[1]["Mapping"]), 0)
+                self.assertEqual(int(rows[1]["Time in TSU"]), 0)
+                self.assertEqual(int(rows[1]["ONFI Xfer"]), 0)
+                self.assertEqual(int(rows[1]["Array Exec"]), 0)
                 self.assertEqual(
-                    int(rows[1][CSV_COLUMN_NAMES[2]]) - int(rows[1][CSV_COLUMN_NAMES[0]]),
+                    int(rows[1]["Finish Time"]) - int(rows[1]["Issue Time"]),
                     _completion_path_sum(rows[1]),
                 )
             finally:

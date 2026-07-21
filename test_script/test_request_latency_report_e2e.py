@@ -8,9 +8,6 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from flash_sim.engine import Engine
-from flash_sim.request_latency_report import CSV_COLUMN_NAMES
-
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TEST_CASE_DIR = REPO_ROOT / "test_case"
 
@@ -46,13 +43,13 @@ def _completion_path_sum(csv_row):
     return sum(
         int(csv_row[column])
         for column in (
-            CSV_COLUMN_NAMES[3],
-            CSV_COLUMN_NAMES[4],
-            CSV_COLUMN_NAMES[6],
-            CSV_COLUMN_NAMES[7],
-            CSV_COLUMN_NAMES[8],
-            CSV_COLUMN_NAMES[9],
-            CSV_COLUMN_NAMES[10],
+            "Time in SQ",
+            "PCIe Xfer",
+            "Mapping",
+            "Time in TSU",
+            "ONFI Xfer",
+            "Array Exec",
+            "PCIe Xfer (CQ)",
         )
     )
 
@@ -106,15 +103,15 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertGreater(req["breakdown"]["phy_cmd_addr"], 0)
         self.assertGreater(req["breakdown"]["phy_array_exec"], 0)
         self.assertGreater(req["breakdown"]["phy_data_out"], 0)
-        self.assertEqual(csv_row[CSV_COLUMN_NAMES[1]], "READ")
-        self.assertEqual(csv_row[CSV_COLUMN_NAMES[5]], "Yes")
-        self.assertEqual(int(csv_row[CSV_COLUMN_NAMES[6]]), 0)
-        self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[8]]), 0)
-        self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[9]]), 0)
-        self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[10]]), 0)
-        self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[11]]), 0)
+        self.assertEqual(csv_row["REQ Type"], "READ")
+        self.assertEqual(csv_row["Cache Hit"], "Yes")
+        self.assertEqual(int(csv_row["Mapping"]), 0)
+        self.assertGreater(int(csv_row["ONFI Xfer"]), 0)
+        self.assertGreater(int(csv_row["Array Exec"]), 0)
+        self.assertGreater(int(csv_row["PCIe Xfer (CQ)"]), 0)
+        self.assertGreater(int(csv_row["PCIe Xfer (Data)"]), 0)
         self.assertEqual(
-            int(csv_row[CSV_COLUMN_NAMES[2]]) - int(csv_row[CSV_COLUMN_NAMES[0]]),
+            int(csv_row["Finish Time"]) - int(csv_row["Issue Time"]),
             _completion_path_sum(csv_row),
         )
 
@@ -143,12 +140,12 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertEqual(second_req["type"], "READ")
         self.assertEqual(second_req["breakdown"]["amu_mapping_wait"], 0)
         self.assertGreater(second_req["breakdown"]["tsu_queue_wait"], 0)
-        self.assertEqual(int(first_row[CSV_COLUMN_NAMES[6]]), 0)
-        self.assertEqual(int(second_row[CSV_COLUMN_NAMES[6]]), 0)
-        self.assertGreater(int(second_row[CSV_COLUMN_NAMES[7]]), int(first_row[CSV_COLUMN_NAMES[7]]))
+        self.assertEqual(int(first_row["Mapping"]), 0)
+        self.assertEqual(int(second_row["Mapping"]), 0)
+        self.assertGreater(int(second_row["Time in TSU"]), int(first_row["Time in TSU"]))
         self.assertTrue(
             all(
-                int(row[CSV_COLUMN_NAMES[2]]) - int(row[CSV_COLUMN_NAMES[0]]) == _completion_path_sum(row)
+                int(row["Finish Time"]) - int(row["Issue Time"]) == _completion_path_sum(row)
                 for row in csv_rows
             )
         )
@@ -171,15 +168,15 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertGreater(req["persistence_breakdown"]["phy_cmd_addr"], 0)
         self.assertGreater(req["persistence_breakdown"]["phy_data_in"], 0)
         self.assertGreater(req["persistence_breakdown"]["phy_array_exec"], 0)
-        self.assertEqual(csv_row[CSV_COLUMN_NAMES[1]], "WRITE")
-        self.assertEqual(int(csv_row[CSV_COLUMN_NAMES[6]]), 0)
-        self.assertEqual(int(csv_row[CSV_COLUMN_NAMES[7]]), 0)
-        self.assertEqual(int(csv_row[CSV_COLUMN_NAMES[8]]), 0)
-        self.assertEqual(int(csv_row[CSV_COLUMN_NAMES[9]]), 0)
-        self.assertGreater(int(csv_row[CSV_COLUMN_NAMES[10]]), 0)
-        self.assertEqual(int(csv_row[CSV_COLUMN_NAMES[11]]), 0)
+        self.assertEqual(csv_row["REQ Type"], "WRITE")
+        self.assertEqual(int(csv_row["Mapping"]), 0)
+        self.assertEqual(int(csv_row["Time in TSU"]), 0)
+        self.assertEqual(int(csv_row["ONFI Xfer"]), 0)
+        self.assertEqual(int(csv_row["Array Exec"]), 0)
+        self.assertGreater(int(csv_row["PCIe Xfer (CQ)"]), 0)
+        self.assertEqual(int(csv_row["PCIe Xfer (Data)"]), 0)
         self.assertEqual(
-            int(csv_row[CSV_COLUMN_NAMES[2]]) - int(csv_row[CSV_COLUMN_NAMES[0]]),
+            int(csv_row["Finish Time"]) - int(csv_row["Issue Time"]),
             _completion_path_sum(csv_row),
         )
 
@@ -191,24 +188,28 @@ class TestRequestLatencyReportEndToEnd(unittest.TestCase):
         self.assertEqual(report["meta"]["request_count"], 4)
         self.assertEqual(len(csv_rows), 4)
         self.assertEqual(
-            [row[CSV_COLUMN_NAMES[1]] for row in csv_rows],
+            [row["REQ Type"] for row in csv_rows],
             ["SEARCH", "COMPUTE", "SEARCH", "COMPUTE"],
         )
         self.assertEqual(
             [req["size"] for req in report["requests"]],
             [trace_req["size"] for trace_req in trace_content],
         )
-        self.assertTrue(all(row[CSV_COLUMN_NAMES[5]] == "/" for row in csv_rows))
-        self.assertTrue(all(int(row[CSV_COLUMN_NAMES[6]]) == 0 for row in csv_rows))
-        compute_rows = [row for row in csv_rows if row[CSV_COLUMN_NAMES[1]] == "COMPUTE"]
-        self.assertTrue(all(int(row[CSV_COLUMN_NAMES[10]]) > 0 for row in compute_rows))
-        self.assertTrue(all(int(row[CSV_COLUMN_NAMES[11]]) > 0 for row in compute_rows))
+        self.assertTrue(all(row["Cache Hit"] == "/" for row in csv_rows))
+        self.assertTrue(all(int(row["Mapping"]) == 0 for row in csv_rows))
+        compute_rows = [row for row in csv_rows if row["REQ Type"] == "COMPUTE"]
+        self.assertTrue(all(int(row["PCIe Xfer (CQ)"]) > 0 for row in compute_rows))
+        self.assertTrue(all(int(row["PCIe Xfer (Data)"]) > 0 for row in compute_rows))
+        compute_reqs = [req for req in report["requests"] if req["type"] == "COMPUTE"]
         self.assertTrue(
             all(
-                int(row[CSV_COLUMN_NAMES[2]]) - int(row[CSV_COLUMN_NAMES[0]]) == _completion_path_sum(row)
+                _completion_path_sum(row)
+                >= int(row["Finish Time"]) - int(row["Issue Time"])
                 for row in compute_rows
             )
         )
+        self.assertTrue(all(req["breakdown"]["overlap_latency"] > 0 for req in compute_reqs))
+        self.assertTrue(all(req["breakdown"]["untracked_latency"] == 0 for req in compute_reqs))
 
 
 if __name__ == "__main__":

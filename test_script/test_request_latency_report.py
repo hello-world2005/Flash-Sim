@@ -23,12 +23,36 @@ from flash_sim.request_latency_report import (
 
 def _csv_latency_sum(row):
     return sum(
-        row[CSV_COLUMN_NAMES[index]]
-        for index in (3, 4, 6, 7, 8, 9, 10)
+        row[column]
+        for column in (
+            "Time in SQ",
+            "PCIe Xfer",
+            "Mapping",
+            "Time in TSU",
+            "ONFI Xfer",
+            "Array Exec",
+            "PCIe Xfer (CQ)",
+        )
     )
 
 
 class TestRequestLatencyRecorder(unittest.TestCase):
+    def test_csv_columns_are_grouped_by_subsystem(self):
+        self.assertEqual(
+            CSV_COLUMN_NAMES,
+            (
+                "Issue Time", "REQ Type", "Finish Time",
+                "Time in SQ", "Cache Hit", "Mapping", "Time in TSU",
+                "Backpressure Wait Time",
+                "PCIe Xfer", "PCIe Queue (Host)", "PCIe Queue (Device)",
+                "PCIe Wire", "PCIe Xfer (Data)", "PCIe Xfer (CQ)",
+                "ONFI Xfer", "ONFI Service", "Array Exec",
+                "Energy for req (μJ)", "Energy for persistant storage (μJ)",
+                "Status", "GC Count", "GC Relocated Pages", "GC Erased Blocks",
+                "Write Amplification",
+            ),
+        )
+
     def _make_req(self, req_type=RequestType.READ, req_id="req-0"):
         return Request(
             type=req_type,
@@ -319,15 +343,15 @@ class TestRequestLatencyRecorder(unittest.TestCase):
             -wire_bytes // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
         )
 
-        self.assertEqual(row[CSV_COLUMN_NAMES[3]], 5)
-        self.assertEqual(row[CSV_COLUMN_NAMES[4]], 10)
-        self.assertEqual(row[CSV_COLUMN_NAMES[6]], 20)
-        self.assertEqual(row[CSV_COLUMN_NAMES[7]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[8]], 15)
-        self.assertEqual(row[CSV_COLUMN_NAMES[9]], 10)
-        self.assertEqual(row[CSV_COLUMN_NAMES[10]], 5)
-        self.assertEqual(row[CSV_COLUMN_NAMES[11]], expected_payload_latency)
-        self.assertEqual(row[CSV_COLUMN_NAMES[2]] - row[CSV_COLUMN_NAMES[0]], _csv_latency_sum(row))
+        self.assertEqual(row["Time in SQ"], 5)
+        self.assertEqual(row["PCIe Xfer"], 10)
+        self.assertEqual(row["Mapping"], 20)
+        self.assertEqual(row["Time in TSU"], 0)
+        self.assertEqual(row["ONFI Xfer"], 15)
+        self.assertEqual(row["Array Exec"], 10)
+        self.assertEqual(row["PCIe Xfer (CQ)"], 5)
+        self.assertEqual(row["PCIe Xfer (Data)"], expected_payload_latency)
+        self.assertEqual(row["Finish Time"] - row["Issue Time"], _csv_latency_sum(row))
 
     def test_json_mapping_resolution_counts_exports_cmt_hit(self):
         recorder = RequestLatencyRecorder()
@@ -453,18 +477,18 @@ class TestRequestLatencyRecorder(unittest.TestCase):
 
         row = recorder.export_csv_rows()[0]
 
-        self.assertEqual(row[CSV_COLUMN_NAMES[1]], "WRITE")
-        self.assertEqual(row[CSV_COLUMN_NAMES[2]], 60)
-        self.assertEqual(row[CSV_COLUMN_NAMES[5]], "No")
-        self.assertEqual(row[CSV_COLUMN_NAMES[3]], 10)
-        self.assertEqual(row[CSV_COLUMN_NAMES[4]], 45)
-        self.assertEqual(row[CSV_COLUMN_NAMES[6]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[7]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[8]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[9]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[10]], 5)
-        self.assertEqual(row[CSV_COLUMN_NAMES[11]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[2]] - row[CSV_COLUMN_NAMES[0]], _csv_latency_sum(row))
+        self.assertEqual(row["REQ Type"], "WRITE")
+        self.assertEqual(row["Finish Time"], 60)
+        self.assertEqual(row["Cache Hit"], "No")
+        self.assertEqual(row["Time in SQ"], 10)
+        self.assertEqual(row["PCIe Xfer"], 45)
+        self.assertEqual(row["Mapping"], 0)
+        self.assertEqual(row["Time in TSU"], 0)
+        self.assertEqual(row["ONFI Xfer"], 0)
+        self.assertEqual(row["Array Exec"], 0)
+        self.assertEqual(row["PCIe Xfer (CQ)"], 5)
+        self.assertEqual(row["PCIe Xfer (Data)"], 0)
+        self.assertEqual(row["Finish Time"] - row["Issue Time"], _csv_latency_sum(row))
 
     def test_csv_read_row_splits_status_and_response_payload_latency(self):
         recorder = RequestLatencyRecorder()
@@ -504,14 +528,172 @@ class TestRequestLatencyRecorder(unittest.TestCase):
             -wire_bytes // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS
         )
 
-        self.assertEqual(row[CSV_COLUMN_NAMES[0]], 12)
-        self.assertEqual(row[CSV_COLUMN_NAMES[1]], "READ")
-        self.assertEqual(row[CSV_COLUMN_NAMES[2]], 110)
-        self.assertEqual(row[CSV_COLUMN_NAMES[5]], "Yes")
-        self.assertEqual(row[CSV_COLUMN_NAMES[6]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[7]], 0)
-        self.assertEqual(row[CSV_COLUMN_NAMES[10]], 20)
-        self.assertEqual(row[CSV_COLUMN_NAMES[11]], expected_payload_latency)
+        self.assertEqual(row["Issue Time"], 12)
+        self.assertEqual(row["REQ Type"], "READ")
+        self.assertEqual(row["Finish Time"], 110)
+        self.assertEqual(row["PCIe Xfer"], 20)
+        self.assertEqual(row["Cache Hit"], "Yes")
+        self.assertEqual(row["Mapping"], 0)
+        self.assertEqual(row["Time in TSU"], 0)
+        self.assertEqual(row["PCIe Xfer (CQ)"], 20)
+        self.assertEqual(row["PCIe Xfer (Data)"], expected_payload_latency)
+
+    def test_csv_request_pcie_merges_all_three_nvme_command_phases(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.READ, "req-read-command-phases")
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_req_init_executed(req, 0)
+        rec = recorder.requests[req.report_req_id]
+
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "pcie_host_to_device",
+            0,
+            8,
+            {"message_type": MessageType.READ_REQ.value, "pcie_phase": "doorbell"},
+        )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "pcie_device_to_host",
+            8,
+            16,
+            {"message_type": MessageType.READ_REQ.value, "pcie_phase": "sq_read_request"},
+        )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "pcie_host_to_device",
+            16,
+            41,
+            {"message_type": MessageType.READ_REQ.value, "pcie_phase": "sq_entry"},
+        )
+        req.status = REQUEST_STATUS_SUCCESS
+        recorder.note_request_completed(req, 41)
+
+        row = recorder.export_csv_rows()[0]
+        self.assertEqual(row["PCIe Xfer"], 41)
+
+    def test_pcie_report_splits_directional_queue_wait_and_wire_time(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.READ, "req-pcie-split")
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_req_init_executed(req, 0)
+
+        def message(message_type, phase):
+            item = type("Message", (), {})()
+            item.type = message_type
+            item.payload = {"req": req}
+            item._nvme_command_phase = phase
+            return item
+
+        first = message(MessageType.READ_REQ, "doorbell")
+        second = message(MessageType.READ_REQ, "sq_entry")
+        completion = message(MessageType.REQ_COMP, None)
+        recorder.note_pcie_enqueued(first, "host_to_device", 0, 30)
+        recorder.note_pcie_transfer_started(first, 0)
+        recorder.note_pcie_enqueued(second, "host_to_device", 2, 92)
+        recorder.note_pcie_delivered(first, 10)
+        recorder.note_pcie_transfer_started(second, 10)
+        recorder.note_pcie_delivered(second, 20)
+        recorder.note_pcie_enqueued(completion, "device_to_host", 5, 44)
+        recorder.note_pcie_transfer_started(completion, 7)
+        recorder.note_pcie_delivered(completion, 12)
+        req.status = REQUEST_STATUS_SUCCESS
+        recorder.note_request_completed(req, 20)
+
+        exported = recorder.export()["requests"][0]
+        row = recorder.export_csv_rows()[0]
+        self.assertEqual(exported["breakdown"]["pcie_host_to_device_queue_wait"], 8)
+        self.assertEqual(exported["breakdown"]["pcie_device_to_host_queue_wait"], 2)
+        self.assertEqual(exported["breakdown"]["pcie_host_to_device_wire"], 20)
+        self.assertEqual(exported["breakdown"]["pcie_device_to_host_wire"], 5)
+        self.assertEqual(row["PCIe Queue (Host)"], 8)
+        self.assertEqual(row["PCIe Queue (Device)"], 2)
+        self.assertEqual(row["PCIe Wire"], 20)
+
+    def test_csv_onfi_xfer_includes_channel_wait_and_keeps_service_separate(self):
+        recorder = RequestLatencyRecorder()
+        req = self._make_req(RequestType.READ, "req-read-onfi-wait")
+        recorder.register_request(req, scheduled_time=0)
+        recorder.note_req_init_executed(req, 0)
+        rec = recorder.requests[req.report_req_id]
+
+        recorder._append_interval(rec, "intervals", "host_dispatch", 0, 5)
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "pcie_host_to_device",
+            5,
+            10,
+            {"message_type": MessageType.READ_REQ.value},
+        )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "tsu_queue_wait",
+            10,
+            20,
+            {"transaction_type": TransactionType.USER_READ.value},
+        )
+        for start, end, transfer_kind in (
+            (20, 30, "command"),
+            (45, 55, "user_data_out"),
+        ):
+            recorder._append_interval(
+                rec,
+                "intervals",
+                "phy_channel_wait",
+                start,
+                end,
+                {
+                    "transaction_type": TransactionType.USER_READ.value,
+                    "transfer_kind": transfer_kind,
+                },
+            )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "phy_cmd_addr",
+            30,
+            35,
+            {"transaction_type": TransactionType.USER_READ.value},
+        )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "phy_array_exec",
+            35,
+            45,
+            {"transaction_type": TransactionType.USER_READ.value},
+        )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "phy_data_out",
+            55,
+            65,
+            {"transaction_type": TransactionType.USER_READ.value},
+        )
+        recorder._append_interval(
+            rec,
+            "intervals",
+            "pcie_device_to_host",
+            65,
+            70,
+            {"message_type": MessageType.REQ_COMP.value},
+        )
+        req.status = REQUEST_STATUS_SUCCESS
+        recorder.note_request_completed(req, 70)
+
+        row = recorder.export_csv_rows()[0]
+        exported = recorder.export()["requests"][0]
+        self.assertEqual(row["Time in TSU"], 10)
+        self.assertEqual(row["ONFI Xfer"], 35)
+        self.assertEqual(row["ONFI Service"], 15)
+        self.assertEqual(exported["breakdown"]["phy_channel_wait"], 20)
+        self.assertEqual(row["Finish Time"] - row["Issue Time"], _csv_latency_sum(row))
 
     def test_metadata_hit_is_recorded_as_non_cache_hit_mapping_resolution(self):
         recorder = RequestLatencyRecorder()

@@ -61,6 +61,17 @@ class TestPCIeLinkLatency(unittest.TestCase):
     def _make_req(self, req_type=RequestType.WRITE, size=1):
         return Request(type=req_type, lha_start=0, size=size)
 
+    def _execute_registered_event(self, link, event):
+        link.engine.current_time = event["scheduled_time"]
+        link.execute(
+            SimEvent(
+                type=EventType.DELIVER,
+                target=link,
+                time=link.engine.current_time,
+                param={"target": event["param"]["target"]},
+            )
+        )
+
     def test_request_message_uses_mqsim_nvme_submission_cost(self):
         link, _, _ = self._make_link()
         req = self._make_req(RequestType.READ)
@@ -74,6 +85,64 @@ class TestPCIeLinkLatency(unittest.TestCase):
         expected_latency = -(-wire_bytes // PCIE_INTERFACE_BANDWIDTH_BYTES_PER_NS)
 
         self.assertEqual(link.estimate_latency(msg), expected_latency)
+
+    def test_nvme_command_submission_uses_three_causal_bidirectional_phases(self):
+        link, host, device = self._make_link()
+        req = self._make_req(RequestType.READ)
+        msg = PCIe_message(MessageType.READ_REQ, payload={"req": req})
+
+        link.send(msg, link.device)
+
+        doorbell_event = link.engine.registered_events[0]
+        self.assertEqual(doorbell_event["scheduled_time"], 8)
+        self.assertIs(doorbell_event["param"]["target"], device.hil)
+        self._execute_registered_event(link, doorbell_event)
+        self.assertEqual(device.hil.received_messages, [])
+
+        sq_read_event = link.engine.registered_events[1]
+        self.assertEqual(sq_read_event["scheduled_time"], 16)
+        self.assertIs(sq_read_event["param"]["target"], host)
+        self._execute_registered_event(link, sq_read_event)
+        self.assertEqual(host.received_messages, [])
+
+        sq_entry_event = link.engine.registered_events[2]
+        self.assertEqual(sq_entry_event["scheduled_time"], 41)
+        self.assertIs(sq_entry_event["param"]["target"], device.hil)
+        self._execute_registered_event(link, sq_entry_event)
+
+        self.assertEqual(
+            device.hil.received_messages,
+            [{"time": 41, "message": msg}],
+        )
+
+    def test_two_nvme_commands_pipeline_across_both_directions(self):
+        link, _, device = self._make_link()
+        first = PCIe_message(
+            MessageType.READ_REQ,
+            payload={"req": self._make_req(RequestType.READ)},
+        )
+        second = PCIe_message(
+            MessageType.READ_REQ,
+            payload={"req": self._make_req(RequestType.READ)},
+        )
+
+        link.send(first, link.device)
+        link.send(second, link.device)
+
+        # Doorbell A (8), SQ read A (16), doorbell B (16), SQ read B (24),
+        # SQE A (41), SQE B (66).  The second command completes at 66 ns,
+        # rather than consuming another aggregated 41 ns H2D slot.
+        for event_index in range(6):
+            self._execute_registered_event(link, link.engine.registered_events[event_index])
+
+        self.assertEqual(
+            [item["time"] for item in device.hil.received_messages],
+            [41, 66],
+        )
+        self.assertEqual(
+            [item["message"] for item in device.hil.received_messages],
+            [first, second],
+        )
 
     def test_data_message_latency_scales_with_payload_size(self):
         link, _, _ = self._make_link()
@@ -167,6 +236,34 @@ class TestPCIeLinkLatency(unittest.TestCase):
             link.estimate_latency(device_to_host),
         )
         self.assertEqual(host.received_messages, [])
+
+    def test_internal_queue_release_bypasses_busy_device_to_host_fifo(self):
+        link, host, _ = self._make_link()
+        req = self._make_req(RequestType.READ, size=64)
+        read_data = PCIe_message(
+            MessageType.READ_RES_SEND_BACK,
+            payload={"req": req, "data": [1] * 64},
+        )
+        queue_release = PCIe_message(
+            MessageType.READ_REQ_RECEIVED,
+            payload={"sq_id": 0},
+        )
+
+        link.send(read_data, link.host)
+        link.send(queue_release, link.host)
+
+        self.assertEqual(list(link.device_to_host_queue), [read_data])
+        self.assertEqual(len(link.engine.registered_events), 2)
+        self.assertEqual(
+            link.engine.registered_events[0]["scheduled_time"],
+            link.estimate_latency(read_data),
+        )
+        self.assertEqual(link.engine.registered_events[1]["scheduled_time"], 0)
+        self.assertIs(link.engine.registered_events[1]["target"], host)
+        self.assertEqual(
+            link.engine.registered_events[1]["param"]["message"],
+            queue_release,
+        )
 
 
 if __name__ == "__main__":

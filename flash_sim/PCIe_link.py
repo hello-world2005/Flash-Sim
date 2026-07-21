@@ -3,7 +3,7 @@ from collections import deque
 from math import ceil
 from typing import TYPE_CHECKING, Any
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .common import (
     EventType,
     MessageType,
@@ -24,6 +24,9 @@ if TYPE_CHECKING:
 class PCIe_message:
     type: MessageType
     payload: dict[str, Any]
+    _nvme_command_phase: str | None = field(default=None, repr=False, compare=False)
+    _original_message: "PCIe_message | None" = field(default=None, repr=False, compare=False)
+    _wire_bytes_override: int | None = field(default=None, repr=False, compare=False)
 
     def __str__(self) -> str:
         lines = ["PCIe_message:", f"  type:    {self.type}", "  payload:"]
@@ -38,6 +41,17 @@ class PCIe_message:
 
 
 class PCIe_link:
+    _NVME_COMMAND_TYPES = {
+        MessageType.WRITE_REQ,
+        MessageType.READ_REQ,
+        MessageType.SEARCH_REQ,
+        MessageType.COMPUTE_REQ,
+        MessageType.STATIC_WRITE_REQ,
+    }
+    _COMMAND_PHASE_DOORBELL = "doorbell"
+    _COMMAND_PHASE_SQ_READ_REQUEST = "sq_read_request"
+    _COMMAND_PHASE_SQ_ENTRY = "sq_entry"
+
     def __init__(self, host, device):
         self._construction_valid: bool = False
         self.host = host
@@ -57,7 +71,38 @@ class PCIe_link:
         self._construction_valid = True
 
     def send(self, message, target):
-        estimated_latency = self.estimate_latency(message)
+        if target == self.host and self._is_internal_queue_release(message):
+            # NVMe does not send a device-to-host PCIe acknowledgement when
+            # the controller fetches an SQ entry.  These *_RECEIVED messages
+            # are simulator-internal flow-control notifications, so deliver
+            # them as zero-delay host events without entering the D2H FIFO.
+            self.Register_sim_event(
+                EventType.DELIVER,
+                self.host,
+                {"message": message},
+                self.engine.current_time,
+            )
+            return
+
+        if target == self.device and self._is_nvme_command(message):
+            # NVMe command submission is a causal three-transfer exchange:
+            #   H2D doorbell -> D2H SQ memory-read request -> H2D SQE data.
+            # Keeping the phases on their real directions is essential under
+            # contention because the two PCIe directions have independent
+            # FIFOs and can operate concurrently.
+            self._enqueue_transfer(
+                self._make_command_phase(
+                    message,
+                    self._COMMAND_PHASE_DOORBELL,
+                    PCIE_TLP_PACKET_OVERHEAD_BYTES + 2,
+                ),
+                self.device,
+            )
+            return
+
+        self._enqueue_transfer(message, target)
+
+    def _enqueue_transfer(self, message, target):
         transfer_bytes = self._estimate_transfer_bytes(message)
         recorder = REQUEST_LATENCY_RECORDER()
         if target == self.device:
@@ -70,8 +115,7 @@ class PCIe_link:
                     transfer_bytes,
                 )
             if len(self.host_to_device_queue) == 1:
-                estimated_finish_time = self.engine.current_time + estimated_latency
-                self.Register_sim_event(EventType.DELIVER, self, {"target": self.device.hil}, estimated_finish_time)
+                self._start_head_transfer(message, self.device.hil)
         elif target == self.host:
             self.device_to_host_queue.append(message)
             if recorder is not None:
@@ -82,8 +126,59 @@ class PCIe_link:
                     transfer_bytes,
                 )
             if len(self.device_to_host_queue) == 1:
-                estimated_finish_time = self.engine.current_time + estimated_latency
-                self.Register_sim_event(EventType.DELIVER, self, {"target": self.host}, estimated_finish_time)
+                self._start_head_transfer(message, self.host)
+
+    def _start_head_transfer(self, message, delivery_target):
+        """Start service for the head of one directional PCIe FIFO."""
+        recorder = REQUEST_LATENCY_RECORDER()
+        if recorder is not None:
+            recorder.note_pcie_transfer_started(message, self.engine.current_time)
+        estimated_finish_time = self.engine.current_time + self.estimate_latency(message)
+        self.Register_sim_event(
+            EventType.DELIVER,
+            self,
+            {"target": delivery_target},
+            estimated_finish_time,
+        )
+
+    def _make_command_phase(self, original_message, phase, wire_bytes):
+        return PCIe_message(
+            type=original_message.type,
+            payload=original_message.payload,
+            _nvme_command_phase=phase,
+            _original_message=original_message,
+            _wire_bytes_override=wire_bytes,
+        )
+
+    def _advance_command_phase(self, message, event):
+        phase = message._nvme_command_phase
+        original_message = message._original_message
+        assert original_message is not None
+        if phase == self._COMMAND_PHASE_DOORBELL:
+            self._enqueue_transfer(
+                self._make_command_phase(
+                    original_message,
+                    self._COMMAND_PHASE_SQ_READ_REQUEST,
+                    PCIE_TLP_PACKET_OVERHEAD_BYTES + 4,
+                ),
+                self.host,
+            )
+            return
+        if phase == self._COMMAND_PHASE_SQ_READ_REQUEST:
+            self._enqueue_transfer(
+                self._make_command_phase(
+                    original_message,
+                    self._COMMAND_PHASE_SQ_ENTRY,
+                    self._tlp_wire_bytes(PCIE_NVME_SQ_ENTRY_BYTES),
+                ),
+                self.device,
+            )
+            return
+        if phase == self._COMMAND_PHASE_SQ_ENTRY:
+            event.param["message"] = original_message
+            self.device.hil.execute(event)
+            return
+        raise ValueError(f"Unexpected NVMe command phase: {phase}")
 
     def estimate_latency(self, message):
         transfer_bytes = self._estimate_transfer_bytes(message)
@@ -95,18 +190,18 @@ class PCIe_link:
     def _estimate_transfer_bytes(self, message) -> int:
         """Return wire bytes using MQSim's PCIe/NVMe transfer model.
 
-        Flash-Sim carries the request object directly in one message, while
-        MQSim models doorbell write + SQ read request + SQ entry DMA.  Charge
-        their aggregate wire bytes to the request message.  Payload and CQ
-        transfers use the same 128-B TLP and 28-B per-packet overhead as
-        MQSim.  *_RECEIVED messages are internal queue-release notifications
-        and have no MQSim PCIe counterpart, so they consume no link time.
+        Public command messages retain the aggregate isolated-command cost for
+        callers of estimate_latency().  send() decomposes them into doorbell,
+        SQ read-request, and SQ-entry phases whose private byte overrides are
+        handled first here.  Payload and CQ transfers use the same 128-B TLP
+        and 28-B per-packet overhead as MQSim.  *_RECEIVED messages are
+        internal queue-release notifications and consume no link time.
         """
+        override = getattr(message, "_wire_bytes_override", None)
+        if override is not None:
+            return override
         message_type = getattr(message, "type", None)
-        if message_type in (
-            MessageType.READ_REQ,
-            MessageType.WRITE_REQ,
-        ):
+        if message_type in self._NVME_COMMAND_TYPES:
             doorbell_bytes = PCIE_TLP_PACKET_OVERHEAD_BYTES + 2
             sq_read_request_bytes = PCIE_TLP_PACKET_OVERHEAD_BYTES + 4
             sq_entry_bytes = self._tlp_wire_bytes(PCIE_NVME_SQ_ENTRY_BYTES)
@@ -118,6 +213,9 @@ class PCIe_link:
         if message_type in (
             MessageType.WRITE_DATA_RECEIVED,
             MessageType.READ_REQ_RECEIVED,
+            MessageType.SEARCH_DATA_RECEIVED,
+            MessageType.COMPUTE_DATA_RECEIVED,
+            MessageType.STATIC_WRITE_DATA_RECEIVED,
         ):
             return 0
         if message_type == MessageType.REQ_COMP:
@@ -129,6 +227,22 @@ class PCIe_link:
             user_data_bytes = self._estimate_user_data_bytes(payload["data"])
             return self._tlp_wire_bytes(user_data_bytes)
         return PCIE_PACKET_OVERHEAD_BYTES
+
+    @staticmethod
+    def _is_internal_queue_release(message) -> bool:
+        return getattr(message, "type", None) in (
+            MessageType.WRITE_DATA_RECEIVED,
+            MessageType.READ_REQ_RECEIVED,
+            MessageType.SEARCH_DATA_RECEIVED,
+            MessageType.COMPUTE_DATA_RECEIVED,
+            MessageType.STATIC_WRITE_DATA_RECEIVED,
+        )
+
+    def _is_nvme_command(self, message) -> bool:
+        return (
+            getattr(message, "type", None) in self._NVME_COMMAND_TYPES
+            and getattr(message, "_nvme_command_phase", None) is None
+        )
 
     @staticmethod
     def _tlp_wire_bytes(payload_bytes: int) -> int:
@@ -165,12 +279,15 @@ class PCIe_link:
         recorder = REQUEST_LATENCY_RECORDER()
         if recorder is not None:
             recorder.note_pcie_delivered(message, self.engine.current_time)
-        target.execute(event)
+        if message._nvme_command_phase is not None:
+            self._advance_command_phase(message, event)
+        else:
+            target.execute(event)
         if target == self.device.hil:
             if len(self.host_to_device_queue) > 0:
                 new_message = self.host_to_device_queue[0]
-                self.Register_sim_event(EventType.DELIVER, self, {"target": self.device.hil}, self.engine.current_time + self.estimate_latency(new_message))
+                self._start_head_transfer(new_message, self.device.hil)
         elif target == self.host:
             if len(self.device_to_host_queue) > 0:
                 new_message = self.device_to_host_queue[0]
-                self.Register_sim_event(EventType.DELIVER, self, {"target": self.host}, self.engine.current_time + self.estimate_latency(new_message))
+                self._start_head_transfer(new_message, self.host)

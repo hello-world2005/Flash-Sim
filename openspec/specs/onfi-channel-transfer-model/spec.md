@@ -133,3 +133,13 @@ When ONFI transfers are preempted or split, request latency reports SHALL record
 
 - **WHEN** a data-in transfer is split by one or more command preemptions
 - **THEN** the reported `phy_data_in` duration for the affected request MUST equal the sum of its completed data-in transfer segments
+
+### Requirement: Latency reporting records ONFI channel queue waits separately
+
+Every ONFI `ChannelTransferTask` SHALL preserve the timestamp at which it enters the channel scheduler. When the task becomes active, the request latency recorder MUST emit a `phy_channel_wait` interval from that enqueue timestamp to the active-transfer start. Active service MUST remain in `phy_cmd_addr`, `phy_data_in`, or `phy_data_out` and MUST NOT be duplicated in `phy_channel_wait`.
+
+#### Scenario: Array-ready data waits for data-out channel
+
+- **WHEN** a read array operation completes while its ONFI channel is occupied
+- **THEN** the data-out task MUST record `phy_channel_wait` from array completion until data-out starts
+- **AND** its active data transfer MUST remain a separate `phy_data_out` interval
